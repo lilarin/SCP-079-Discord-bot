@@ -78,30 +78,42 @@ class Config:
             },
             {
                 "path": os.path.join(base_path, "keycard-6.png"),
+                "primary": "#4BA3F5",
+                "secondary": "#70BBFF",
+                "embed": "#ABD6FF"
+            },
+            {
+                "path": os.path.join(base_path, "keycard-7.png"),
                 "primary": "#2E2E2E",
                 "secondary": "#4F4F4F",
                 "embed": "#808080"
             },
             {
-                "path": os.path.join(base_path, "keycard-7.png"),
+                "path": os.path.join(base_path, "keycard-8.png"),
                 "primary": "#8BF3E8",
                 "secondary": "#13C5B3",
                 "embed": "#258F84"
             },
             {
-                "path": os.path.join(base_path, "keycard-8.png"),
+                "path": os.path.join(base_path, "keycard-9.png"),
+                "primary": "#FFC2BA",
+                "secondary": "#E1A597",
+                "embed": "#BB8D83"
+            },
+            {
+                "path": os.path.join(base_path, "keycard-10.png"),
                 "primary": "#2E2E2E",
                 "secondary": "#717171",
                 "embed": "#FFC74B"
             },
             {
-                "path": os.path.join(base_path, "keycard-9.png"),
+                "path": os.path.join(base_path, "keycard-11.png"),
                 "primary": "#484844",
                 "secondary": "#858585",
                 "embed": "#FFE18C"
             },
             {
-                "path": os.path.join(base_path, "keycard-10.png"),
+                "path": os.path.join(base_path, "keycard-12.png"),
                 "primary": "#F0EBFF",
                 "secondary": "#A287FF",
                 "embed": "#BEB3E6"
