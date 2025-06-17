@@ -1,6 +1,6 @@
 from typing import Optional
 
-from disnake import MessageFlags, File, Embed
+from disnake import MessageFlags, Embed
 
 
 class ResponseUtils:
