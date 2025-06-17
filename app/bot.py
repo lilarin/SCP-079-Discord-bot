@@ -113,7 +113,7 @@ async def spam(
         ),
         messages: int = commands.Param(
             description="Кількість надісланих повідомлень у кожній гілці",
-            default=400, max_value=5000
+            default=400, max_value=4000
         ),
         delete_existing_threads: bool = commands.Param(
             description="Видалити існуючі гілки в каналі?",
@@ -167,10 +167,12 @@ async def spam(
     async def work(thread):
         for _ in range(messages):
             await thread.send(content=message_content)
-        await thread.delete()
 
     tasks = [asyncio.create_task(work(thread)) for thread in created_threads]
     await asyncio.gather(*tasks)
+
+    for thread in created_threads:
+        await thread.delete()
 
 
 bot.run(config.discord_bot_token)
