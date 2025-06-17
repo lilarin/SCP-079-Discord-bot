@@ -3,6 +3,7 @@ import os
 import sys
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
+from urllib.parse import urlparse
 
 from PIL import Image, ImageFont
 from dotenv import load_dotenv
@@ -21,6 +22,7 @@ class Config:
         load_dotenv()
 
         self.discord_bot_token = self._get_env_variable("DISCORD_BOT_TOKEN")
+        self.database_url = self._get_env_variable("SUPABASE_DIRECT_URL")
 
         current_file_dir = os.path.dirname(os.path.abspath(__file__))
         self.project_root = os.path.abspath(os.path.join(current_file_dir, "."))
@@ -142,3 +144,26 @@ class Config:
 
 config = Config()
 logger = config.setup_logging()
+
+db_url = urlparse(config.database_url)
+tortoise_orm = {
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.asyncpg",
+            "credentials": {
+                "host": db_url.hostname,
+                "port": db_url.port,
+                "user": db_url.username,
+                "password": db_url.password,
+                "database": db_url.path[1:],
+                "statement_cache_size": 0,
+            },
+        }
+    },
+    "apps": {
+        "models": {
+            "models": ["app.models", "aerich.models"],
+            "default_connection": "default",
+        },
+    },
+}

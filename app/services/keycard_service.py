@@ -88,7 +88,7 @@ class KeyCardService:
 
         self.image.paste(decoration, position, decoration)
 
-    async def process_template(
+    def process_template(
             self,
             template_image: Image.Image,
             user_name: str,

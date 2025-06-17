@@ -1,4 +1,6 @@
-from disnake import Embed
+from typing import Optional
+
+from disnake import Embed, File
 
 
 class KeyCardUtils:
@@ -23,12 +25,14 @@ class KeyCardUtils:
         return embed
 
     @staticmethod
-    async def format_user_embed(card, color):
+    async def format_user_embed(card: File, color: int, dossier: Optional[str] = None):
         embed = Embed(
             title="Інформація про співробітника фонду",
             color=color
         )
         embed.set_image(file=card)
+        if dossier:
+            embed.add_field(name="Досьє:", value=dossier, inline=False)
         return embed
 
 

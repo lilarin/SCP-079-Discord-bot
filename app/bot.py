@@ -4,8 +4,10 @@ import random
 
 import disnake
 from disnake.ext import commands
+# from tortoise import Tortoise
 
-from app.config import config, logger
+from app.config import config, logger, tortoise_orm
+# from app.models import User
 from app.services.keycard_service import keycard_service
 from app.utils.keycard_utils import keycard_utils
 from app.utils.response_utils import response_utils
@@ -36,6 +38,14 @@ async def on_slash_command(interaction):
 
 
 @bot.event
+async def on_slash_command_error(interaction, error):
+    if isinstance(error, commands.MissingPermissions):
+        await response_utils.send_ephemeral_response(interaction, "Ця команда недоступна для вас")
+        return
+    logger.error(error)
+
+
+@bot.event
 async def on_member_join(member):
     template = config.templates[-1]
 
@@ -46,7 +56,8 @@ async def on_member_join(member):
     if avatar_decoration:
         avatar_decoration = io.BytesIO(await avatar_decoration.read())
 
-    card = await keycard_service.process_template(
+    card = await asyncio.to_thread(
+        keycard_service.process_template,
         template.image,
         user_name,
         user_code,
@@ -59,6 +70,8 @@ async def on_member_join(member):
     embed = await keycard_utils.format_new_user_embed(member.mention, card, template.embed_color)
 
     await member.guild.system_channel.send(embed=embed)
+    #
+    # await User.get_or_create(user_id=member.id)
 
 
 @bot.slash_command(name="картка", description="Переглянути картку співробітника фонду")
@@ -68,8 +81,7 @@ async def view_card(
 ):
     await response_utils.wait_for_response(interaction)
 
-    if not user:
-        user = interaction.user
+    user = user or interaction.user
 
     template = config.templates[random.randint(0, len(config.templates) - 1)]
 
@@ -80,7 +92,8 @@ async def view_card(
     if avatar_decoration:
         avatar_decoration = io.BytesIO(await avatar_decoration.read())
 
-    card = await keycard_service.process_template(
+    card = await asyncio.to_thread(
+        keycard_service.process_template,
         template.image,
         user_name,
         user_code,
@@ -90,16 +103,15 @@ async def view_card(
         avatar_decoration,
     )
 
-    embed = await keycard_utils.format_user_embed(card, template.embed_color)
+    # db_user = await User.get_or_none(user_id=user.id)
+
+    embed = await keycard_utils.format_user_embed(
+        card=card,
+        color=template.embed_color,
+        # dossier=db_user.dossier if db_user else None
+    )
 
     await response_utils.send_response(interaction, embed=embed)
-
-
-@bot.event
-async def on_slash_command_error(interaction, error):
-    if isinstance(error, commands.MissingPermissions):
-        await response_utils.send_ephemeral_response(interaction, "Ця команда недоступна для вас")
-        return
 
 
 @bot.slash_command(name="пнути", description="???")
@@ -175,4 +187,16 @@ async def spam(
         await thread.delete()
 
 
-bot.run(config.discord_bot_token)
+async def main():
+    try:
+        logger.info("Starting bot...")
+        # await Tortoise.init(tortoise_orm)
+        # logger.info("Tortoise-ORM started.")
+        await bot.start(config.discord_bot_token)
+    finally:
+        # await Tortoise.close_connections()
+        logger.info("Tortoise-ORM connections closed.")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
