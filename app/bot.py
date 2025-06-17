@@ -4,10 +4,10 @@ import random
 
 import disnake
 from disnake.ext import commands
-# from tortoise import Tortoise
 
-from app.config import config, logger, tortoise_orm
-# from app.models import User
+from app.config import config, logger
+from app.modals.dossier_modal import DossierModal
+from app.models import User
 from app.services.keycard_service import keycard_service
 from app.utils.keycard_utils import keycard_utils
 from app.utils.response_utils import response_utils
@@ -70,25 +70,25 @@ async def on_member_join(member):
     embed = await keycard_utils.format_new_user_embed(member.mention, card, template.embed_color)
 
     await member.guild.system_channel.send(embed=embed)
-    #
-    # await User.get_or_create(user_id=member.id)
+
+    await User.get_or_create(user_id=member.id)
 
 
 @bot.slash_command(name="картка", description="Переглянути картку співробітника фонду")
 async def view_card(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", default=None),
+        user: disnake.Member = commands.Param(description="Оберіть користувача", default=None),
 ):
     await response_utils.wait_for_response(interaction)
 
-    user = user or interaction.user
+    member = user or interaction.user
 
     template = config.templates[random.randint(0, len(config.templates) - 1)]
 
-    user_name = await keycard_utils.process_username(user.display_name)
-    user_code = await keycard_utils.get_user_code(user.joined_at.timestamp())
-    avatar = io.BytesIO(await user.avatar.read())
-    avatar_decoration = user.avatar_decoration
+    user_name = await keycard_utils.process_username(member.display_name)
+    user_code = await keycard_utils.get_user_code(member.joined_at.timestamp())
+    avatar = io.BytesIO(await member.avatar.read())
+    avatar_decoration = member.avatar_decoration
     if avatar_decoration:
         avatar_decoration = io.BytesIO(await avatar_decoration.read())
 
@@ -103,15 +103,26 @@ async def view_card(
         avatar_decoration,
     )
 
-    # db_user = await User.get_or_none(user_id=user.id)
+    db_user, created = await User.get_or_create(user_id=member.id)
+    top_role = member.top_role
 
     embed = await keycard_utils.format_user_embed(
         card=card,
         color=template.embed_color,
-        # dossier=db_user.dossier if db_user else None
+        dossier=db_user.dossier if not created else None,
+        role=top_role if top_role != member.guild.default_role else None,
     )
 
     await response_utils.send_response(interaction, embed=embed)
+
+
+@bot.slash_command(name="досьє", description="Заповнити своє досьє")
+async def view_card(interaction: disnake.ApplicationCommandInteraction):
+    db_user, _ = await User.get_or_create(user_id=interaction.user.id)
+
+    await interaction.response.send_modal(
+        modal=DossierModal(user=interaction.user, db_user=db_user)
+    )
 
 
 @bot.slash_command(name="пнути", description="???")
@@ -185,18 +196,3 @@ async def spam(
 
     for thread in created_threads:
         await thread.delete()
-
-
-async def main():
-    try:
-        logger.info("Starting bot...")
-        # await Tortoise.init(tortoise_orm)
-        # logger.info("Tortoise-ORM started.")
-        await bot.start(config.discord_bot_token)
-    finally:
-        # await Tortoise.close_connections()
-        logger.info("Tortoise-ORM connections closed.")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
