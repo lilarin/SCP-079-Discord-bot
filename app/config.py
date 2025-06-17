@@ -24,8 +24,7 @@ class Config:
         self.discord_bot_token = self._get_env_variable("DISCORD_BOT_TOKEN")
         self.database_url = self._get_env_variable("SUPABASE_DIRECT_URL")
 
-        current_file_dir = os.path.dirname(os.path.abspath(__file__))
-        self.project_root = os.path.abspath(os.path.join(current_file_dir, "."))
+        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         self.primary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Regular.ttf")
         self.secondary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Bold.ttf")
