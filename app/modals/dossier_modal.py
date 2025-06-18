@@ -10,17 +10,18 @@ class DossierModal(disnake.ui.Modal):
 
         components = [
             disnake.ui.TextInput(
-                label="Редагування досьє",
+                label="Інформація",
                 placeholder=self.dossier,
                 custom_id="dossier",
                 style=disnake.TextInputStyle.paragraph,
                 min_length=20,
                 max_length=1024,
+                required=False,
             ),
         ]
 
         super().__init__(
-            title="",
+            title=f"Досьє співробітника {user.display_name}",
             custom_id="dossierModal",
             components=components,
         )

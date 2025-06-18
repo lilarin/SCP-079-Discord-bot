@@ -42,7 +42,9 @@ async def on_slash_command_error(interaction, error):
     if isinstance(error, commands.MissingPermissions):
         await response_utils.send_ephemeral_response(interaction, "Ця команда недоступна для вас")
         return
-    logger.error(error)
+
+    timestamp = await time_utils.get_normalised()
+    logger.error(f"[{timestamp}] {error}")
 
 
 @bot.event
@@ -145,9 +147,7 @@ async def spam(
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
 
-    channel_type = interaction.channel.type
-
-    if channel_type != disnake.ChannelType.text:
+    if interaction.channel.type != disnake.ChannelType.text:
         await response_utils.send_response(
             interaction,
             message=f"Команду можна використовувати лише в **текстових** каналах"
@@ -161,11 +161,9 @@ async def spam(
         )
         return
 
-    user_mention = user.mention
-
     await response_utils.send_response(
         interaction,
-        message=f"{user_mention} поплачет"
+        message=f"{user.mention} поплачет"
     )
 
     channel = interaction.channel
@@ -173,7 +171,7 @@ async def spam(
         for channel_thread in channel.threads:
             await channel_thread.delete()
 
-    message_content = f"{user_mention}[.](https://imgur.com/1bS0ahP.png)"
+    message_content = f"{user.mention}[.](https://imgur.com/1bS0ahP.png)"
     thread_name = "⠀̛"
 
     threads_to_create = [
