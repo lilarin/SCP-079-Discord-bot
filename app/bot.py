@@ -140,18 +140,25 @@ async def random_article(
         object_range=commands.Param(
             choices=list(config.scp_ranges.keys()), description="Діапазон номеру об'єкту (необов'язково)", default=None
         ),
+        skip_viewed: bool = commands.Param(
+            choices=[True, False], description="Виключити вже переглянуті? (необов'язково, увімкнено)", default=True
+        ),
 
 ):
     await response_utils.wait_for_response(interaction)
 
-    object_class = config.scp_classes[object_class] if object_class else None
-    object_range = config.scp_ranges[object_range] if object_range else None
-
-    link = await scp_objects_service.get_random_scp_link(
-        object_range=object_range,
-        object_class=object_class
+    found_all, link = await scp_objects_service.get_random_scp_link(
+        object_class=config.scp_classes[object_class] if object_class else None,
+        object_range=config.scp_ranges[object_range] if object_range else None,
+        member_id=interaction.user.id if skip_viewed else None,
     )
-    await response_utils.send_response(interaction, message=link)
+
+    if found_all:
+        await response_utils.send_response(interaction, message="Ви переглянули всі статті за цими фільтрами.")
+    elif link:
+        await response_utils.send_response(interaction, message=link)
+    else:
+        await response_utils.send_response(interaction, message="Статті за цими фільтрами не знайдено.")
 
 
 @bot.slash_command(name="досьє", description="Заповнити своє досьє")

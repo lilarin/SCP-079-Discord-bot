@@ -26,3 +26,17 @@ class SCPObject(Model):
 
     def __str__(self):
         return f"{self.title} ({self.object_class})"
+
+
+class ViewedScpObject(Model):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField("models.User", related_name="viewed_objects")
+    scp_object = fields.ForeignKeyField("models.SCPObject", related_name="viewed_by_users")
+    viewed_at = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        table = "viewed_scp_objects"
+        unique_together = ("user", "scp_object")
+
+    def __str__(self):
+        return f"User {self.user} viewed SCP {self.scp_object} at {self.viewed_at}"

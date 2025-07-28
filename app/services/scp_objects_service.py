@@ -1,13 +1,13 @@
 import asyncio
 import random
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 import aiohttp
 from bs4 import BeautifulSoup
 
 from app.config import config, logger
-from app.models import SCPObject
+from app.models import SCPObject, User, ViewedScpObject
 
 
 class ScpObjectsService:
@@ -94,27 +94,38 @@ class ScpObjectsService:
 
     @staticmethod
     async def get_random_scp_link(
+            object_class: Optional[str] = None,
             object_range: Optional[int] = None,
-            object_class: Optional[str] = None
-    ) -> Optional[str]:
+            member_id: Optional[int] = None,
+    ) -> Tuple[bool, Optional[str]]:
         filters = {}
         if object_range is not None:
             filters["range"] = object_range
         if object_class is not None:
             filters["object_class"] = object_class
 
+        db_user = None
         query = SCPObject.filter(**filters)
+
+        if member_id:
+            db_user, created = await User.get_or_create(user_id=member_id)
+            viewed_scp_ids = await db_user.viewed_objects.all().values_list("scp_object_id", flat=True)  # type: ignore
+            query = query.exclude(id__in=viewed_scp_ids)
 
         count = await query.count()
         if count == 0:
-            logger.warning(f"Не знайдено SCP-об'єктів з параметрами: діапазон={object_range}, клас={object_class}")
-            return None
+            return True, None
 
         random_offset = random.randint(0, count - 1)
         random_scp_object = await query.offset(random_offset).first()
 
         if random_scp_object:
-            return random_scp_object.link
+            if db_user:
+                await ViewedScpObject.create(user=db_user, scp_object=random_scp_object)
+
+            return False, random_scp_object.link
+
+        return True, None
 
 
 scp_objects_service = ScpObjectsService()
