@@ -24,6 +24,19 @@ class Config:
         self.discord_bot_token = self._get_env_variable("DISCORD_BOT_TOKEN")
         self.database_url = self._get_env_variable("SUPABASE_DIRECT_URL")
 
+        self.wiki_url = "http://scp-ukrainian.wikidot.com"
+        self.scrape_urls = [
+            "http://scp-ukrainian.wikidot.com/scp-series-ua",
+            "http://scp-ukrainian.wikidot.com/scp-series",
+            "http://scp-ukrainian.wikidot.com/scp-series-2",
+            "http://scp-ukrainian.wikidot.com/scp-series-3",
+            "http://scp-ukrainian.wikidot.com/scp-series-4",
+            "http://scp-ukrainian.wikidot.com/scp-series-5",
+            "http://scp-ukrainian.wikidot.com/scp-series-6",
+            "http://scp-ukrainian.wikidot.com/scp-series-7",
+            "http://scp-ukrainian.wikidot.com/scp-series-8"
+        ]
+
         self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         self.primary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Regular.ttf")
