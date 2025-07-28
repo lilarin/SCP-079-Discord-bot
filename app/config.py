@@ -24,6 +24,25 @@ class Config:
         self.discord_bot_token = self._get_env_variable("DISCORD_BOT_TOKEN")
         self.database_url = self._get_env_variable("SUPABASE_DIRECT_URL")
 
+        self.scp_classes = {
+            "Безпечний": "safe",
+            "Евклід": "euclid",
+            "Кетер": "keter",
+            "Тауміель": "thaumiel",
+            "Особливий": "exotic",
+            "Метаклас": "meta",
+        }
+        self.scp_ranges = {
+            "001-999": "1",
+            "1000-1999": "2",
+            "2000-2999": "3",
+            "3000-3999": "4",
+            "4000-4999": "5",
+            "5000-5999": "6",
+            "6000-6999": "7",
+            "7000-7999": "8",
+            "8000-8999": "9",
+        }
         self.wiki_url = "http://scp-ukrainian.wikidot.com"
         self.scrape_urls = [
             "http://scp-ukrainian.wikidot.com/scp-series-ua",
@@ -34,7 +53,8 @@ class Config:
             "http://scp-ukrainian.wikidot.com/scp-series-5",
             "http://scp-ukrainian.wikidot.com/scp-series-6",
             "http://scp-ukrainian.wikidot.com/scp-series-7",
-            "http://scp-ukrainian.wikidot.com/scp-series-8"
+            "http://scp-ukrainian.wikidot.com/scp-series-8",
+            "http://scp-ukrainian.wikidot.com/scp-series-9"
         ]
 
         self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

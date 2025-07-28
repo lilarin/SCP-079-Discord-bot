@@ -131,6 +131,29 @@ async def view_card(
         logger.error(f"[{timestamp}] {exception}")
 
 
+@bot.slash_command(name="стаття", description="Отримати посилання на випадкову статтю з тих, що ще не були переглянуті")
+async def random_article(
+        interaction: disnake.ApplicationCommandInteraction,
+        object_class = commands.Param(
+            choices=list(config.scp_classes.keys()), description="Клас об'єкту (необов'язково)", default=None
+        ),
+        object_range=commands.Param(
+            choices=list(config.scp_ranges.keys()), description="Діапазон номеру об'єкту (необов'язково)", default=None
+        ),
+
+):
+    await response_utils.wait_for_response(interaction)
+
+    object_class = config.scp_classes[object_class] if object_class else None
+    object_range = config.scp_ranges[object_range] if object_range else None
+
+    link = await scp_objects_service.get_random_scp_link(
+        object_range=object_range,
+        object_class=object_class
+    )
+    await response_utils.send_response(interaction, message=link)
+
+
 @bot.slash_command(name="досьє", description="Заповнити своє досьє")
 async def view_card(interaction: disnake.ApplicationCommandInteraction):
     db_user, _ = await User.get_or_create(user_id=interaction.user.id)
