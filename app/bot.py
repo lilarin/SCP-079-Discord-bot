@@ -9,8 +9,10 @@ from disnake.ext import commands
 from app.config import config, logger
 from app.modals.dossier_modal import DossierModal
 from app.models import User
+from app.services.articles_service import article_service
 from app.services.keycard_service import keycard_service
 from app.services.scp_objects_service import scp_objects_service
+from app.utils.articles_utils import article_utils
 from app.utils.keycard_utils import keycard_utils
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
@@ -91,6 +93,9 @@ async def view_card(
     await response_utils.wait_for_response(interaction)
 
     member = user or interaction.user
+    if member.bot:
+        await response_utils.send_response(interaction, message="Команду не можна використовувати на ботах.", delete_after=5)
+        return
 
     template = config.templates[random.randint(0, len(config.templates) - 1)]
 
@@ -101,7 +106,7 @@ async def view_card(
     if avatar_decoration:
         avatar_decoration = io.BytesIO(await avatar_decoration.read())
 
-    card = await asyncio.to_thread(
+    image = await asyncio.to_thread(
         keycard_service.process_template,
         template.image,
         user_name,
@@ -117,7 +122,7 @@ async def view_card(
         top_role = member.top_role
 
         embed = await keycard_utils.format_user_embed(
-            card=card,
+            card=image,
             color=template.embed_color,
             dossier=db_user.dossier if not created else None,
             role=top_role if top_role != member.guild.default_role else None,
@@ -131,10 +136,10 @@ async def view_card(
         logger.error(f"[{timestamp}] {exception}")
 
 
-@bot.slash_command(name="стаття", description="Отримати посилання на випадкову статтю з тих, що ще не були переглянуті")
-async def random_article(
+@bot.slash_command(name="випадкова-стаття", description="Отримати посилання на випадкову статтю за фільтрами")
+async def get_random_article(
         interaction: disnake.ApplicationCommandInteraction,
-        object_class = commands.Param(
+        object_class=commands.Param(
             choices=list(config.scp_classes.keys()), description="Клас об'єкту (необов'язково)", default=None
         ),
         object_range=commands.Param(
@@ -142,23 +147,36 @@ async def random_article(
         ),
         skip_viewed: bool = commands.Param(
             choices=[True, False], description="Виключити вже переглянуті? (необов'язково, увімкнено)", default=True
-        ),
-
+        )
 ):
     await response_utils.wait_for_response(interaction)
 
-    found_all, link = await scp_objects_service.get_random_scp_link(
-        object_class=config.scp_classes[object_class] if object_class else None,
-        object_range=config.scp_ranges[object_range] if object_range else None,
-        member_id=interaction.user.id if skip_viewed else None,
-    )
+    try:
+        found_all, random_article = await scp_objects_service.get_random_scp_object(
+            object_class=config.scp_classes[object_class] if object_class else None,
+            object_range=config.scp_ranges[object_range] if object_range else None,
+            skip_viewed=skip_viewed,
+            member_id=interaction.user.id,
+        )
 
-    if found_all:
-        await response_utils.send_response(interaction, message="Ви переглянули всі статті за цими фільтрами.")
-    elif link:
-        await response_utils.send_response(interaction, message=link)
-    else:
-        await response_utils.send_response(interaction, message="Статті за цими фільтрами не знайдено.")
+        if found_all:
+            await response_utils.send_response(
+                interaction, message="Ви переглянули всі статті за цими фільтрами.", delete_after=5
+            )
+        elif random_article:
+            image = await article_service.create_article_image(random_article)
+
+            embed, components = article_utils.format_article_embed(random_article, image)
+            await response_utils.send_response(interaction, embed=embed, components=components)
+        else:
+            await response_utils.send_response(
+                interaction, message="Статті за цими фільтрами не знайдено.", delete_after=5
+            )
+
+    except asyncpg.exceptions.InternalServerError as exception:
+        await response_utils.send_response(interaction, "Виникла помилка під час отримання cтатті")
+        timestamp = await time_utils.get_normalised()
+        logger.error(f"[{timestamp}] {exception}")
 
 
 @bot.slash_command(name="досьє", description="Заповнити своє досьє")
