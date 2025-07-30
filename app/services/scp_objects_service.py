@@ -4,7 +4,7 @@ import re
 from typing import List, Dict, Optional, Tuple
 
 import aiohttp
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 
 from app.config import config, logger
 from app.models import SCPObject, User, ViewedScpObject
@@ -27,21 +27,26 @@ class ScpObjectsService:
 
     def _parse_scp_data(self, html: str) -> List[Dict]:
         soup = BeautifulSoup(html, "html.parser")
-        content_div = soup.find("div", class_="content-panel standalone series")
+        content_div = soup.find("div", id="page-content")
 
         if not content_div:
             return []
 
         found_items = []
-        for a_tag in content_div.find_all("a"):
+
+        for a_tag in content_div.find_all("a", href=re.compile("/scp-")):
             try:
-                href = a_tag.get("href")
-                if not href or not href.startswith("/scp-"):
-                    continue
+                href = a_tag["href"]
 
                 img_tag = a_tag.find_previous_sibling("img")
                 if not img_tag:
                     continue
+
+                next_node = a_tag.next_sibling
+                if not isinstance(next_node, NavigableString) or not str(next_node).strip():
+                    continue
+
+                title = str(next_node).lstrip(" -").strip()
 
                 number_match = re.search(r"\d+", href)
                 if not number_match:
@@ -51,15 +56,16 @@ class ScpObjectsService:
                 object_class = img_tag["src"].split("/")[-1].split(".")[0]
 
                 item = {
-                    "title": a_tag.get_text(),
+                    "number": a_tag.get_text(),
+                    "title": title,
                     "range": (scp_number // 1000) + 1,
                     "object_class": object_class if object_class != "na" else None,
                     "link": f"{self.wiki_url}{href}"
                 }
 
-                if not object_class or object_class in config.scp_classes.values():
-                    found_items.append(item)
-            except (AttributeError, TypeError, KeyError):
+                found_items.append(item)
+
+            except (AttributeError, TypeError, KeyError, IndexError):
                 continue
 
         return found_items
@@ -93,22 +99,22 @@ class ScpObjectsService:
             logger.info(f"All SCP objects are up-to-date.")
 
     @staticmethod
-    async def get_random_scp_link(
+    async def get_random_scp_object(
             object_class: Optional[str] = None,
             object_range: Optional[int] = None,
+            skip_viewed: bool = False,
             member_id: Optional[int] = None,
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> Tuple[bool, Optional[SCPObject]]:
         filters = {}
         if object_range is not None:
             filters["range"] = object_range
         if object_class is not None:
             filters["object_class"] = object_class
 
-        db_user = None
+        db_user, _ = await User.get_or_create(user_id=member_id)
         query = SCPObject.filter(**filters)
 
-        if member_id:
-            db_user, created = await User.get_or_create(user_id=member_id)
+        if skip_viewed:
             viewed_scp_ids = await db_user.viewed_objects.all().values_list("scp_object_id", flat=True)  # type: ignore
             query = query.exclude(id__in=viewed_scp_ids)
 
@@ -123,7 +129,7 @@ class ScpObjectsService:
             if db_user:
                 await ViewedScpObject.create(user=db_user, scp_object=random_scp_object)
 
-            return False, random_scp_object.link
+            return False, random_scp_object
 
         return True, None
 
