@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Optional, List
 
-from disnake import MessageFlags, Embed
+from disnake import MessageFlags, Embed, ActionRow
 
 
 class ResponseUtils:
@@ -16,12 +16,14 @@ class ResponseUtils:
     async def send_response(
             interaction,
             message: Optional[str] = None,
-            embed: Optional[Embed] = None
+            embed: Optional[Embed] = None,
+            components: Optional[List[ActionRow]] = None,
+            delete_after: Optional[int] = None
     ) -> None:
         if embed:
-            await interaction.edit_original_response(content=message, embed=embed)
+            await interaction.edit_original_response(content=message, embed=embed, components=components)
         else:
-            await interaction.edit_original_response(content=message)
+            await interaction.edit_original_response(content=message, delete_after=delete_after)
 
     @staticmethod
     async def send_ephemeral_response(interaction, message: Optional[str] = None) -> None:
