@@ -5,7 +5,7 @@ from tortoise.models import Model
 class User(Model):
     id = fields.IntField(pk=True)
     user_id = fields.BigIntField(unique=True)
-    dossier = fields.TextField(null=True)
+    dossier = fields.CharField(null=True, max_length=255)
 
     class Meta:
         table = "users"
@@ -16,9 +16,10 @@ class User(Model):
 
 class SCPObject(Model):
     id = fields.IntField(pk=True)
-    title = fields.TextField()
+    number = fields.CharField(max_length=255)
+    title = fields.CharField(max_length=255)
     range = fields.IntField()
-    object_class = fields.TextField(null=True)
+    object_class = fields.CharField(null=True, max_length=255)
     link = fields.CharField(unique=True, max_length=255)
 
     class Meta:
