@@ -32,6 +32,15 @@ class Config:
             "Особливий": "exotic",
             "Метаклас": "meta",
         }
+        self.scp_class_config = {
+            None: ("#AAAAAA", "📁"),
+            "safe": ("#6AAB64", "📗"),
+            "euclid": ("#FF9F52", "📙"),
+            "keter": ("#E13821", "📕"),
+            "thaumiel": ("#222222", "📓"),
+            "exotic": ("#D74D97", "📔"),
+            "meta": ("#326D9E", "📘")
+        }
         self.scp_ranges = {
             "001-999": "1",
             "1000-1999": "2",
@@ -45,21 +54,21 @@ class Config:
         }
         self.wiki_url = "http://scp-ukrainian.wikidot.com"
         self.scrape_urls = [
-            "http://scp-ukrainian.wikidot.com/scp-series-ua",
-            "http://scp-ukrainian.wikidot.com/scp-series",
-            "http://scp-ukrainian.wikidot.com/scp-series-2",
-            "http://scp-ukrainian.wikidot.com/scp-series-3",
-            "http://scp-ukrainian.wikidot.com/scp-series-4",
-            "http://scp-ukrainian.wikidot.com/scp-series-5",
-            "http://scp-ukrainian.wikidot.com/scp-series-6",
-            "http://scp-ukrainian.wikidot.com/scp-series-7",
-            "http://scp-ukrainian.wikidot.com/scp-series-8",
-            "http://scp-ukrainian.wikidot.com/scp-series-9"
+            f"{self.wiki_url}/scp-series-ua",
+            f"{self.wiki_url}/scp-series",
+            f"{self.wiki_url}/scp-series-2",
+            f"{self.wiki_url}/scp-series-3",
+            f"{self.wiki_url}/scp-series-4",
+            f"{self.wiki_url}/scp-series-5",
+            f"{self.wiki_url}/scp-series-6",
+            f"{self.wiki_url}/scp-series-7",
+            f"{self.wiki_url}/scp-series-8",
+            f"{self.wiki_url}/scp-series-9"
         ]
 
         self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-        self.primary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Regular.ttf")
+        self.article_template_path = os.path.join(self.project_root, "assets", "articles", "article.png")
+        self.primary_font_path = os.path.join(self.project_root, "assets", "fonts", "BauhausDemi.ttf")
         self.secondary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Bold.ttf")
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
         self.templates: List[TemplateConfig] = self._load_templates()
