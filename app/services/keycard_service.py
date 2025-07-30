@@ -128,11 +128,11 @@ class KeyCardService:
             color=primary_color
         )
 
-        output_buffer = BytesIO()
-        self.image.save(output_buffer, format="PNG")
-        output_buffer.seek(0)
+        image_buffer = BytesIO()
+        self.image.save(image_buffer, format="PNG")
+        image_buffer.seek(0)
 
-        return File(output_buffer, filename="keycard.png")
+        return File(fp=image_buffer, filename="keycard.png")
 
 
 keycard_service = KeyCardService()
