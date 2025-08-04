@@ -23,9 +23,12 @@ class Config:
     def __init__(self):
         load_dotenv()
 
+        # General settings
         self.discord_bot_token = self._get_env_variable("DISCORD_BOT_TOKEN")
         self.database_url = self._get_env_variable("SUPABASE_DIRECT_URL")
+        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+        # SCP articles settings
         self.scp_classes = {
             "Безпечний": "safe",
             "Евклід": "euclid",
@@ -68,7 +71,14 @@ class Config:
             f"{self.wiki_url}/scp-series-9"
         ]
 
-        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Leaderboard settings
+        self.leaderboard_options = {
+            "Переглянуті статті": "articles",
+            "Баланс": "balance",
+            "Репутація": "reputation"
+        }
+
+        # Articles settings
         self.article_template_path = os.path.join(self.project_root, "assets", "articles", "article.png")
         self.primary_font_path = os.path.join(self.project_root, "assets", "fonts", "BauhausDemi.ttf")
         self.secondary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Bold.ttf")
@@ -201,6 +211,7 @@ config = Config()
 logger, log_listener = config.setup_logging()
 
 
+# Tortoise ORM Settings
 db_url = urlparse(config.database_url)
 tortoise_orm = {
     "connections": {
