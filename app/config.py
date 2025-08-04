@@ -1,5 +1,7 @@
 import logging
+import logging.handlers
 import os
+import queue
 import sys
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
@@ -173,18 +175,31 @@ class Config:
 
     @staticmethod
     def setup_logging():
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(levelname)s:     %(name)s - %(message)s",
-            handlers=[
-                logging.StreamHandler(sys.stdout),
-            ],
+        log_queue = queue.Queue(-1)
+
+        queue_handler = logging.handlers.QueueHandler(log_queue)
+
+        logger = logging.getLogger("scp-profiles")
+        logger.setLevel(logging.INFO)
+        logger.addHandler(queue_handler)
+
+        console_handler = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter(
+            fmt="%(levelname)s:     [%(asctime)s] %(name)s - %(message)s",
+            datefmt="%H:%M:%S %d.%m.%Y"
         )
-        return logging.getLogger("scp-profiles")
+        console_handler.setFormatter(formatter)
+
+        listener = logging.handlers.QueueListener(
+            log_queue, console_handler, respect_handler_level=True
+        )
+
+        return logger, listener
 
 
 config = Config()
-logger = config.setup_logging()
+logger, log_listener = config.setup_logging()
+
 
 db_url = urlparse(config.database_url)
 tortoise_orm = {
