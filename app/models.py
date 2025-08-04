@@ -5,7 +5,7 @@ from tortoise.models import Model
 class User(Model):
     id = fields.IntField(pk=True)
     user_id = fields.BigIntField(unique=True)
-    dossier = fields.CharField(null=True, max_length=255)
+    dossier = fields.TextField(null=True)
     balance = fields.BigIntField(default=0)
     reputation = fields.BigIntField(default=0)
 
