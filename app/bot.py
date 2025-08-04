@@ -11,9 +11,11 @@ from app.modals.dossier_modal import DossierModal
 from app.models import User
 from app.services.articles_service import article_service
 from app.services.keycard_service import keycard_service
+from app.services.leaderboard_service import leaderboard_service
 from app.services.scp_objects_service import scp_objects_service
 from app.utils.articles_utils import article_utils
 from app.utils.keycard_utils import keycard_utils
+from app.utils.leaderboard_utils import leaderboard_utils
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
 
@@ -94,7 +96,9 @@ async def view_card(
 
     member = user or interaction.user
     if member.bot:
-        await response_utils.send_response(interaction, message="Команду не можна використовувати на ботах.", delete_after=5)
+        await response_utils.send_response(
+            interaction, message="Команду не можна використовувати на ботах.", delete_after=5
+        )
         return
 
     template = config.templates[random.randint(0, len(config.templates) - 1)]
@@ -181,11 +185,64 @@ async def get_random_article(
 
 @bot.slash_command(name="досьє", description="Заповнити своє досьє")
 async def view_card(interaction: disnake.ApplicationCommandInteraction):
-    db_user, _ = await User.get_or_create(user_id=interaction.user.id)
+    try:
+        db_user, _ = await User.get_or_create(user_id=interaction.user.id)
 
-    await interaction.response.send_modal(
-        modal=DossierModal(user=interaction.user, db_user=db_user)
-    )
+        await interaction.response.send_modal(
+            modal=DossierModal(user=interaction.user, db_user=db_user)
+        )
+    except asyncpg.exceptions.InternalServerError as exception:
+        await response_utils.wait_for_ephemeral_response(interaction, "Виникла помилка під час отримання користувача")
+        timestamp = await time_utils.get_normalised()
+        logger.error(f"[{timestamp}] {exception}")
+
+
+@bot.slash_command(name="топ", description="Показати топ користувачів за певним критерієм")
+async def top_articles(
+        interaction: disnake.ApplicationCommandInteraction,
+        criteria=commands.Param(
+            choices=list(["Переглянуті статті", "Баланс", "Репутація"]), description="Критерій для перегляду списку лідерів"
+        ),
+):
+    await response_utils.wait_for_response(interaction)
+
+    try:
+        if criteria == "Переглянуті статті":
+            top_users = await leaderboard_service.get_articles_top_users()
+            embed = await leaderboard_utils.format_leaderboard_embed(
+                top_users,
+                top_criteria="за переглянутими статтями",
+                hint="Кількість унікальних статей, що були переглянуті користувачем",
+                symbol="📚",
+                color="#f5575a"
+            )
+            await response_utils.send_response(interaction, embed=embed)
+        elif criteria == "Баланс":
+            top_users = await leaderboard_service.get_balance_top_users()
+            embed = await leaderboard_utils.format_leaderboard_embed(
+                top_users,
+                top_criteria="за поточною репутацією у фонді",
+                hint="Поточний баланс користувача, що може зменшитись за різних дій",
+                symbol="💠",
+                color="#57b1f5"
+            )
+            await response_utils.send_response(interaction, embed=embed)
+        elif criteria == "Репутація":
+            top_users = await leaderboard_service.get_reputation_top_users()
+            embed = await leaderboard_utils.format_leaderboard_embed(
+                top_users,
+                top_criteria="за загальною репутацією у фонді",
+                hint="Загальна репутація користувача, що була зароблена за весь час",
+                symbol="🔰",
+                color="#FFD700"
+            )
+            await response_utils.send_response(interaction, embed=embed)
+
+    except Exception as e:
+        await response_utils.send_response(interaction, "Виникла помилка під час отримання топу.")
+        timestamp = await time_utils.get_normalised()
+        logger.error(f"[{timestamp}] {e}")
+
 
 # @bot.slash_command(name="пнути", description="???")
 # @commands.has_permissions(administrator=True)
