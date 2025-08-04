@@ -6,9 +6,14 @@ class User(Model):
     id = fields.IntField(pk=True)
     user_id = fields.BigIntField(unique=True)
     dossier = fields.CharField(null=True, max_length=255)
+    balance = fields.BigIntField(default=0)
+    reputation = fields.BigIntField(default=0)
 
     class Meta:
         table = "users"
+        db_constraints = {
+            "balance_gte_zero": "CHECK (balance >= 0)"
+        }
 
     def __str__(self):
         return f"User {self.user_id}"
