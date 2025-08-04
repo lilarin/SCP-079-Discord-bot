@@ -41,4 +41,9 @@ class EconomyManagementService:
         return await economy_management_utils.format_balance_embed(user.balance, user.reputation, position)
 
 
+    @staticmethod
+    async def reset_users_reputation() -> None:
+        await User.all().update(reputation=0)
+
+
 economy_management_service = EconomyManagementService()

@@ -108,13 +108,16 @@ async def view_card(
 async def get_random_article(
         interaction: disnake.ApplicationCommandInteraction,
         object_class=commands.Param(
-            choices=list(config.scp_classes.keys()), description="Клас об'єкту (необов'язково)", default=None
+            choices=list(config.scp_classes.keys()),
+            description="Клас об'єкту (необов'язково)", default=None
         ),
         object_range=commands.Param(
-            choices=list(config.scp_ranges.keys()), description="Діапазон номеру об'єкту (необов'язково)", default=None
+            choices=list(config.scp_ranges.keys()),
+            description="Діапазон номеру об'єкту (необов'язково)", default=None
         ),
         skip_viewed: bool = commands.Param(
-            choices=[True, False], description="Виключити вже переглянуті? (необов'язково, увімкнено)", default=True
+            choices=[True, False],
+            description="Виключити вже переглянуті? (необов'язково, увімкнено)", default=True
         )
 ):
     await response_utils.wait_for_response(interaction)
@@ -155,7 +158,9 @@ async def view_card(interaction: disnake.ApplicationCommandInteraction):
             modal=DossierModal(user=interaction.user, db_user=db_user)
         )
     except asyncpg.exceptions.InternalServerError as exception:
-        await response_utils.wait_for_ephemeral_response(interaction, "Виникла помилка під час отримання користувача")
+        await response_utils.wait_for_ephemeral_response(
+            interaction, "Виникла помилка під час отримання користувача"
+        )
         logger.error(exception)
 
 
@@ -199,6 +204,52 @@ async def view_balance(
 
     except Exception as exception:
         await response_utils.send_response(interaction, "Виникла помилка під час отримання балансу репутації")
+        logger.error(exception)
+
+
+@bot.slash_command(name="скинути-репутацію", description="Скинути загальну репутацію всіх співробітників")
+@commands.has_permissions(administrator=True)
+async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
+    await response_utils.wait_for_response(interaction)
+
+    try:
+        await economy_management_service.reset_users_reputation()
+        await response_utils.send_response(
+            interaction, "Загальна репутація всіх гравців було скинуто до початкового стану"
+        )
+
+    except Exception as exception:
+        await response_utils.send_response(
+            interaction, "Виникла помилка під час скидання репутації всіх гравців"
+        )
+        logger.error(exception)
+
+
+@bot.slash_command(name="змінити-поточну-репутацію", description="Змінити поточну репутацію користувачу")
+@commands.has_permissions(administrator=True)
+async def edit_player_balance_reputation(
+        interaction: disnake.ApplicationCommandInteraction,
+        user: disnake.Member = commands.Param(description="Оберіть користувача"),
+        amount: int = commands.Param(description="Кількість"),
+):
+    await response_utils.wait_for_response(interaction)
+
+    if user.bot:
+        await response_utils.send_response(
+            interaction, message="Команду не можна використовувати на ботах.", delete_after=5
+        )
+        return
+
+    try:
+        await economy_management_service.update_user_balance(user.id, amount)
+        await response_utils.send_response(
+            interaction, f"Поточна репутація гравця {user.mention} була змінена"
+        )
+
+    except Exception as exception:
+        await response_utils.send_response(
+            interaction, "Виникла помилка під час зміни поточної репутації гравцю"
+        )
         logger.error(exception)
 
 
