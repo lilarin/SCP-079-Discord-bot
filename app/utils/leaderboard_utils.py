@@ -32,6 +32,7 @@ class LeaderboardUtils:
 
     @staticmethod
     async def init_leaderboard_buttons(
+            criteria: str,
             current_page_text: str = "1",
             disable_first_page_button: bool = False,
             disable_previous_page_button: bool = False,
@@ -41,31 +42,31 @@ class LeaderboardUtils:
         first_page_button = disnake.ui.Button(
             style=disnake.ButtonStyle.grey,
             label="🡸",
-            custom_id="first_page_button",
+            custom_id=f"first_page_{criteria}_button",
             disabled=disable_first_page_button,
         )
         previous_page_button = disnake.ui.Button(
             style=disnake.ButtonStyle.grey,
             label="❮",
-            custom_id="previous_page_button",
+            custom_id=f"previous_page_{criteria}_button",
             disabled=disable_previous_page_button,
         )
         current_page_button = disnake.ui.Button(
             style=disnake.ButtonStyle.grey,
             label=current_page_text,
-            custom_id="current_page_button",
+            custom_id=f"current_page_{criteria}_button",
             disabled=True,
         )
         next_page_button = disnake.ui.Button(
             style=disnake.ButtonStyle.grey,
             label="❯",
-            custom_id="next_page_button",
+            custom_id=f"next_page_{criteria}_button",
             disabled=disable_next_page_button,
         )
         last_page_button = disnake.ui.Button(
             style=disnake.ButtonStyle.grey,
             label="🡺",
-            custom_id="last_page_button",
+            custom_id=f"last_page_{criteria}_button",
             disabled=disable_last_page_button,
         )
         return disnake.ui.ActionRow(

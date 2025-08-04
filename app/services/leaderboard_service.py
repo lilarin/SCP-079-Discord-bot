@@ -1,9 +1,11 @@
 import math
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
+from disnake import Embed, Component
 from tortoise.functions import Count
 
 from app.models import User
+from app.utils.leaderboard_utils import leaderboard_utils
 
 
 class LeaderboardService:
@@ -77,12 +79,68 @@ class LeaderboardService:
         return await User.all().filter(reputation__gt=0).count()
 
     @staticmethod
-    def get_last_page_offset(total_count: int, limit: int) -> int:
+    async def get_last_page_offset(total_count: int, limit: int) -> int:
         if total_count == 0:
             return 0
         total_pages = math.ceil(total_count / limit)
         offset = max(0, (total_pages - 1) * limit)
         return offset
+
+    @staticmethod
+    async def init_leaderboard_message(chosen_criteria: str) -> Optional[Tuple[Embed, List[Component]]]:
+        if chosen_criteria == "articles":
+            top_users, _, has_next = await leaderboard_service.get_articles_top_users()
+            embed = await leaderboard_utils.format_leaderboard_embed(
+                top_users,
+                top_criteria="за переглянутими статтями",
+                hint="Кількість унікальних статей, що були переглянуті користувачем",
+                symbol="📚",
+                color="#f5575a"
+            )
+            components = await leaderboard_utils.init_leaderboard_buttons(
+                criteria=chosen_criteria,
+                disable_first_page_button=True,
+                disable_previous_page_button=True,
+                disable_next_page_button=not has_next,
+                disable_last_page_button=not has_next
+            )
+            return embed, components
+
+        elif chosen_criteria == "balance":
+            top_users, _, has_next = await leaderboard_service.get_balance_top_users()
+            embed = await leaderboard_utils.format_leaderboard_embed(
+                top_users,
+                top_criteria="за поточною репутацією у фонді",
+                hint="Поточний баланс користувача, що може зменшитись за різних дій",
+                symbol="💠",
+                color="#57b1f5"
+            )
+            components = await leaderboard_utils.init_leaderboard_buttons(
+                criteria=chosen_criteria,
+                disable_first_page_button=True,
+                disable_previous_page_button=True,
+                disable_next_page_button=not has_next,
+                disable_last_page_button=not has_next
+            )
+            return embed, components
+
+        elif chosen_criteria == "reputation":
+            top_users, _, has_next = await leaderboard_service.get_reputation_top_users()
+            embed = await leaderboard_utils.format_leaderboard_embed(
+                top_users,
+                top_criteria="за загальною репутацією у фонді",
+                hint="Загальна репутація користувача, що була зароблена за весь час",
+                symbol="🔰",
+                color="#FFD700"
+            )
+            components = await leaderboard_utils.init_leaderboard_buttons(
+                criteria=chosen_criteria,
+                disable_first_page_button=True,
+                disable_previous_page_button=True,
+                disable_next_page_button=not has_next,
+                disable_last_page_button=not has_next
+            )
+            return embed, components
 
 
 leaderboard_service = LeaderboardService()

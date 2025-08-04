@@ -1,5 +1,4 @@
 import asyncio
-import io
 import random
 
 import asyncpg
@@ -14,10 +13,7 @@ from app.services.keycard_service import keycard_service
 from app.services.leaderboard_service import leaderboard_service
 from app.services.scp_objects_service import scp_objects_service
 from app.utils.articles_utils import article_utils
-from app.utils.keycard_utils import keycard_utils
-from app.utils.leaderboard_utils import leaderboard_utils
 from app.utils.response_utils import response_utils
-from app.utils.time_utils import time_utils
 
 bot = commands.InteractionBot(intents=disnake.Intents.all())
 
@@ -25,8 +21,7 @@ bot = commands.InteractionBot(intents=disnake.Intents.all())
 @bot.event
 async def on_ready():
     await scp_objects_service.update_scp_objects()
-    timestamp = await time_utils.get_normalised()
-    logger.info(f"[{timestamp}] Виконано вхід як {bot.user}")
+    logger.info(f"Виконано вхід як {bot.user}")
     await asyncio.sleep(1)
     await bot.change_presence(
         activity=disnake.Activity(
@@ -40,8 +35,7 @@ async def on_ready():
 async def on_slash_command(interaction):
     user = interaction.author
     command = interaction.data.name
-    timestamp = await time_utils.get_normalised()
-    logger.info(f"[{timestamp}] Користувач {user} використав команду /{command}")
+    logger.info(f"Користувач {user} використав команду /{command}")
 
 
 @bot.event
@@ -50,41 +44,23 @@ async def on_slash_command_error(interaction, error):
         await response_utils.send_ephemeral_response(interaction, "Ця команда недоступна для вас")
         return
 
-    timestamp = await time_utils.get_normalised()
-    logger.error(f"[{timestamp}] {error}")
+    logger.error(error)
 
 
 @bot.event
 async def on_member_join(member):
-    template = config.templates[-1]
-
-    user_name = await keycard_utils.process_username(member.display_name)
-    user_code = await keycard_utils.get_user_code(member.joined_at.timestamp())
-    avatar = io.BytesIO(await member.avatar.read())
-    avatar_decoration = member.avatar_decoration
-    if avatar_decoration:
-        avatar_decoration = io.BytesIO(await avatar_decoration.read())
-
-    card = await asyncio.to_thread(
-        keycard_service.process_template,
-        template.image,
-        user_name,
-        user_code,
-        avatar,
-        template.primary_color,
-        template.secondary_color,
-        avatar_decoration,
-    )
-
-    embed = await keycard_utils.format_new_user_embed(member.mention, card, template.embed_color)
-
-    await member.guild.system_channel.send(embed=embed)
-
     try:
+        template = config.templates[-1]
+
+        embed = await keycard_service.create_new_user_embed(member, template)
+
+        await member.guild.system_channel.send(embed=embed)
+
         await User.get_or_create(user_id=member.id)
-    except asyncpg.exceptions.InternalServerError as exception:
-        timestamp = await time_utils.get_normalised()
-        logger.error(f"[{timestamp}] {exception}")
+    except asyncpg.exceptions.InternalServerError as error:
+        logger.error(error)
+    except Exception as exception:
+        logger.error(exception)
 
 
 @bot.slash_command(name="картка", description="Переглянути картку співробітника фонду")
@@ -101,31 +77,15 @@ async def view_card(
         )
         return
 
-    template = config.templates[random.randint(0, len(config.templates) - 1)]
-
-    user_name = await keycard_utils.process_username(member.display_name)
-    user_code = await keycard_utils.get_user_code(member.joined_at.timestamp())
-    avatar = io.BytesIO(await member.avatar.read())
-    avatar_decoration = member.avatar_decoration
-    if avatar_decoration:
-        avatar_decoration = io.BytesIO(await avatar_decoration.read())
-
-    image = await asyncio.to_thread(
-        keycard_service.process_template,
-        template.image,
-        user_name,
-        user_code,
-        avatar,
-        template.primary_color,
-        template.secondary_color,
-        avatar_decoration,
-    )
-
     try:
+        template = config.templates[random.randint(0, len(config.templates) - 1)]
+
+        image = await keycard_service.generate_image(member, template)
+
         db_user, created = await User.get_or_create(user_id=member.id)
         top_role = member.top_role
 
-        embed = await keycard_utils.format_user_embed(
+        embed = await keycard_service.create_profile_embed(
             card=image,
             color=template.embed_color,
             dossier=db_user.dossier if not created else None,
@@ -136,8 +96,10 @@ async def view_card(
 
     except asyncpg.exceptions.InternalServerError as exception:
         await response_utils.send_response(interaction, "Виникла помилка під час отримання користувача")
-        timestamp = await time_utils.get_normalised()
-        logger.error(f"[{timestamp}] {exception}")
+        logger.error(exception)
+    except Exception as exception:
+        await response_utils.send_response(interaction, "Виникла помилка під час виконання команди")
+        logger.error(exception)
 
 
 @bot.slash_command(name="випадкова-стаття", description="Отримати посилання на випадкову статтю за фільтрами")
@@ -179,8 +141,7 @@ async def get_random_article(
 
     except asyncpg.exceptions.InternalServerError as exception:
         await response_utils.send_response(interaction, "Виникла помилка під час отримання cтатті")
-        timestamp = await time_utils.get_normalised()
-        logger.error(f"[{timestamp}] {exception}")
+        logger.error(exception)
 
 
 @bot.slash_command(name="досьє", description="Заповнити своє досьє")
@@ -193,55 +154,41 @@ async def view_card(interaction: disnake.ApplicationCommandInteraction):
         )
     except asyncpg.exceptions.InternalServerError as exception:
         await response_utils.wait_for_ephemeral_response(interaction, "Виникла помилка під час отримання користувача")
-        timestamp = await time_utils.get_normalised()
-        logger.error(f"[{timestamp}] {exception}")
+        logger.error(exception)
 
 
 @bot.slash_command(name="топ", description="Показати топ користувачів за певним критерієм")
 async def top_articles(
         interaction: disnake.ApplicationCommandInteraction,
         criteria=commands.Param(
-            choices=list(["Переглянуті статті", "Баланс", "Репутація"]), description="Критерій для перегляду списку лідерів"
+            choices=list(config.leaderboard_options.keys()),
+            description="Критерій для перегляду списку лідерів"
         ),
 ):
     await response_utils.wait_for_response(interaction)
 
     try:
-        if criteria == "Переглянуті статті":
-            top_users = await leaderboard_service.get_articles_top_users()
-            embed = await leaderboard_utils.format_leaderboard_embed(
-                top_users,
-                top_criteria="за переглянутими статтями",
-                hint="Кількість унікальних статей, що були переглянуті користувачем",
-                symbol="📚",
-                color="#f5575a"
-            )
-            await response_utils.send_response(interaction, embed=embed)
-        elif criteria == "Баланс":
-            top_users = await leaderboard_service.get_balance_top_users()
-            embed = await leaderboard_utils.format_leaderboard_embed(
-                top_users,
-                top_criteria="за поточною репутацією у фонді",
-                hint="Поточний баланс користувача, що може зменшитись за різних дій",
-                symbol="💠",
-                color="#57b1f5"
-            )
-            await response_utils.send_response(interaction, embed=embed)
-        elif criteria == "Репутація":
-            top_users = await leaderboard_service.get_reputation_top_users()
-            embed = await leaderboard_utils.format_leaderboard_embed(
-                top_users,
-                top_criteria="за загальною репутацією у фонді",
-                hint="Загальна репутація користувача, що була зароблена за весь час",
-                symbol="🔰",
-                color="#FFD700"
-            )
-            await response_utils.send_response(interaction, embed=embed)
+        chosen_criteria = config.leaderboard_options[criteria]
+        embed, components = await leaderboard_service.init_leaderboard_message(chosen_criteria)
+        await response_utils.send_response(interaction, embed=embed, components=components)
 
-    except Exception as e:
+    except Exception as exception:
         await response_utils.send_response(interaction, "Виникла помилка під час отримання топу.")
-        timestamp = await time_utils.get_normalised()
-        logger.error(f"[{timestamp}] {e}")
+        logger.error(exception)
+
+
+@bot.event
+async def on_button_click(interaction: disnake.MessageInteraction) -> None:
+    try:
+        interaction_component_id = interaction.component.custom_id
+        page = int(interaction.message.components[0].children[2].label)
+
+    except ValueError as exception:
+        await response_utils.send_response(interaction, "Виникла помилка під час отримання компонентів.")
+        logger.error(exception)
+    except Exception as exception:
+        await response_utils.send_response(interaction, "Виникла помилка під час обробки компонентів.")
+        logger.error(exception)
 
 
 # @bot.slash_command(name="пнути", description="???")

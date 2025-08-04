@@ -1,3 +1,5 @@
+import asyncio
+import io
 from io import BytesIO
 from typing import Tuple, Optional
 
@@ -5,6 +7,7 @@ from PIL import Image, ImageDraw
 from disnake import File
 
 from app.config import config
+from app.utils.keycard_utils import keycard_utils
 
 
 class KeyCardService:
@@ -88,7 +91,7 @@ class KeyCardService:
 
         self.image.paste(decoration, position, decoration)
 
-    def process_template(
+    def _process_template(
             self,
             template_image: Image.Image,
             user_name: str,
@@ -133,6 +136,42 @@ class KeyCardService:
         image_buffer.seek(0)
 
         return File(fp=image_buffer, filename="keycard.png")
+
+    async def generate_image(self, member, template) -> BytesIO:
+        user_name = await keycard_utils.process_username(member.display_name)
+        user_code = await keycard_utils.get_user_code(member.joined_at.timestamp())
+        avatar = io.BytesIO(await member.avatar.read())
+        avatar_decoration = member.avatar_decoration
+        if avatar_decoration:
+            avatar_decoration = io.BytesIO(await avatar_decoration.read())
+
+        image = await asyncio.to_thread(
+            self._process_template,
+            template.image,
+            user_name,
+            user_code,
+            avatar,
+            template.primary_color,
+            template.secondary_color,
+            avatar_decoration,
+        )
+
+        return image
+
+    @staticmethod
+    async def create_profile_embed(card, color, dossier, role):
+        return await keycard_utils.format_user_embed(
+            card=card,
+            color=color,
+            dossier=dossier,
+            role=role,
+        )
+
+    async def create_new_user_embed(self, member, template):
+        card = await self.generate_image(member, template)
+        embed = await keycard_utils.format_new_user_embed(member.mention, card, template.embed_color)
+
+        return embed
 
 
 keycard_service = KeyCardService()
