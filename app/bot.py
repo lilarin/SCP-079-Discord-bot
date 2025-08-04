@@ -9,6 +9,7 @@ from app.config import config, logger
 from app.modals.dossier_modal import DossierModal
 from app.models import User
 from app.services.articles_service import article_service
+from app.services.economy_management_service import economy_management_service
 from app.services.keycard_service import keycard_service
 from app.services.leaderboard_service import leaderboard_service
 from app.services.scp_objects_service import scp_objects_service
@@ -57,6 +58,7 @@ async def on_member_join(member):
         await member.guild.system_channel.send(embed=embed)
 
         await User.get_or_create(user_id=member.id)
+
     except asyncpg.exceptions.InternalServerError as error:
         logger.error(error)
     except Exception as exception:
@@ -173,21 +175,74 @@ async def top_articles(
         await response_utils.send_response(interaction, embed=embed, components=components)
 
     except Exception as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання топу.")
+        await response_utils.send_response(interaction, "Виникла помилка під час отримання топу")
+        logger.error(exception)
+
+
+@bot.slash_command(name="баланс", description="Переглянути баланс репутації користувача")
+async def view_balance(
+        interaction: disnake.ApplicationCommandInteraction,
+        user: disnake.Member = commands.Param(description="Оберіть користувача", default=None),
+):
+    await response_utils.wait_for_response(interaction)
+
+    member = user or interaction.user
+    if member.bot:
+        await response_utils.send_response(
+            interaction, message="Команду не можна використовувати на ботах.", delete_after=5
+        )
+        return
+
+    try:
+        embed = await economy_management_service.create_user_balance_message(member.id)
+        await response_utils.send_response(interaction, embed=embed)
+
+    except Exception as exception:
+        await response_utils.send_response(interaction, "Виникла помилка під час отримання балансу репутації")
         logger.error(exception)
 
 
 @bot.event
 async def on_button_click(interaction: disnake.MessageInteraction) -> None:
+    await interaction.response.defer()
+
+    if interaction.user != interaction.message.interaction_metadata.user:
+        await response_utils.send_ephemeral_response(
+            interaction,
+            (
+                "Ви не можете керувати цим повідомленням "
+                "\n-# Тільки користувач, що викликав команду може з ним взаємодіяти"
+            )
+        )
+        return
+
     try:
         interaction_component_id = interaction.component.custom_id
-        page = int(interaction.message.components[0].children[2].label)
+        current_page = int(interaction.message.components[0].children[2].label)
 
-    except ValueError as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання компонентів.")
-        logger.error(exception)
+        for criteria in config.leaderboard_options.values():
+            if criteria in interaction_component_id:
+                if "previous" in interaction_component_id:
+                    offset = (current_page - 2) * 10
+                    current_page -= 1
+                elif "next" in interaction_component_id:
+                    offset = current_page * 10
+                    current_page += 1
+                elif "last" in interaction_component_id:
+                    total_count = await leaderboard_service.get_total_users_count(criteria)
+                    offset, current_page = await leaderboard_service.get_last_page_offset(total_count)
+                else:
+                    current_page = 1
+                    offset = 0
+
+                embed, components = await leaderboard_service.edit_leaderboard_message(
+                    criteria, current_page, offset
+                )
+
+                await response_utils.edit_response(interaction, embed=embed, components=components)
+                break
+
     except Exception as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час обробки компонентів.")
         logger.error(exception)
 
 
