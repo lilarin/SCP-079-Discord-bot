@@ -12,11 +12,38 @@ class User(Model):
     class Meta:
         table = "users"
         db_constraints = {
-            "balance_gte_zero": "CHECK (balance >= 0)"
+            "balance_gte_zero": "CHECK (balance >= 0)",
+            "reputation_gte_zero": "CHECK (reputation >= 0)"
         }
 
     def __str__(self):
         return f"User {self.user_id}"
+
+    async def set_balance(self, amount: int):
+        if amount < 0:
+            raise ValueError("Баланс не може бути від'ємним")
+        self.balance = amount
+        await self.save()
+
+    async def set_reputation(self, amount: int):
+        if amount < 0:
+            raise ValueError("Репутація не може бути від'ємною")
+        self.reputation = amount
+        await self.save()
+
+    async def update_balance(self, amount: int):
+        new_balance = self.balance + amount
+        if new_balance < 0:
+            new_balance = 0
+        self.balance = new_balance
+        if amount > 0:
+            await self._update_reputation(amount)
+        await self.save()
+
+    async def _update_reputation(self, amount: int):
+        new_reputation = self.reputation + amount
+        self.reputation = new_reputation
+        await self.save()
 
 
 class SCPObject(Model):
