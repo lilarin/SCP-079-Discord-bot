@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from tortoise.exceptions import DoesNotExist
+from tortoise.expressions import Q
 
 from app.models import User
 from app.utils.economy_management_utils import economy_management_utils
@@ -31,7 +32,11 @@ class EconomyManagementService:
     @staticmethod
     async def create_user_balance_message(user_id: int) -> Tuple[int, int]:
         user, is_created = await User.get_or_create(user_id=user_id)
-        position = await User.filter(reputation__gt=user.reputation).count() + 1 if user.reputation > 0 else None
+        higher_ranking_users_count = await User.filter(
+            Q(reputation__gt=user.reputation) |
+            Q(reputation=user.reputation, user_id__lt=user.user_id)
+        ).count()
+        position = higher_ranking_users_count + 1
 
         return await economy_management_utils.format_balance_embed(user.balance, user.reputation, position)
 

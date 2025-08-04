@@ -52,7 +52,7 @@ class LeaderboardService:
         top_users_query = (
             User.all()
             .filter(reputation__gt=0)
-            .order_by("-reputation")
+            .order_by("-reputation", "user_id")
             .offset(offset)
             .limit(limit + 1)
             .values_list("user_id", "reputation", flat=False)
