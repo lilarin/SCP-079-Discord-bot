@@ -7,7 +7,7 @@ import disnake
 class LeaderboardUtils:
     @staticmethod
     async def format_leaderboard_embed(
-            top_users: List[Tuple[int, int]], top_criteria: str, hint: str, symbol: str, color: str
+            top_users: List[Tuple[int, int]], top_criteria: str, hint: str, symbol: str, color: str, offset: int = 0
     ) -> disnake.Embed:
         embed = disnake.Embed(
             title=f"Топ користувачів {top_criteria}",
@@ -24,7 +24,7 @@ class LeaderboardUtils:
         for i, (user_id, count) in enumerate(top_users, 1):
             user = fetched_users[i - 1]
             if user:
-                description_lines.append(f"{i}. {user.mention} (`{user.name}`) – **{count} {symbol}**")
+                description_lines.append(f"{i + offset}. {user.mention} (`{user.name}`) – **{count} {symbol}**")
 
         embed.description = "\n".join(description_lines)
         embed.description += f"\n-# {hint}"
@@ -33,7 +33,7 @@ class LeaderboardUtils:
     @staticmethod
     async def init_leaderboard_buttons(
             criteria: str,
-            current_page_text: str = "1",
+            current_page_text: int = 1,
             disable_first_page_button: bool = False,
             disable_previous_page_button: bool = False,
             disable_next_page_button: bool = False,
@@ -53,7 +53,7 @@ class LeaderboardUtils:
         )
         current_page_button = disnake.ui.Button(
             style=disnake.ButtonStyle.grey,
-            label=current_page_text,
+            label=str(current_page_text),
             custom_id=f"current_page_{criteria}_button",
             disabled=True,
         )
