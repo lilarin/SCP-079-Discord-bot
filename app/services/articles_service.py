@@ -1,12 +1,12 @@
+import asyncio
 import io
 import re
 import textwrap
-import asyncio
 from typing import List, Dict, Tuple
 
-from disnake import File
 from PIL import Image, ImageDraw, ImageFont
 from bs4 import BeautifulSoup, NavigableString
+from disnake import File
 from tortoise.exceptions import IntegrityError
 
 from app.config import config
@@ -121,7 +121,7 @@ class ArticleService:
                 line_bbox = draw.textbbox((0, 0), line, font=title_font)
                 line_width = line_bbox[2] - line_bbox[0]
                 line_x = (img_width - line_width) / 2
-                self._draw_text_with_shadow(draw , (line_x, current_y), line, title_font, (50, 50, 50))
+                self._draw_text_with_shadow(draw, (line_x, current_y), line, title_font, (50, 50, 50))
                 current_y += title_line_height + spacing_between_lines
 
             out_image = Image.alpha_composite(base_image, text_layer)
@@ -130,7 +130,6 @@ class ArticleService:
             out_image.save(buffer, format="PNG")
             buffer.seek(0)
             return buffer
-
 
     async def create_article_image(self, article: SCPObject) -> File:
         image_buffer = await asyncio.to_thread(
