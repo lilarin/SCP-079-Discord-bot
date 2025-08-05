@@ -184,7 +184,7 @@ async def top_articles(
         logger.error(exception)
 
 
-@bot.slash_command(name="баланс", description="Переглянути баланс репутації користувача")
+@bot.slash_command(name="баланс", description="Переглянути баланс користувача")
 async def view_balance(
         interaction: disnake.ApplicationCommandInteraction,
         user: disnake.Member = commands.Param(description="Оберіть користувача", default=None),
@@ -203,7 +203,7 @@ async def view_balance(
         await response_utils.send_response(interaction, embed=embed)
 
     except Exception as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання балансу репутації")
+        await response_utils.send_response(interaction, "Виникла помилка під час отримання балансу користувача")
         logger.error(exception)
 
 
@@ -225,12 +225,12 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="змінити-поточну-репутацію", description="Змінити поточну репутацію користувачу")
+@bot.slash_command(name="змінити-баланс-користувача", description="Збільшити, або зменшити баланс на певну кількість репутації")
 @commands.has_permissions(administrator=True)
 async def edit_player_balance_reputation(
         interaction: disnake.ApplicationCommandInteraction,
         user: disnake.Member = commands.Param(description="Оберіть користувача"),
-        amount: int = commands.Param(description="Кількість"),
+        amount: int = commands.Param(description="Кількість репутації"),
 ):
     await response_utils.wait_for_response(interaction)
 
