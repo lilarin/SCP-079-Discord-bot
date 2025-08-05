@@ -5,7 +5,7 @@ from disnake import Embed, Component
 from tortoise.functions import Count
 
 from app.models import User
-from app.utils.leaderboard_utils import leaderboard_utils
+from app.utils.ui_utils import ui_utils
 
 
 class LeaderboardService:
@@ -98,14 +98,14 @@ class LeaderboardService:
     async def init_leaderboard_message(chosen_criteria: str) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, _, has_next = await leaderboard_service.get_articles_top_users()
-            embed = await leaderboard_utils.format_leaderboard_embed(
+            embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за переглянутими статтями",
                 hint="Кількість унікальних статей, що були переглянуті користувачем",
                 symbol="📚",
                 color="#f5575a"
             )
-            components = await leaderboard_utils.init_leaderboard_buttons(
+            components = await ui_utils.init_control_buttons(
                 criteria=chosen_criteria,
                 disable_first_page_button=True,
                 disable_previous_page_button=True,
@@ -116,14 +116,14 @@ class LeaderboardService:
 
         elif chosen_criteria == "balance":
             top_users, _, has_next = await leaderboard_service.get_balance_top_users()
-            embed = await leaderboard_utils.format_leaderboard_embed(
+            embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за поточною репутацією у фонді",
                 hint="Поточний баланс користувача, що може зменшитись за різних дій",
                 symbol="💠",
                 color="#57b1f5"
             )
-            components = await leaderboard_utils.init_leaderboard_buttons(
+            components = await ui_utils.init_control_buttons(
                 criteria=chosen_criteria,
                 disable_first_page_button=True,
                 disable_previous_page_button=True,
@@ -134,14 +134,14 @@ class LeaderboardService:
 
         elif chosen_criteria == "reputation":
             top_users, _, has_next = await leaderboard_service.get_reputation_top_users()
-            embed = await leaderboard_utils.format_leaderboard_embed(
+            embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за загальною репутацією у фонді",
                 hint="Загальна репутація користувача, що була зароблена за весь час",
                 symbol="🔰",
                 color="#FFD700"
             )
-            components = await leaderboard_utils.init_leaderboard_buttons(
+            components = await ui_utils.init_control_buttons(
                 criteria=chosen_criteria,
                 disable_first_page_button=True,
                 disable_previous_page_button=True,
@@ -154,7 +154,7 @@ class LeaderboardService:
     async def edit_leaderboard_message(chosen_criteria: str, page: int, offset: int) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, has_previous, has_next = await leaderboard_service.get_articles_top_users(offset=offset)
-            embed = await leaderboard_utils.format_leaderboard_embed(
+            embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за переглянутими статтями",
                 hint="Кількість унікальних статей, що були переглянуті користувачем",
@@ -162,7 +162,7 @@ class LeaderboardService:
                 color="#f5575a",
                 offset=offset
             )
-            components = await leaderboard_utils.init_leaderboard_buttons(
+            components = await ui_utils.init_control_buttons(
                 criteria=chosen_criteria,
                 current_page_text=page,
                 disable_first_page_button=not has_previous,
@@ -174,7 +174,7 @@ class LeaderboardService:
 
         elif chosen_criteria == "balance":
             top_users, has_previous, has_next = await leaderboard_service.get_balance_top_users(offset=offset)
-            embed = await leaderboard_utils.format_leaderboard_embed(
+            embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за поточною репутацією у фонді",
                 hint="Поточний баланс користувача, що може зменшитись за різних дій",
@@ -182,7 +182,7 @@ class LeaderboardService:
                 color="#57b1f5",
                 offset=offset
             )
-            components = await leaderboard_utils.init_leaderboard_buttons(
+            components = await ui_utils.init_control_buttons(
                 criteria=chosen_criteria,
                 current_page_text=page,
                 disable_first_page_button=not has_previous,
@@ -194,7 +194,7 @@ class LeaderboardService:
 
         elif chosen_criteria == "reputation":
             top_users, has_previous, has_next = await leaderboard_service.get_reputation_top_users(offset=offset)
-            embed = await leaderboard_utils.format_leaderboard_embed(
+            embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за загальною репутацією у фонді",
                 hint="Загальна репутація користувача, що була зароблена за весь час",
@@ -202,7 +202,7 @@ class LeaderboardService:
                 color="#FFD700",
                 offset=offset
             )
-            components = await leaderboard_utils.init_leaderboard_buttons(
+            components = await ui_utils.init_control_buttons(
                 criteria=chosen_criteria,
                 current_page_text=page,
                 disable_first_page_button=not has_previous,

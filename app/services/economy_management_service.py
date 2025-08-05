@@ -4,7 +4,7 @@ from tortoise.exceptions import DoesNotExist
 from tortoise.expressions import Q
 
 from app.models import User
-from app.utils.economy_management_utils import economy_management_utils
+from app.utils.ui_utils import ui_utils
 
 
 class EconomyManagementService:
@@ -38,8 +38,7 @@ class EconomyManagementService:
         ).count()
         position = higher_ranking_users_count + 1
 
-        return await economy_management_utils.format_balance_embed(user.balance, user.reputation, position)
-
+        return await ui_utils.format_balance_embed(user.balance, user.reputation, position)
 
     @staticmethod
     async def reset_users_reputation() -> None:

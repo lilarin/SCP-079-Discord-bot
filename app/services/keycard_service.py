@@ -8,6 +8,7 @@ from disnake import File
 
 from app.config import config
 from app.utils.keycard_utils import keycard_utils
+from app.utils.ui_utils import ui_utils
 
 
 class KeyCardService:
@@ -160,7 +161,7 @@ class KeyCardService:
 
     @staticmethod
     async def create_profile_embed(card, color, dossier, role):
-        return await keycard_utils.format_user_embed(
+        return await ui_utils.format_user_embed(
             card=card,
             color=color,
             dossier=dossier,
@@ -169,7 +170,7 @@ class KeyCardService:
 
     async def create_new_user_embed(self, member, template):
         card = await self.generate_image(member, template)
-        embed = await keycard_utils.format_new_user_embed(member.mention, card, template.embed_color)
+        embed = await ui_utils.format_new_user_embed(member.mention, card, template.embed_color)
 
         return embed
 
