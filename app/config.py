@@ -1,10 +1,11 @@
+import json
 import logging
 import logging.handlers
 import os
 import queue
 import sys
 from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from typing import Dict, Tuple, Optional
 from urllib.parse import urlparse
 
 from PIL import Image, ImageFont
@@ -12,7 +13,11 @@ from dotenv import load_dotenv
 
 
 @dataclass
-class TemplateConfig:
+class CardConfig:
+    name: str
+    description: str
+    price: int
+    quantity_range: Tuple
     image: Image.Image
     primary_color: int
     secondary_color: int
@@ -83,7 +88,7 @@ class Config:
         self.primary_font_path = os.path.join(self.project_root, "assets", "fonts", "BauhausDemi.ttf")
         self.secondary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Bold.ttf")
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
-        self.templates: List[TemplateConfig] = self._load_templates()
+        self.cards: Dict[str, CardConfig] = self._load_cards_from_json()
 
     def get_font(self, font_path: str, size: int) -> ImageFont.FreeTypeFont:
         if (font_path, size) not in self.fonts:
@@ -91,97 +96,43 @@ class Config:
         return self.fonts[(font_path, size)]
 
     @staticmethod
-    def _get_env_variable(var_name: str) -> str | None:
+    def _get_env_variable(var_name: str) -> str:
         value = os.environ.get(var_name)
         if not value:
             logger.error(f"{var_name} environment variable is not set!")
-            return None
+            exit(1)
         return value
 
-    def _load_templates(self) -> List[TemplateConfig]:
-        base_path = str(os.path.join(self.project_root, "assets", "cards"))
-        template_configs = [
-            {
-                "path": os.path.join(base_path, "keycard-1.png"),
-                "primary": "#FBFBFB",
-                "secondary": "#A6A6A6",
-                "embed": "#0D0D0D"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-2.png"),
-                "primary": "#343434",
-                "secondary": "#717171",
-                "embed": "#FBFBFB"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-3.png"),
-                "primary": "#FFE2E2",
-                "secondary": "#E89495",
-                "embed": "#730004"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-4.png"),
-                "primary": "#C4E4FF",
-                "secondary": "#80BFFF",
-                "embed": "#1B2C86"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-5.png"),
-                "primary": "#3E41E0",
-                "secondary": "#5265FC",
-                "embed": "#4BA3F5"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-6.png"),
-                "primary": "#4BA3F5",
-                "secondary": "#70BBFF",
-                "embed": "#ABD6FF"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-7.png"),
-                "primary": "#2E2E2E",
-                "secondary": "#4F4F4F",
-                "embed": "#808080"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-8.png"),
-                "primary": "#8BF3E8",
-                "secondary": "#13C5B3",
-                "embed": "#258F84"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-9.png"),
-                "primary": "#FFC2BA",
-                "secondary": "#E1A597",
-                "embed": "#BB8D83"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-10.png"),
-                "primary": "#2E2E2E",
-                "secondary": "#717171",
-                "embed": "#FFC74B"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-11.png"),
-                "primary": "#484844",
-                "secondary": "#858585",
-                "embed": "#FFE18C"
-            },
-            {
-                "path": os.path.join(base_path, "keycard-12.png"),
-                "primary": "#F0EBFF",
-                "secondary": "#A287FF",
-                "embed": "#BEB3E6"
-            },
-        ]
-        return [
-            TemplateConfig(
-                image=Image.open(conf["path"]),
-                primary_color=int(conf["primary"].lstrip('#'), 16),
-                secondary_color=int(conf["secondary"].lstrip('#'), 16),
-                embed_color=int(conf["embed"].lstrip('#'), 16)
-            ) for conf in template_configs
-        ]
+    def _load_cards_from_json(self) -> Optional[Dict[str, CardConfig]]:
+        json_path = os.path.join(self.project_root, "shop_cards.json")
+        images_base_path = os.path.join(self.project_root, "assets", "cards")
+
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                raw_data = json.load(f)
+
+            loaded_cards: Dict[str, CardConfig] = {}
+            for key, data in raw_data.items():
+                full_image_path = os.path.join(images_base_path, data["image_file"])
+                loaded_cards[key] = CardConfig(
+                    name=data["name"],
+                    description=data["description"],
+                    price=data["price"],
+                    quantity_range=tuple(data["quantity_range"]),
+                    image=Image.open(full_image_path),
+                    primary_color=int(data["colors"]["primary"].lstrip("#"), 16),
+                    secondary_color=int(data["colors"]["secondary"].lstrip("#"), 16),
+                    embed_color=int(data["colors"]["embed"].lstrip("#"), 16)
+                )
+            logging.info(f"Successfully loaded {len(loaded_cards)} card configurations from JSON.")
+            return loaded_cards
+
+        except FileNotFoundError:
+            logging.error(f"Card config file not found at {json_path}")
+            exit(1)
+        except json.JSONDecodeError:
+            logging.error(f"Could not decode JSON from {json_path}. Check for syntax errors.")
+            exit(1)
 
     @staticmethod
     def setup_logging():
@@ -191,6 +142,7 @@ class Config:
 
         logger = logging.getLogger("scp-profiles")
         logger.setLevel(logging.INFO)
+        logger.propagate = False
         logger.addHandler(queue_handler)
 
         console_handler = logging.StreamHandler(sys.stdout)
@@ -209,7 +161,6 @@ class Config:
 
 config = Config()
 logger, log_listener = config.setup_logging()
-
 
 # Tortoise ORM Settings
 db_url = urlparse(config.database_url)
