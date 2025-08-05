@@ -1,6 +1,8 @@
 from tortoise import fields
 from tortoise.models import Model
 
+from app.enums import ItemType
+
 
 class User(Model):
     id = fields.IntField(pk=True)
@@ -8,6 +10,14 @@ class User(Model):
     dossier = fields.TextField(null=True)
     balance = fields.BigIntField(default=0)
     reputation = fields.BigIntField(default=0)
+
+    equipped_card = fields.ForeignKeyField(
+        "models.Item", related_name="equipped_by", null=True, on_delete=fields.SET_NULL
+    )
+
+    inventory: fields.ManyToManyRelation["Item"] = fields.ManyToManyField(
+        "models.Item", related_name="owners", through="user_items"
+    )
 
     class Meta:
         table = "users"
@@ -44,6 +54,25 @@ class User(Model):
         new_reputation = self.reputation + amount
         self.reputation = new_reputation
         await self.save()
+
+
+class Item(Model):
+    id = fields.IntField(pk=True)
+    template_id = fields.CharField(max_length=50, unique=True)
+    name = fields.CharField(max_length=100)
+    description = fields.TextField()
+    price = fields.BigIntField()
+    item_type = fields.CharEnumField(ItemType)
+    quantity = fields.IntField(default=0)
+
+    class Meta:
+        table = "items"
+        db_constraints = {
+            "quantity_gte_zero": "CHECK (quantity >= 0)"
+        }
+
+    def __str__(self):
+        return f"{self.name} (Qty: {self.quantity})"
 
 
 class SCPObject(Model):
