@@ -6,7 +6,7 @@ from disnake import Embed, File, Role, ButtonStyle
 from disnake.ui import ActionRow, Button
 
 from app.config import config
-from app.models import SCPObject
+from app.models import SCPObject, Item
 
 
 class UIUtils:
@@ -141,6 +141,34 @@ class UIUtils:
         if position:
             embed.description += f"\n-# **#{position} у рейтингу серед співробітників**"
 
+        return embed
+
+    @staticmethod
+    async def format_shop_embed(items: List[Item], offset: int = 0) -> Embed:
+        embed = Embed(
+            title="Магазин",
+            color=0xffffff
+        )
+
+        if not items:
+            embed.description = "У магазині наразі немає товарів"
+            return embed
+
+        description_lines = []
+        for i, item in enumerate(items, 1):
+            item_details = [
+                f"{i + offset}. **{item.name}**",
+                f"Ціна: **{item.price}** 💠",
+                f"Кількість: **{item.quantity}**",
+                f"-# **{item.description}**",
+                f"-# ID для покупки: `{item.template_id}`"
+            ]
+            description_lines.append("\n".join(item_details))
+
+        embed.description = "\n\n".join(description_lines)
+        embed.set_thumbnail(
+            url="https://media.discordapp.net/attachments/614115775376261120/1402411530548543629/plate_1.png"
+        )
         return embed
 
 
