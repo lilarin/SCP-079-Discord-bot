@@ -12,7 +12,8 @@ from app.models import SCPObject
 class UIUtils:
     @staticmethod
     async def format_leaderboard_embed(
-            top_users: List[Tuple[int, int]], top_criteria: str, hint: str, symbol: str, color: str, offset: int = 0
+            top_users: List[Tuple[int, int]], top_criteria: str,
+            hint: str, symbol: str, color: str, offset: int = 0
     ) -> Embed:
         embed = Embed(
             title=f"Топ користувачів {top_criteria}",
@@ -29,7 +30,9 @@ class UIUtils:
         for i, (user_id, count) in enumerate(top_users, 1):
             user = fetched_users[i - 1]
             if user:
-                description_lines.append(f"{i + offset}. {user.mention} (`{user.name}`) – **{count} {symbol}**")
+                description_lines.append(
+                    f"{i + offset}. {user.mention} (`{user.name}`) – **{count} {symbol}**"
+                )
 
         embed.description = "\n".join(description_lines)
         embed.description += f"\n-# {hint}"
@@ -75,7 +78,8 @@ class UIUtils:
             disabled=disable_last_page_button,
         )
         return ActionRow(
-            first_page_button, previous_page_button, current_page_button, next_page_button, last_page_button,
+            first_page_button, previous_page_button, current_page_button,
+            next_page_button, last_page_button,
         )
 
     @staticmethod
@@ -90,7 +94,8 @@ class UIUtils:
 
     @staticmethod
     async def format_user_embed(
-            card: File, color: int, dossier: Optional[str] = None, role: Optional[Role] = None
+            card: File, color: int, dossier: Optional[str] = None,
+            role: Optional[Role] = None
     ) -> Embed:
         embed = Embed(
             title="Інформація про співробітника фонду",
@@ -106,7 +111,9 @@ class UIUtils:
         return embed
 
     @staticmethod
-    async def format_article_embed(article: SCPObject, image_file: File) -> Tuple[Embed, ActionRow]:
+    async def format_article_embed(
+            article: SCPObject, image_file: File
+    ) -> Tuple[Embed, ActionRow]:
         embed = Embed(
             color=int(config.scp_class_config[article.object_class][0].lstrip('#'), 16)
         )
@@ -128,7 +135,8 @@ class UIUtils:
             color=0xffffff
         )
 
-        embed.description += f"Поточний баланс – {balance} 💠 \n\n-# Загальна кількість заробленої репутації – {reputation} 🔰"
+        embed.description += f"Поточний баланс – {balance} 💠 "
+        embed.description += f"\n\n-# Загальна кількість заробленої репутації – {reputation} 🔰"
 
         if position:
             embed.description += f"\n-# **#{position} у рейтингу серед співробітників**"
