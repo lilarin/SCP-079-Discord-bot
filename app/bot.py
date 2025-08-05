@@ -155,6 +155,7 @@ async def get_random_article(
 
 @bot.slash_command(name="досьє", description="Заповнити своє досьє")
 async def view_card(interaction: disnake.ApplicationCommandInteraction):
+
     try:
         db_user, _ = await User.get_or_create(user_id=interaction.user.id)
 
@@ -220,6 +221,30 @@ async def shop(interaction: disnake.ApplicationCommandInteraction):
 
     except Exception as exception:
         await response_utils.send_response(interaction, "Виникла помилка під час відкриття магазину")
+        logger.error(exception)
+
+
+@bot.slash_command(name="купити", description="Купити товар з магазину за його ID")
+async def buy_item(
+        interaction: disnake.ApplicationCommandInteraction,
+        item_id: str = commands.Param(description="ID товару"),
+):
+    await response_utils.wait_for_ephemeral_response(interaction)
+
+    try:
+        await User.get_or_create(user_id=interaction.user.id)
+
+        message = await shop_service.buy_item(
+            user_id=interaction.user.id,
+            item_id=item_id
+        )
+
+        await response_utils.edit_ephemeral_response(interaction, message=message)
+
+    except Exception as exception:
+        await response_utils.send_response(
+            interaction, "Виникла помилка під час виконання покупки."
+        )
         logger.error(exception)
 
 

@@ -3,9 +3,11 @@ import random
 from typing import List, Tuple, Optional
 
 from disnake import Embed, Component
+from tortoise.exceptions import DoesNotExist
+from tortoise.transactions import in_transaction
 
 from app.config import config, logger
-from app.models import Item, ItemType
+from app.models import Item, ItemType, User
 from app.utils.ui_utils import ui_utils
 
 
@@ -120,6 +122,39 @@ class ShopService:
             disable_last_page_button=not has_next
         )
         return embed, components
+
+    @staticmethod
+    async def buy_item(user_id: int, item_id: str) -> str:
+        try:
+            item_info = await Item.get(item_id=item_id)
+        except DoesNotExist:
+            return "Товар з таким ID не знайдено"
+
+        try:
+            async with in_transaction() as conn:
+                user = await User.get(user_id=user_id).using_db(conn).select_for_update()
+                item = await Item.get(id=item_info.id).using_db(conn).select_for_update()
+
+                if item.quantity <= 0:
+                    return "Цей товар закінчився"
+
+                if user.balance < item.price:
+                    return "У вас недостатньо коштів"
+
+                if await user.inventory.filter(id=item.id).exists():
+                    return "Ви вже маєте цей предмет у своєму інвентарі"
+
+                user.balance -= item.price
+                item.quantity -= 1
+
+                await user.save(using_db=conn, update_fields=['balance'])
+                await item.save(using_db=conn, update_fields=['quantity'])
+                await user.inventory.add(item, using_db=conn)
+
+                return f"Ви успішно придбали товар **{item.name}**!"
+        except Exception as e:
+            logger.error(f"Помилка під час транзакції покупки для користувача {user_id}: {e}")
+            return "Під час покупки сталася помилка. Спробуйте ще раз"
 
 
 shop_service = ShopService()
