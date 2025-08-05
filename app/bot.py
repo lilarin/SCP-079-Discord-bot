@@ -13,8 +13,9 @@ from app.services.economy_management_service import economy_management_service
 from app.services.keycard_service import keycard_service
 from app.services.leaderboard_service import leaderboard_service
 from app.services.scp_objects_service import scp_objects_service
-from app.utils.articles_utils import article_utils
+from app.services.shop_service import shop_service
 from app.utils.response_utils import response_utils
+from app.utils.ui_utils import ui_utils
 
 bot = commands.InteractionBot(intents=disnake.Intents.all())
 
@@ -22,6 +23,7 @@ bot = commands.InteractionBot(intents=disnake.Intents.all())
 @bot.event
 async def on_ready():
     await scp_objects_service.update_scp_objects()
+    await shop_service.sync_card_items()
     logger.info(f"Виконано вхід як {bot.user}")
     await asyncio.sleep(1)
     await bot.change_presence(
@@ -51,7 +53,8 @@ async def on_slash_command_error(interaction, error):
 @bot.event
 async def on_member_join(member):
     try:
-        template = config.templates[-1]
+        templates = list(config.cards.values())
+        template = templates[-1]
 
         embed = await keycard_service.create_new_user_embed(member, template)
 
@@ -80,7 +83,8 @@ async def view_card(
         return
 
     try:
-        template = config.templates[random.randint(0, len(config.templates) - 1)]
+        templates = list(config.cards.values())
+        template = templates[random.randint(0, len(templates) - 1)]
 
         image = await keycard_service.generate_image(member, template)
 
@@ -137,7 +141,7 @@ async def get_random_article(
         elif random_article:
             image = await article_service.create_article_image(random_article)
 
-            embed, components = article_utils.format_article_embed(random_article, image)
+            embed, components = await ui_utils.format_article_embed(random_article, image)
             await response_utils.send_response(interaction, embed=embed, components=components)
         else:
             await response_utils.send_response(
@@ -207,6 +211,18 @@ async def view_balance(
         logger.error(exception)
 
 
+@bot.slash_command(name="магазин", description="Переглянути товари у магазині")
+async def shop(interaction: disnake.ApplicationCommandInteraction):
+    await response_utils.wait_for_response(interaction)
+    try:
+        embed, components = await shop_service.init_shop_message()
+        await response_utils.send_response(interaction, embed=embed, components=components)
+
+    except Exception as exception:
+        await response_utils.send_response(interaction, "Виникла помилка під час відкриття магазину")
+        logger.error(exception)
+
+
 @bot.slash_command(name="скинути-репутацію", description="Скинути загальну репутацію всіх співробітників")
 @commands.has_permissions(administrator=True)
 async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
@@ -225,7 +241,8 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="змінити-баланс-користувача", description="Збільшити, або зменшити баланс на певну кількість репутації")
+@bot.slash_command(name="змінити-баланс-користувача",
+                   description="Збільшити, або зменшити баланс на певну кількість репутації")
 @commands.has_permissions(administrator=True)
 async def edit_player_balance_reputation(
         interaction: disnake.ApplicationCommandInteraction,
@@ -271,17 +288,39 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
         interaction_component_id = interaction.component.custom_id
         current_page = int(interaction.message.components[0].children[2].label)
 
+        if "shop" in interaction_component_id:
+            if "previous" in interaction_component_id:
+                offset = (current_page - 2) * config.shop_items_per_page
+                current_page -= 1
+            elif "next" in interaction_component_id:
+                offset = current_page * config.shop_items_per_page
+                current_page += 1
+            elif "last" in interaction_component_id:
+                total_count = await shop_service.get_total_items_count()
+                offset, current_page = await shop_service.get_last_page_offset(
+                    total_count=total_count, limit=config.shop_items_per_page
+                )
+            else:
+                current_page = 1
+                offset = 0
+
+            embed, components = await shop_service.edit_shop_message(current_page, offset)
+            await response_utils.edit_response(interaction, embed=embed, components=components)
+            return
+
         for criteria in config.leaderboard_options.values():
             if criteria in interaction_component_id:
                 if "previous" in interaction_component_id:
-                    offset = (current_page - 2) * 10
+                    offset = (current_page - 2) * config.leaderboard_items_per_page
                     current_page -= 1
                 elif "next" in interaction_component_id:
-                    offset = current_page * 10
+                    offset = current_page * config.leaderboard_items_per_page
                     current_page += 1
                 elif "last" in interaction_component_id:
                     total_count = await leaderboard_service.get_total_users_count(criteria)
-                    offset, current_page = await leaderboard_service.get_last_page_offset(total_count)
+                    offset, current_page = await leaderboard_service.get_last_page_offset(
+                        total_count=total_count, limit=config.leaderboard_items_per_page
+                    )
                 else:
                     current_page = 1
                     offset = 0
@@ -295,72 +334,3 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
 
     except Exception as exception:
         logger.error(exception)
-
-
-# @bot.slash_command(name="пнути", description="???")
-# @commands.has_permissions(administrator=True)
-# async def spam(
-#         interaction: disnake.ApplicationCommandInteraction,
-#         user: disnake.User = commands.Param(description="Оберіть користувача"),
-#         threads: int = commands.Param(
-#             description="Кількість гілок для надсилання повідомлень",
-#             default=25, max_value=25
-#         ),
-#         messages: int = commands.Param(
-#             description="Кількість надісланих повідомлень у кожній гілці",
-#             default=400, max_value=4000
-#         ),
-#         delete_existing_threads: bool = commands.Param(
-#             description="Видалити існуючі гілки в каналі?",
-#             default=False
-#         ),
-# ):
-#     await response_utils.wait_for_ephemeral_response(interaction)
-#
-#     if interaction.channel.type != disnake.ChannelType.text:
-#         await response_utils.send_response(
-#             interaction,
-#             message=f"Команду можна використовувати лише в **текстових** каналах"
-#         )
-#         return
-#
-#     if user.bot:
-#         await response_utils.send_response(
-#             interaction,
-#             message=f"Команду не можна використовувати на ботах"
-#         )
-#         return
-#
-#     await response_utils.send_response(
-#         interaction,
-#         message=f"{user.mention} поплачет"
-#     )
-#
-#     channel = interaction.channel
-#     if delete_existing_threads:
-#         for channel_thread in channel.threads:
-#             await channel_thread.delete()
-#
-#     message_content = f"{user.mention}[.](https://imgur.com/1bS0ahP.png)"
-#     thread_name = "⠀̛"
-#
-#     threads_to_create = [
-#         channel.create_thread(
-#             name=thread_name,
-#             type=disnake.ChannelType.private_thread,
-#             invitable=False
-#         )
-#         for _ in range(threads)
-#     ]
-#
-#     created_threads = await asyncio.gather(*threads_to_create)
-#
-#     async def work(thread):
-#         for _ in range(messages):
-#             await thread.send(content=message_content)
-#
-#     tasks = [asyncio.create_task(work(thread)) for thread in created_threads]
-#     await asyncio.gather(*tasks)
-#
-#     for thread in created_threads:
-#         await thread.delete()

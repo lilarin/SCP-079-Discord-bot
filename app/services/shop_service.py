@@ -1,7 +1,12 @@
+import math
 import random
+from typing import List, Tuple, Optional
+
+from disnake import Embed, Component
 
 from app.config import config, logger
 from app.models import Item, ItemType
+from app.utils.ui_utils import ui_utils
 
 
 class ShopService:
@@ -56,6 +61,65 @@ class ShopService:
             logger.info("All card items are already up-to-date. No changes made.")
         else:
             logger.info("Shop synchronization complete.")
+
+    @staticmethod
+    async def get_shop_items(limit: int, offset: int = 0) -> Tuple[List[Item], bool, bool]:
+        items_query = (
+            Item.filter(quantity__gt=0)
+            .order_by("price")
+            .offset(offset)
+            .limit(limit + 1)
+        )
+        items_raw = await items_query
+
+        has_next = len(items_raw) > limit
+        current_page_items = items_raw[:limit]
+        has_previous = offset > 0
+
+        return current_page_items, has_previous, has_next
+
+    @staticmethod
+    async def get_total_items_count() -> int:
+        return await Item.filter(quantity__gt=0).count()
+
+    @staticmethod
+    async def get_last_page_offset(total_count: int, limit: int) -> Tuple[int, int]:
+        if total_count == 0:
+            return 0, 1
+        total_pages = math.ceil(total_count / limit)
+        offset = max(0, (total_pages - 1) * limit)
+        return offset, total_pages
+
+    async def init_shop_message(self) -> Optional[Tuple[Embed, List[Component]]]:
+        items, _, has_next = await self.get_shop_items(
+            limit=config.shop_items_per_page
+        )
+        embed = await ui_utils.format_shop_embed(items)
+
+        components = await ui_utils.init_control_buttons(
+            criteria="shop",
+            disable_first_page_button=True,
+            disable_previous_page_button=True,
+            disable_next_page_button=not has_next,
+            disable_last_page_button=not has_next
+        )
+        return embed, components
+
+    async def edit_shop_message(self, page: int, offset: int) -> Optional[Tuple[Embed, List[Component]]]:
+        items, has_previous, has_next = await self.get_shop_items(
+            limit=config.shop_items_per_page, offset=offset
+        )
+        embed = await ui_utils.format_shop_embed(items, offset=offset)
+
+        components = await ui_utils.init_control_buttons(
+            criteria="shop",
+            current_page_text=page,
+            disable_first_page_button=not has_previous,
+            disable_previous_page_button=not has_previous,
+            disable_next_page_button=not has_next,
+            disable_last_page_button=not has_next
+        )
+        return embed, components
 
 
 shop_service = ShopService()

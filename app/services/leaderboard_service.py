@@ -4,13 +4,14 @@ from typing import List, Tuple, Optional
 from disnake import Embed, Component
 from tortoise.functions import Count
 
+from app.config import config
 from app.models import User
 from app.utils.ui_utils import ui_utils
 
 
 class LeaderboardService:
     @staticmethod
-    async def get_articles_top_users(limit: int = 10, offset: int = 0) -> Tuple[List[Tuple[int, int]], bool, bool]:
+    async def get_articles_top_users(limit: int, offset: int = 0) -> Tuple[List[Tuple[int, int]], bool, bool]:
         top_users_query = (
             User.all()
             .annotate(viewed_count=Count("viewed_objects"))
@@ -29,7 +30,7 @@ class LeaderboardService:
         return current_page_users, has_previous, has_next
 
     @staticmethod
-    async def get_balance_top_users(limit: int = 10, offset: int = 0) -> Tuple[List[Tuple[int, int]], bool, bool]:
+    async def get_balance_top_users(limit: int, offset: int = 0) -> Tuple[List[Tuple[int, int]], bool, bool]:
         top_users_query = (
             User.all()
             .filter(balance__gt=0)
@@ -48,7 +49,7 @@ class LeaderboardService:
         return current_page_users, has_previous, has_next
 
     @staticmethod
-    async def get_reputation_top_users(limit: int = 10, offset: int = 0) -> Tuple[List[Tuple[int, int]], bool, bool]:
+    async def get_reputation_top_users(limit: int, offset: int = 0) -> Tuple[List[Tuple[int, int]], bool, bool]:
         top_users_query = (
             User.all()
             .filter(reputation__gt=0)
@@ -87,7 +88,7 @@ class LeaderboardService:
             return await self._get_total_reputation_users_count()
 
     @staticmethod
-    async def get_last_page_offset(total_count: int, limit: int = 10) -> Tuple[int, int]:
+    async def get_last_page_offset(total_count: int, limit: int) -> Tuple[int, int]:
         if total_count == 0:
             return 0, 0
         total_pages = math.ceil(total_count / limit)
@@ -97,7 +98,9 @@ class LeaderboardService:
     @staticmethod
     async def init_leaderboard_message(chosen_criteria: str) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
-            top_users, _, has_next = await leaderboard_service.get_articles_top_users()
+            top_users, _, has_next = await leaderboard_service.get_articles_top_users(
+                limit=config.leaderboard_items_per_page
+            )
             embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за переглянутими статтями",
@@ -115,7 +118,9 @@ class LeaderboardService:
             return embed, components
 
         elif chosen_criteria == "balance":
-            top_users, _, has_next = await leaderboard_service.get_balance_top_users()
+            top_users, _, has_next = await leaderboard_service.get_balance_top_users(
+                limit=config.leaderboard_items_per_page
+            )
             embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за поточною репутацією у фонді",
@@ -133,7 +138,9 @@ class LeaderboardService:
             return embed, components
 
         elif chosen_criteria == "reputation":
-            top_users, _, has_next = await leaderboard_service.get_reputation_top_users()
+            top_users, _, has_next = await leaderboard_service.get_reputation_top_users(
+                limit=config.leaderboard_items_per_page
+            )
             embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за загальною репутацією у фонді",
@@ -151,9 +158,13 @@ class LeaderboardService:
             return embed, components
 
     @staticmethod
-    async def edit_leaderboard_message(chosen_criteria: str, page: int, offset: int) -> Optional[Tuple[Embed, List[Component]]]:
+    async def edit_leaderboard_message(
+            chosen_criteria: str, page: int, offset: int
+    ) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
-            top_users, has_previous, has_next = await leaderboard_service.get_articles_top_users(offset=offset)
+            top_users, has_previous, has_next = await leaderboard_service.get_articles_top_users(
+                limit=config.leaderboard_items_per_page, offset=offset
+            )
             embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за переглянутими статтями",
@@ -173,7 +184,9 @@ class LeaderboardService:
             return embed, components
 
         elif chosen_criteria == "balance":
-            top_users, has_previous, has_next = await leaderboard_service.get_balance_top_users(offset=offset)
+            top_users, has_previous, has_next = await leaderboard_service.get_balance_top_users(
+                limit=config.leaderboard_items_per_page, offset=offset
+            )
             embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за поточною репутацією у фонді",
@@ -193,7 +206,9 @@ class LeaderboardService:
             return embed, components
 
         elif chosen_criteria == "reputation":
-            top_users, has_previous, has_next = await leaderboard_service.get_reputation_top_users(offset=offset)
+            top_users, has_previous, has_next = await leaderboard_service.get_reputation_top_users(
+                limit=config.leaderboard_items_per_page, offset=offset
+            )
             embed = await ui_utils.format_leaderboard_embed(
                 top_users,
                 top_criteria="за загальною репутацією у фонді",
