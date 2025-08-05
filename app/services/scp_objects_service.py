@@ -127,7 +127,7 @@ class ScpObjectsService:
 
         if random_scp_object:
             if db_user:
-                await ViewedScpObject.create(user=db_user, scp_object=random_scp_object)
+                await ViewedScpObject.get_or_create(user=db_user, scp_object=random_scp_object)
 
             return False, random_scp_object
 
