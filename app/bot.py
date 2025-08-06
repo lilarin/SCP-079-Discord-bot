@@ -1,5 +1,4 @@
 import asyncio
-import random
 
 import asyncpg
 import disnake
@@ -10,6 +9,7 @@ from app.modals.dossier_modal import DossierModal
 from app.models import User
 from app.services.articles_service import article_service
 from app.services.economy_management_service import economy_management_service
+from app.services.inventory_service import inventory_service
 from app.services.keycard_service import keycard_service
 from app.services.leaderboard_service import leaderboard_service
 from app.services.scp_objects_service import scp_objects_service
@@ -83,8 +83,18 @@ async def view_card(
         return
 
     try:
-        templates = list(config.cards.values())
-        template = templates[random.randint(0, len(templates) - 1)]
+        db_user, created = await User.get_or_create(user_id=member.id)
+        await db_user.fetch_related("equipped_card")
+
+        template = None
+        if db_user.equipped_card:
+            equipped_template_id = db_user.equipped_card.item_id
+            if equipped_template_id in config.cards:
+                template = config.cards[equipped_template_id]
+
+        if not template:
+            templates = list(config.cards.values())
+            template = templates[-1]
 
         image = await keycard_service.generate_image(member, template)
 
@@ -248,6 +258,48 @@ async def buy_item(
         logger.error(exception)
 
 
+@bot.slash_command(name="інвентар", description="Переглянути свій інвентар")
+async def inventory(interaction: disnake.ApplicationCommandInteraction):
+    await response_utils.wait_for_ephemeral_response(interaction)
+
+    try:
+        await User.get_or_create(user_id=interaction.user.id)
+
+        embed, components = await inventory_service.init_inventory_message(user=interaction.user)
+        await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
+
+    except Exception as exception:
+        await response_utils.edit_ephemeral_response(
+            interaction, message="Виникла помилка під час перегляду інвентаря."
+        )
+        logger.error(exception)
+
+
+@bot.slash_command(name="екіпірувати", description="Екіпірувати картку доступу з інвентаря")
+async def equip_item(
+    interaction: disnake.ApplicationCommandInteraction,
+    item_id: str = commands.Param(description="ID картки, яку ви хочете екіпірувати"),
+):
+    await response_utils.wait_for_ephemeral_response(interaction)
+
+    try:
+        await User.get_or_create(user_id=interaction.user.id)
+
+        message = await inventory_service.equip_item(
+            user_id=interaction.user.id,
+            item_id=item_id
+        )
+
+        await response_utils.edit_ephemeral_response(interaction, message=message)
+
+    except Exception as exception:
+        await response_utils.edit_ephemeral_response(
+            interaction, message="Виникла помилка під час екіпірування предмету."
+        )
+        logger.error(exception)
+
+
+
 @bot.slash_command(name="скинути-репутацію", description="Скинути загальну репутацію всіх співробітників")
 @commands.has_permissions(administrator=True)
 async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
@@ -266,8 +318,7 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="змінити-баланс-користувача",
-                   description="Збільшити, або зменшити баланс на певну кількість репутації")
+@bot.slash_command(name="змінити-баланс-користувача", description="Збільшити, або зменшити баланс на певну кількість репутації")
 @commands.has_permissions(administrator=True)
 async def edit_player_balance_reputation(
         interaction: disnake.ApplicationCommandInteraction,
@@ -285,7 +336,7 @@ async def edit_player_balance_reputation(
     try:
         await economy_management_service.update_user_balance(user.id, amount)
         await response_utils.send_response(
-            interaction, f"Поточна репутація гравця {user.mention} була змінена"
+            interaction, f"Баланс гравця {user.mention} було змінено"
         )
 
     except Exception as exception:
@@ -331,6 +382,31 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
 
             embed, components = await shop_service.edit_shop_message(current_page, offset)
             await response_utils.edit_response(interaction, embed=embed, components=components)
+            return
+
+        if "inventory" in interaction_component_id:
+            user = interaction.user
+
+            if "previous" in interaction_component_id:
+                offset = (current_page - 2) * config.inventory_items_per_page
+                current_page -= 1
+            elif "next" in interaction_component_id:
+                offset = current_page * config.inventory_items_per_page
+                current_page += 1
+            elif "last" in interaction_component_id:
+                total_count = await inventory_service.get_total_user_items_count(user.id)
+                offset, current_page = await inventory_service.get_last_page_offset(
+                    total_count=total_count, limit=config.inventory_items_per_page
+                )
+            else:
+                current_page = 1
+                offset = 0
+
+            embed, components = await inventory_service.edit_inventory_message(
+                user, current_page, offset
+            )
+
+            await interaction.edit_original_message(embed=embed, components=components)
             return
 
         for criteria in config.leaderboard_options.values():
