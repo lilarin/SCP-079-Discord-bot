@@ -39,8 +39,13 @@ class ResponseUtils:
         await interaction.send(message, flags=MessageFlags(ephemeral=True))
 
     @staticmethod
-    async def edit_ephemeral_response(interaction, message: Optional[str] = None) -> None:
-        await interaction.edit_original_response(content=message)
+    async def edit_ephemeral_response(
+            interaction,
+            message: Optional[str] = None,
+            embed: Optional[Embed] = None,
+            components: Optional[List[ActionRow]] = None,
+    ) -> None:
+        await interaction.edit_original_response(content=message, embed=embed, components=components)
 
 
 response_utils = ResponseUtils()
