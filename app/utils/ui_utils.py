@@ -194,5 +194,32 @@ class UIUtils:
         embed.description = "\n\n".join(description)
         return embed
 
+    @staticmethod
+    async def format_legal_work_embed(prompt: str, reward: int) -> Embed:
+        embed = Embed(
+            title="Результат роботи",
+            description=f"{prompt}\n\n-# **Зароблено:** {reward} 💠",
+            color=0x4CAF50
+        )
+        return embed
+
+    @staticmethod
+    async def format_non_legal_work_embed(prompt: str, amount: int, is_success: bool) -> Embed:
+        if is_success:
+            title = "Результат ризикованої роботи"
+            description = f"{prompt}\n\n-# **Зароблено:** {amount} 💠"
+            color = 0x4CAF50
+        else:
+            title = "Результат ризикованої роботи"
+            description = f"{prompt}\n\n-# **Втрачено:** {amount} 💠"
+            color = 0xE53935
+
+        embed = Embed(
+            title=title,
+            description=description,
+            color=color
+        )
+        return embed
+
 
 ui_utils = UIUtils()

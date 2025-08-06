@@ -83,6 +83,11 @@ class Config:
         self.shop_items_per_page = 4
         self.inventory_items_per_page = 5
 
+        self.legal_work_reward_range: Tuple[int, int] = (50, 150)
+        self.non_legal_work_success_chance: float = 0.5
+        self.non_legal_work_reward_range: Tuple[int, int] = (200, 500)
+        self.non_legal_work_penalty_range: Tuple[int, int] = (100, 300)
+
     def get_font(self, font_path: str, size: int) -> ImageFont.FreeTypeFont:
         if (font_path, size) not in self.fonts:
             self.fonts[(font_path, size)] = ImageFont.truetype(font_path, size=size)

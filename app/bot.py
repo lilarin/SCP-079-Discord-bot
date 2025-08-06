@@ -14,6 +14,7 @@ from app.services.keycard_service import keycard_service
 from app.services.leaderboard_service import leaderboard_service
 from app.services.scp_objects_service import scp_objects_service
 from app.services.shop_service import shop_service
+from app.services.work_service import work_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
 
@@ -298,6 +299,48 @@ async def equip_item(
         )
         logger.error(exception)
 
+
+@bot.slash_command(name="робота", description="Виконати безпечне завдання для фонду")
+async def legal_work(interaction: disnake.ApplicationCommandInteraction):
+    await response_utils.wait_for_response(interaction)
+
+    try:
+        prompt, reward = await work_service.perform_legal_work(user_id=interaction.user.id)
+
+        embed = await ui_utils.format_legal_work_embed(
+            prompt=prompt,
+            reward=reward
+        )
+
+        await response_utils.send_response(interaction, embed=embed)
+
+    except Exception as exception:
+        await response_utils.send_response(
+            interaction, "Виникла помилка під час виконання завдання."
+        )
+        logger.error(exception)
+
+
+@bot.slash_command(name="нелегальна-робота", description="Взятися за ризиковану справу зі значним прибутком")
+async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
+    await response_utils.wait_for_response(interaction)
+
+    try:
+        prompt, amount, is_success = await work_service.perform_non_legal_work(user_id=interaction.user.id)
+
+        embed = await ui_utils.format_non_legal_work_embed(
+            prompt=prompt,
+            amount=amount,
+            is_success=is_success
+        )
+
+        await response_utils.send_response(interaction, embed=embed)
+
+    except Exception as exception:
+        await response_utils.send_response(
+            interaction, "Виникла помилка під час виконання завдання."
+        )
+        logger.error(exception)
 
 
 @bot.slash_command(name="скинути-репутацію", description="Скинути загальну репутацію всіх співробітників")
