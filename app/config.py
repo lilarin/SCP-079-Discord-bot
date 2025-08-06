@@ -84,13 +84,14 @@ class Config:
             "Репутація": "reputation"
         }
 
-        # Articles & Cards settings
+        # Articles, Cards & Inventory settings
         self.article_template_path = os.path.join(self.project_root, "assets", "articles", "article.png")
         self.primary_font_path = os.path.join(self.project_root, "assets", "fonts", "BauhausDemi.ttf")
         self.secondary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Bold.ttf")
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
         self.cards: Dict[str, CardConfig] = self._load_cards_from_json()
         self.shop_items_per_page = 4
+        self.inventory_items_per_page = 5
 
     def get_font(self, font_path: str, size: int) -> ImageFont.FreeTypeFont:
         if (font_path, size) not in self.fonts:
