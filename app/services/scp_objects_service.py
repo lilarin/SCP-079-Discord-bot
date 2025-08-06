@@ -7,7 +7,7 @@ import aiohttp
 from bs4 import BeautifulSoup, NavigableString
 
 from app.config import config, logger
-from app.models import SCPObject, User, ViewedScpObject
+from app.core.models import SCPObject, User, ViewedScpObject
 
 
 class ScpObjectsService:

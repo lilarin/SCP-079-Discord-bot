@@ -5,7 +5,7 @@ from disnake import Embed, Component
 from tortoise.functions import Count
 
 from app.config import config
-from app.models import User
+from app.core.models import User
 from app.utils.ui_utils import ui_utils
 
 

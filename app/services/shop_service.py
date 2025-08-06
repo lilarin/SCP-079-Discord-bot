@@ -7,7 +7,7 @@ from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
 from app.config import config, logger
-from app.models import Item, ItemType, User
+from app.core.models import Item, ItemType, User
 from app.utils.ui_utils import ui_utils
 
 

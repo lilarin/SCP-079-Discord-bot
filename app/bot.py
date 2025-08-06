@@ -6,7 +6,7 @@ from disnake.ext import commands
 
 from app.config import config, logger
 from app.modals.dossier_modal import DossierModal
-from app.models import User
+from app.core.models import User
 from app.services.articles_service import article_service
 from app.services.economy_management_service import economy_management_service
 from app.services.inventory_service import inventory_service

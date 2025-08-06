@@ -4,24 +4,13 @@ import logging.handlers
 import os
 import queue
 import sys
-from dataclasses import dataclass
 from typing import Dict, Tuple, Optional
 from urllib.parse import urlparse
 
 from PIL import Image, ImageFont
 from dotenv import load_dotenv
 
-
-@dataclass
-class CardConfig:
-    name: str
-    description: str
-    price: int
-    quantity_range: Tuple
-    image: Image.Image
-    primary_color: int
-    secondary_color: int
-    embed_color: int
+from app.core.schemas import CardConfig, WorkPrompts, NonLegalPrompts
 
 
 class Config:
@@ -36,14 +25,16 @@ class Config:
         # File System Paths
         self.assets_dir_path = os.path.join(self.project_root, "assets")
         self.cards_dir_path = os.path.join(self.assets_dir_path, "cards")
-        self.shop_cards_path = os.path.join(self.assets_dir_path, "templates", "shop_cards.json")
+        self.shop_cards_path = os.path.join(self.assets_dir_path, "configs", "shop_cards.json")
+        self.work_prompts_path = os.path.join(self.assets_dir_path, "configs", "work_prompts.json")
         self.article_template_path = os.path.join(self.assets_dir_path, "articles", "article.png")
         self.primary_font_path = os.path.join(self.assets_dir_path, "fonts", "BauhausDemi.ttf")
         self.secondary_font_path = os.path.join(self.assets_dir_path, "fonts", "Inter_18pt-Bold.ttf")
 
-        # Image and Card Configuration
+        # Image, card and work prompts Configuration
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
         self.cards: Dict[str, CardConfig] = self._load_cards_from_json()
+        self.work_prompts: Dict[str, WorkPrompts] = self._load_work_prompts_from_json()
 
         # SCP Article Scraper Settings
         self.wiki_url = "http://scp-ukrainian.wikidot.com"
@@ -137,6 +128,37 @@ class Config:
             logging.error(f"Missing key in card data from {self.shop_cards_path}: {e}")
             exit(1)
 
+    def _load_work_prompts_from_json(self) -> Optional[Dict[str, WorkPrompts]]:
+        """Loads work prompt configurations from a JSON file."""
+        try:
+            with open(self.work_prompts_path, "r", encoding="utf-8") as f:
+                raw_data = json.load(f)
+
+            loaded_prompts: Dict[str, WorkPrompts] = {}
+            for key, data in raw_data.items():
+                non_legal_data = data["non-legal"]
+                non_legal_prompts_obj = NonLegalPrompts(
+                    success=non_legal_data["success"],
+                    failure=non_legal_data["failure"]
+                )
+
+                loaded_prompts[key] = WorkPrompts(
+                    legal=data["legal"],
+                    non_legal=non_legal_prompts_obj
+                )
+            logging.info(f"Successfully loaded {len(loaded_prompts)} work prompt configurations from JSON.")
+            return loaded_prompts
+
+        except FileNotFoundError:
+            logging.error(f"Work prompts config file not found at {self.work_prompts_path}")
+            exit(1)
+        except json.JSONDecodeError:
+            logging.error(f"Could not decode JSON from {self.work_prompts_path}. Check for syntax errors.")
+            exit(1)
+        except KeyError as e:
+            logging.error(f"Missing key in work prompts data from {self.work_prompts_path}: {e}")
+            exit(1)
+
     @staticmethod
     def setup_logging():
         log_queue = queue.Queue(-1)
@@ -185,7 +207,7 @@ tortoise_orm = {
     },
     "apps": {
         "models": {
-            "models": ["app.models", "aerich.models"],
+            "models": ["app.core.models", "aerich.models"],
             "default_connection": "default",
         },
     },

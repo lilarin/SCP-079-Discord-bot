@@ -5,8 +5,8 @@ from disnake import Embed, Component, User
 from tortoise.exceptions import DoesNotExist
 
 from app.config import config
-from app.enums import ItemType
-from app.models import Item, User
+from app.core.enums import ItemType
+from app.core.models import Item, User
 from app.utils.ui_utils import ui_utils
 
 

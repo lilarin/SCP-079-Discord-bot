@@ -10,7 +10,7 @@ from disnake import File
 from tortoise.exceptions import IntegrityError
 
 from app.config import config
-from app.models import SCPObject
+from app.core.models import SCPObject
 
 
 class ArticleService:

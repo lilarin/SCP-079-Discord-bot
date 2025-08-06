@@ -1,6 +1,6 @@
 import disnake
 
-from app.models import User
+from app.core.models import User
 from app.utils.response_utils import response_utils
 
 

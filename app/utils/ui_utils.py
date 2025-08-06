@@ -6,7 +6,7 @@ from disnake import Embed, File, Role, ButtonStyle, User
 from disnake.ui import ActionRow, Button
 
 from app.config import config
-from app.models import SCPObject, Item
+from app.core.models import SCPObject, Item
 
 
 class UIUtils:

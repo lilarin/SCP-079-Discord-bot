@@ -3,7 +3,7 @@ from typing import Tuple
 from tortoise.exceptions import DoesNotExist
 from tortoise.expressions import Q
 
-from app.models import User
+from app.core.models import User
 from app.utils.ui_utils import ui_utils
 
 
