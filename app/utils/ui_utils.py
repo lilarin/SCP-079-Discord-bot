@@ -161,7 +161,7 @@ class UIUtils:
                 f"Ціна: **{item.price}** 💠",
                 f"Кількість: **{item.quantity}**",
                 f"-# **{item.description}**",
-                f"-# ID для покупки: `{item.item_id}`"
+                f"-# ID: `{item.item_id}`"
             ]
             description_lines.append("\n".join(item_details))
 
