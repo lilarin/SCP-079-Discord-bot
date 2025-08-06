@@ -58,7 +58,7 @@ class User(Model):
 
 class Item(Model):
     id = fields.IntField(pk=True)
-    template_id = fields.CharField(max_length=50, unique=True)
+    item_id = fields.CharField(max_length=50, unique=True)
     name = fields.CharField(max_length=100)
     description = fields.TextField()
     price = fields.BigIntField()
