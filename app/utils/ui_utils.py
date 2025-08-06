@@ -2,7 +2,7 @@ import asyncio
 from typing import List, Tuple
 from typing import Optional
 
-from disnake import Embed, File, Role, ButtonStyle
+from disnake import Embed, File, Role, ButtonStyle, User
 from disnake.ui import ActionRow, Button
 
 from app.config import config
@@ -161,7 +161,7 @@ class UIUtils:
                 f"Ціна: **{item.price}** 💠",
                 f"Кількість: **{item.quantity}**",
                 f"-# **{item.description}**",
-                f"-# ID для покупки: `{item.template_id}`"
+                f"-# ID для покупки: `{item.item_id}`"
             ]
             description_lines.append("\n".join(item_details))
 
@@ -169,6 +169,29 @@ class UIUtils:
         embed.set_thumbnail(
             url="https://media.discordapp.net/attachments/614115775376261120/1402411530548543629/plate_1.png"
         )
+        return embed
+
+    @staticmethod
+    async def format_inventory_embed(user: User, items: List[Item], offset: int = 0) -> Embed:
+        embed = Embed(
+            title="Інвентар",
+            color=0xffffff
+        )
+        embed.set_thumbnail(url=user.display_avatar.url)
+
+        if not items:
+            embed.description = "Ваш інвентар порожній"
+            return embed
+
+        description = []
+        for i, item in enumerate(items):
+            description.append(
+                f"{offset + i + 1}. **{item.name}**\n"
+                f"-# **{item.description}**\n"
+                f"-# ID: `{item.item_id}`"
+            )
+
+        embed.description = "\n\n".join(description)
         return embed
 
 
