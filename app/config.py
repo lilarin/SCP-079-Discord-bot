@@ -28,12 +28,25 @@ class Config:
     def __init__(self):
         load_dotenv()
 
-        # General settings
+        # Core Application Settings
         self.discord_bot_token = self._get_env_variable("DISCORD_BOT_TOKEN")
         self.database_url = self._get_env_variable("SUPABASE_DIRECT_URL")
         self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        # SCP articles settings
+        # File System Paths
+        self.assets_dir_path = os.path.join(self.project_root, "assets")
+        self.cards_dir_path = os.path.join(self.assets_dir_path, "cards")
+        self.shop_cards_path = os.path.join(self.assets_dir_path, "templates", "shop_cards.json")
+        self.article_template_path = os.path.join(self.assets_dir_path, "articles", "article.png")
+        self.primary_font_path = os.path.join(self.assets_dir_path, "fonts", "BauhausDemi.ttf")
+        self.secondary_font_path = os.path.join(self.assets_dir_path, "fonts", "Inter_18pt-Bold.ttf")
+
+        # Image and Card Configuration
+        self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
+        self.cards: Dict[str, CardConfig] = self._load_cards_from_json()
+
+        # SCP Article Scraper Settings
+        self.wiki_url = "http://scp-ukrainian.wikidot.com"
         self.scp_classes = {
             "Безпечний": "safe",
             "Евклід": "euclid",
@@ -62,34 +75,20 @@ class Config:
             "7000-7999": "8",
             "8000-8999": "9",
         }
-        self.wiki_url = "http://scp-ukrainian.wikidot.com"
         self.scrape_urls = [
-            f"{self.wiki_url}/scp-series-ua",
-            f"{self.wiki_url}/scp-series",
-            f"{self.wiki_url}/scp-series-2",
-            f"{self.wiki_url}/scp-series-3",
-            f"{self.wiki_url}/scp-series-4",
-            f"{self.wiki_url}/scp-series-5",
-            f"{self.wiki_url}/scp-series-6",
-            f"{self.wiki_url}/scp-series-7",
-            f"{self.wiki_url}/scp-series-8",
+            f"{self.wiki_url}/scp-series-ua", f"{self.wiki_url}/scp-series", f"{self.wiki_url}/scp-series-2",
+            f"{self.wiki_url}/scp-series-3", f"{self.wiki_url}/scp-series-4", f"{self.wiki_url}/scp-series-5",
+            f"{self.wiki_url}/scp-series-6", f"{self.wiki_url}/scp-series-7", f"{self.wiki_url}/scp-series-8",
             f"{self.wiki_url}/scp-series-9"
         ]
 
-        # Leaderboard settings
-        self.leaderboard_items_per_page = 10
+        # UI & Pagination Settings
         self.leaderboard_options = {
             "Переглянуті статті": "articles",
             "Баланс": "balance",
             "Репутація": "reputation"
         }
-
-        # Articles, Cards & Inventory settings
-        self.article_template_path = os.path.join(self.project_root, "assets", "articles", "article.png")
-        self.primary_font_path = os.path.join(self.project_root, "assets", "fonts", "BauhausDemi.ttf")
-        self.secondary_font_path = os.path.join(self.project_root, "assets", "fonts", "Inter_18pt-Bold.ttf")
-        self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
-        self.cards: Dict[str, CardConfig] = self._load_cards_from_json()
+        self.leaderboard_items_per_page = 10
         self.shop_items_per_page = 4
         self.inventory_items_per_page = 5
 
@@ -107,16 +106,14 @@ class Config:
         return value
 
     def _load_cards_from_json(self) -> Optional[Dict[str, CardConfig]]:
-        json_path = os.path.join(self.project_root, "shop_cards.json")
-        images_base_path = os.path.join(self.project_root, "assets", "cards")
-
+        """Loads card configurations from a JSON file."""
         try:
-            with open(json_path, "r", encoding="utf-8") as f:
+            with open(self.shop_cards_path, "r", encoding="utf-8") as f:
                 raw_data = json.load(f)
 
             loaded_cards: Dict[str, CardConfig] = {}
             for key, data in raw_data.items():
-                full_image_path = os.path.join(images_base_path, data["image_file"])
+                full_image_path = os.path.join(self.cards_dir_path, data["image_file"])
                 loaded_cards[key] = CardConfig(
                     name=data["name"],
                     description=data["description"],
@@ -131,10 +128,13 @@ class Config:
             return loaded_cards
 
         except FileNotFoundError:
-            logging.error(f"Card config file not found at {json_path}")
+            logging.error(f"Card config file not found at {self.shop_cards_path}")
             exit(1)
         except json.JSONDecodeError:
-            logging.error(f"Could not decode JSON from {json_path}. Check for syntax errors.")
+            logging.error(f"Could not decode JSON from {self.shop_cards_path}. Check for syntax errors.")
+            exit(1)
+        except KeyError as e:
+            logging.error(f"Missing key in card data from {self.shop_cards_path}: {e}")
             exit(1)
 
     @staticmethod
@@ -162,10 +162,12 @@ class Config:
         return logger, listener
 
 
+# Initialize Config and Logging
 config = Config()
 logger, log_listener = config.setup_logging()
 
 # Tortoise ORM Settings
+# Used directly by the ORM initialization.
 db_url = urlparse(config.database_url)
 tortoise_orm = {
     "connections": {

@@ -14,7 +14,7 @@ class InventoryService:
 
     @staticmethod
     async def get_user_items(user_id: int, limit: int, offset: int = 0) -> Tuple[List[Item], bool, bool]:
-        user = await User.get(user_id=user_id).prefetch_related('inventory')
+        user = await User.get(user_id=user_id).prefetch_related("inventory")
         items_query = user.inventory.all().order_by("name").offset(offset).limit(limit + 1)
         items_raw = await items_query
 
@@ -85,7 +85,7 @@ class InventoryService:
             return "Ви вже екіпірували даний предмет"
 
         user.equipped_card_id = item_to_equip.id
-        await user.save(update_fields=['equipped_card_id'])
+        await user.save(update_fields=["equipped_card_id"])
 
         return f"Ви успішно екіпірували картку!"
 
