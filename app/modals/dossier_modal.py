@@ -30,7 +30,7 @@ class DossierModal(disnake.ui.Modal):
 
     @staticmethod
     def _format_dossier(db_user: User) -> str:
-        return db_user.dossier[:97] + "..." if db_user else "..."
+        return db_user.dossier[:97] + "..." if db_user.dossier else "..."
 
     async def callback(self, interaction: disnake.ModalInteraction) -> None:
         new_dossier = interaction.text_values.get("dossier")
