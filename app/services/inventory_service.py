@@ -4,7 +4,7 @@ from typing import List, Tuple, Optional
 from disnake import Embed, Component, User
 from tortoise.exceptions import DoesNotExist
 
-from app.config import config
+from app.config import config, logger
 from app.core.enums import ItemType
 from app.core.models import Item, User
 from app.utils.ui_utils import ui_utils
@@ -15,7 +15,7 @@ class InventoryService:
     @staticmethod
     async def get_user_items(user_id: int, limit: int, offset: int = 0) -> Tuple[List[Item], bool, bool]:
         user = await User.get(user_id=user_id).prefetch_related("inventory")
-        items_query = user.inventory.all().order_by("name").offset(offset).limit(limit + 1)
+        items_query = user.inventory.all().order_by("id").offset(offset).limit(limit + 1)
         items_raw = await items_query
 
         has_next = len(items_raw) > limit
@@ -36,6 +36,21 @@ class InventoryService:
         total_pages = math.ceil(total_count / limit)
         offset = max(0, (total_pages - 1) * limit)
         return offset, total_pages
+
+    @staticmethod
+    async def check_for_default_card(user: User) -> None:
+        if not config.cards:
+            return
+
+        default_card_id = list(config.cards.keys())[-1]
+        has_default_card = await user.inventory.filter(item_id=default_card_id).exists()
+
+        if not has_default_card:
+            try:
+                default_item = await Item.get(item_id=default_card_id)
+                await user.inventory.add(default_item)
+            except DoesNotExist:
+                logger.error(f"Error: Default item '{default_card_id}' not found in the database.")
 
     async def init_inventory_message(self, user: User) -> Optional[Tuple[Embed, List[Component]]]:
         items, _, has_next = await self.get_user_items(user.id, limit=config.inventory_items_per_page)

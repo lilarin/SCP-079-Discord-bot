@@ -72,7 +72,7 @@ async def on_member_join(member):
 @bot.slash_command(name="картка", description="Переглянути картку співробітника фонду")
 async def view_card(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.Member = commands.Param(description="Оберіть користувача", default=None),
+        user: disnake.User = commands.Param(description="Оберіть користувача", default=None),
 ):
     await response_utils.wait_for_response(interaction)
 
@@ -203,7 +203,7 @@ async def top_articles(
 @bot.slash_command(name="баланс", description="Переглянути баланс користувача")
 async def view_balance(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.Member = commands.Param(description="Оберіть користувача", default=None),
+        user: disnake.User = commands.Param(description="Оберіть користувача", default=None),
 ):
     await response_utils.wait_for_response(interaction)
 
@@ -264,7 +264,9 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
 
     try:
-        await User.get_or_create(user_id=interaction.user.id)
+        db_user, _ = await User.get_or_create(user_id=interaction.user.id)
+
+        await inventory_service.check_for_default_card(user=db_user)
 
         embed, components = await inventory_service.init_inventory_message(user=interaction.user)
         await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
@@ -321,7 +323,7 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="нелегальна-робота", description="Взятися за ризиковану справу зі значним прибутком")
+@bot.slash_command(name="ризикована-робота", description="Взятися за ризиковану справу")
 async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
 
@@ -365,7 +367,7 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
 @commands.has_permissions(administrator=True)
 async def edit_player_balance_reputation(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.Member = commands.Param(description="Оберіть користувача"),
+        user: disnake.User = commands.Param(description="Оберіть користувача"),
         amount: int = commands.Param(description="Кількість репутації"),
 ):
     await response_utils.wait_for_response(interaction)
