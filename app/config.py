@@ -67,9 +67,15 @@ class Config:
             "8000-8999": "9",
         }
         self.scrape_urls = [
-            f"{self.wiki_url}/scp-series-ua", f"{self.wiki_url}/scp-series", f"{self.wiki_url}/scp-series-2",
-            f"{self.wiki_url}/scp-series-3", f"{self.wiki_url}/scp-series-4", f"{self.wiki_url}/scp-series-5",
-            f"{self.wiki_url}/scp-series-6", f"{self.wiki_url}/scp-series-7", f"{self.wiki_url}/scp-series-8",
+            f"{self.wiki_url}/scp-series-ua",
+            f"{self.wiki_url}/scp-series",
+            f"{self.wiki_url}/scp-series-2",
+            f"{self.wiki_url}/scp-series-3",
+            f"{self.wiki_url}/scp-series-4",
+            f"{self.wiki_url}/scp-series-5",
+            f"{self.wiki_url}/scp-series-6",
+            f"{self.wiki_url}/scp-series-7",
+            f"{self.wiki_url}/scp-series-8",
             f"{self.wiki_url}/scp-series-9"
         ]
 
