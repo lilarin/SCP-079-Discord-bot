@@ -16,7 +16,7 @@ class User(Model):
     )
 
     inventory: fields.ManyToManyRelation["Item"] = fields.ManyToManyField(
-        "models.Item", related_name="owners", through="models.UserItem"
+        "models.Item", related_name="owners", through="user_items"
     )
 
     class Meta:
@@ -83,26 +83,6 @@ class UserItem(Model):
 
     def __str__(self):
         return f"Item {self.item.id} owned by User {self.user.id}"
-
-
-class UserShopItem(Model):
-    id = fields.IntField(pk=True)
-    user_item = fields.OneToOneField(
-        "models.UserItem",
-        related_name="shop_listing",
-        on_delete=fields.CASCADE,
-    )
-    price = fields.BigIntField()
-
-
-    class Meta:
-        table = "user_shop_items"
-        db_constraints = {
-            "price_gt_zero": "CHECK (price > 0)"
-        }
-
-    def __str__(self):
-        return f"Listing {self.id} for UserItem {self.user_item.id} at price {self.price}"
 
 
 class SCPObject(Model):
