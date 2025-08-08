@@ -16,7 +16,7 @@ class User(Model):
     )
 
     inventory: fields.ManyToManyRelation["Item"] = fields.ManyToManyField(
-        "models.Item", related_name="owners", through="user_items"
+        "models.Item", related_name="owners", through="models.UserItem"
     )
 
     class Meta:
@@ -43,16 +43,11 @@ class User(Model):
 
     async def update_balance(self, amount: int):
         new_balance = self.balance + amount
-        if new_balance < 0:
-            new_balance = 0
-        self.balance = new_balance
-        if amount > 0:
-            await self._update_reputation(amount)
-        await self.save()
+        self.balance = max(new_balance, 0)
 
-    async def _update_reputation(self, amount: int):
-        new_reputation = self.reputation + amount
-        self.reputation = new_reputation
+        if amount > 0:
+            self.reputation += amount
+
         await self.save()
 
 
@@ -61,7 +56,7 @@ class Item(Model):
     item_id = fields.CharField(max_length=50, unique=True)
     name = fields.CharField(max_length=100)
     description = fields.TextField()
-    price = fields.BigIntField()
+    price = fields.BigIntField(db_index=True)
     item_type = fields.CharEnumField(ItemType)
     quantity = fields.IntField(default=0)
 
@@ -73,6 +68,19 @@ class Item(Model):
 
     def __str__(self):
         return f"{self.name} (Qty: {self.quantity})"
+
+
+class UserItem(Model):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField("models.User", related_name="inventory_items")
+    item = fields.ForeignKeyField("models.Item", related_name="owned_by_users")
+
+    class Meta:
+        table = "user_items"
+        unique_together = ("user", "item")
+
+    def __str__(self):
+        return f"Item {self.item.id} owned by User {self.user.id}"
 
 
 class SCPObject(Model):
