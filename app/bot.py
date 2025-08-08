@@ -5,6 +5,7 @@ import disnake
 from disnake.ext import commands
 
 from app.config import config, logger
+from app.core.decorators import target_is_user
 from app.modals.dossier_modal import DossierModal
 from app.core.models import User
 from app.services.articles_service import article_service
@@ -47,6 +48,9 @@ async def on_slash_command_error(interaction, error):
     if isinstance(error, commands.MissingPermissions):
         await response_utils.send_ephemeral_response(interaction, "Ця команда недоступна для вас")
         return
+    elif isinstance(error, commands.NoPrivateMessage):
+        await response_utils.send_ephemeral_response(interaction, "Команди бота можна використовувати лише на сервері")
+        return
 
     logger.error(error)
 
@@ -70,18 +74,14 @@ async def on_member_join(member):
 
 
 @bot.slash_command(name="картка", description="Переглянути картку співробітника фонду")
+@commands.guild_only()
+@target_is_user
 async def view_card(
         interaction: disnake.ApplicationCommandInteraction,
         user: disnake.User = commands.Param(description="Оберіть користувача", default=None),
 ):
     await response_utils.wait_for_response(interaction)
-
     member = user or interaction.user
-    if member.bot:
-        await response_utils.send_response(
-            interaction, message="Команду не можна використовувати на ботах.", delete_after=5
-        )
-        return
 
     try:
         db_user, created = await User.get_or_create(user_id=member.id)
@@ -100,13 +100,17 @@ async def view_card(
         image = await keycard_service.generate_image(member, template)
 
         db_user, created = await User.get_or_create(user_id=member.id)
-        top_role = member.top_role
+
+        try:
+            top_role = member.top_role if member.top_role != interaction.guild.default_role else None
+        except AttributeError:
+            top_role = None
 
         embed = await keycard_service.create_profile_embed(
             card=image,
             color=template.embed_color,
             dossier=db_user.dossier if not created else None,
-            role=top_role if top_role != member.guild.default_role else None,
+            role=top_role,
         )
 
         await response_utils.send_response(interaction, embed=embed)
@@ -120,6 +124,7 @@ async def view_card(
 
 
 @bot.slash_command(name="випадкова-стаття", description="Отримати посилання на випадкову статтю за фільтрами")
+@commands.guild_only()
 async def get_random_article(
         interaction: disnake.ApplicationCommandInteraction,
         object_class=commands.Param(
@@ -165,6 +170,7 @@ async def get_random_article(
 
 
 @bot.slash_command(name="досьє", description="Заповнити своє досьє")
+@commands.guild_only()
 async def view_card(interaction: disnake.ApplicationCommandInteraction):
 
     try:
@@ -181,6 +187,7 @@ async def view_card(interaction: disnake.ApplicationCommandInteraction):
 
 
 @bot.slash_command(name="топ", description="Показати топ користувачів за певним критерієм")
+@commands.guild_only()
 async def top_articles(
         interaction: disnake.ApplicationCommandInteraction,
         criteria=commands.Param(
@@ -201,18 +208,14 @@ async def top_articles(
 
 
 @bot.slash_command(name="баланс", description="Переглянути баланс користувача")
+@commands.guild_only()
+@target_is_user
 async def view_balance(
         interaction: disnake.ApplicationCommandInteraction,
         user: disnake.User = commands.Param(description="Оберіть користувача", default=None),
 ):
     await response_utils.wait_for_response(interaction)
-
     member = user or interaction.user
-    if member.bot:
-        await response_utils.send_response(
-            interaction, message="Команду не можна використовувати на ботах.", delete_after=5
-        )
-        return
 
     try:
         embed = await economy_management_service.create_user_balance_message(member.id)
@@ -224,6 +227,7 @@ async def view_balance(
 
 
 @bot.slash_command(name="магазин", description="Переглянути товари у магазині")
+@commands.guild_only()
 async def shop(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
     try:
@@ -236,6 +240,7 @@ async def shop(interaction: disnake.ApplicationCommandInteraction):
 
 
 @bot.slash_command(name="купити", description="Купити товар з магазину за його ID")
+@commands.guild_only()
 async def buy_item(
         interaction: disnake.ApplicationCommandInteraction,
         item_id: str = commands.Param(description="ID товару"),
@@ -260,6 +265,7 @@ async def buy_item(
 
 
 @bot.slash_command(name="інвентар", description="Переглянути свій інвентар")
+@commands.guild_only()
 async def inventory(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
 
@@ -279,6 +285,7 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
 
 
 @bot.slash_command(name="екіпірувати", description="Екіпірувати картку доступу з інвентаря")
+@commands.guild_only()
 async def equip_item(
     interaction: disnake.ApplicationCommandInteraction,
     item_id: str = commands.Param(description="ID картки, яку ви хочете екіпірувати"),
@@ -303,6 +310,7 @@ async def equip_item(
 
 
 @bot.slash_command(name="робота", description="Виконати безпечне завдання для фонду")
+@commands.guild_only()
 async def legal_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
 
@@ -324,6 +332,7 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
 
 
 @bot.slash_command(name="ризикована-робота", description="Взятися за ризиковану справу")
+@commands.guild_only()
 async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
 
@@ -346,6 +355,7 @@ async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
 
 
 @bot.slash_command(name="скинути-репутацію", description="Скинути загальну репутацію всіх співробітників")
+@commands.guild_only()
 @commands.has_permissions(administrator=True)
 async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
@@ -364,19 +374,15 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
 
 
 @bot.slash_command(name="змінити-баланс-користувача", description="Збільшити, або зменшити баланс на певну кількість репутації")
+@commands.guild_only()
 @commands.has_permissions(administrator=True)
+@target_is_user
 async def edit_player_balance_reputation(
         interaction: disnake.ApplicationCommandInteraction,
         user: disnake.User = commands.Param(description="Оберіть користувача"),
         amount: int = commands.Param(description="Кількість репутації"),
 ):
     await response_utils.wait_for_response(interaction)
-
-    if user.bot:
-        await response_utils.send_response(
-            interaction, message="Команду не можна використовувати на ботах.", delete_after=5
-        )
-        return
 
     try:
         await economy_management_service.update_user_balance(user.id, amount)

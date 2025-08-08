@@ -139,8 +139,13 @@ class KeyCardService:
         return File(fp=image_buffer, filename="keycard.png")
 
     async def generate_image(self, member, template) -> BytesIO:
+        try:
+            user_code = await keycard_utils.get_user_code(member.joined_at.timestamp())
+        except AttributeError:
+            user_code = ""
+
         user_name = await keycard_utils.process_username(member.display_name)
-        user_code = await keycard_utils.get_user_code(member.joined_at.timestamp())
+
         avatar = io.BytesIO(await member.avatar.read())
         avatar_decoration = member.avatar_decoration
         if avatar_decoration:
