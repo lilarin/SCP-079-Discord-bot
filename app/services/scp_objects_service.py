@@ -22,7 +22,7 @@ class ScpObjectsService:
                 response.raise_for_status()
                 return await response.text()
         except aiohttp.ClientError as e:
-            print(f"Error fetching {url}: {e}")
+            logger.error(f"Error fetching {url}: {e}")
             return None
 
     def _parse_scp_data(self, html: str) -> List[Dict]:
