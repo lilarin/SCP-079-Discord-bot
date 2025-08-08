@@ -21,6 +21,7 @@ class User(Model):
 
     class Meta:
         table = "users"
+        indexes = ("balance","reputation")
         db_constraints = {
             "balance_gte_zero": "CHECK (balance >= 0)",
             "reputation_gte_zero": "CHECK (reputation >= 0)"
@@ -56,12 +57,13 @@ class Item(Model):
     item_id = fields.CharField(max_length=50, unique=True)
     name = fields.CharField(max_length=100)
     description = fields.TextField()
-    price = fields.BigIntField(db_index=True)
+    price = fields.BigIntField()
     item_type = fields.CharEnumField(ItemType)
     quantity = fields.IntField(default=0)
 
     class Meta:
         table = "items"
+        indexes = ("price",)
         db_constraints = {
             "quantity_gte_zero": "CHECK (quantity >= 0)"
         }
@@ -83,6 +85,26 @@ class UserItem(Model):
         return f"Item {self.item.id} owned by User {self.user.id}"
 
 
+class UserShopItem(Model):
+    id = fields.IntField(pk=True)
+    user_item = fields.OneToOneField(
+        "models.UserItem",
+        related_name="shop_listing",
+        on_delete=fields.CASCADE,
+    )
+    price = fields.BigIntField()
+
+
+    class Meta:
+        table = "user_shop_items"
+        db_constraints = {
+            "price_gt_zero": "CHECK (price > 0)"
+        }
+
+    def __str__(self):
+        return f"Listing {self.id} for UserItem {self.user_item.id} at price {self.price}"
+
+
 class SCPObject(Model):
     id = fields.IntField(pk=True)
     number = fields.CharField(max_length=255)
@@ -93,6 +115,7 @@ class SCPObject(Model):
 
     class Meta:
         table = "scp_objects"
+        indexes = ("range","object_class")
 
     def __str__(self):
         return f"{self.title} ({self.object_class})"
