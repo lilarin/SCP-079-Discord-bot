@@ -26,3 +26,10 @@ class NonLegalPrompts:
 class WorkPrompts:
     legal: List[str]
     non_legal: NonLegalPrompts
+
+
+@dataclass
+class CrystallizationState:
+    bet: int
+    multiplier: float
+    loss_chance: float

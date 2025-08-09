@@ -169,7 +169,7 @@ class UIUtils:
             description_lines.append("\n".join(item_details))
 
         embed.description = "\n\n".join(description_lines)
-        embed.set_thumbnail( url="https://imgur.com/XmqvWK9.png")
+        embed.set_thumbnail(url="https://imgur.com/XmqvWK9.png")
         return embed
 
     @staticmethod
@@ -220,6 +220,83 @@ class UIUtils:
             description=description,
             color=color
         )
+        return embed
+
+    @staticmethod
+    async def format_crystallize_embed(
+            bet: int, multiplier: float, potential_win: int, loss_chance: float, is_first_turn: bool
+    ) -> Tuple[Embed, List[ActionRow]]:
+        embed = Embed(
+            title="Процес Кристалізації",
+            description=(
+                "Ваша ставка кристалізується\n"
+                "Збільшуйте множник, але пам'ятайте про ризик!"
+            ),
+            color=0xFFB9BC
+        )
+        embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
+
+        buttons = [
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Ставка: {bet} 💠",
+                custom_id="display_bet",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Множник: x{multiplier:.2f}",
+                custom_id="display_multiplier",
+                disabled=True),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Шанс провалу: {loss_chance:.1f}%",
+                custom_id="display_loss",
+                disabled=True)
+        ]
+        state_row = ActionRow(*buttons)
+
+        continue_button = Button(
+            style=ButtonStyle.primary,
+            label="Кристалізувати далі",
+            custom_id="game_crystallize_continue"
+        )
+        stop_button = Button(
+            style=ButtonStyle.green,
+            label=f"Забрати {potential_win} 💠",
+            custom_id="game_crystallize_stop",
+            disabled=is_first_turn
+        )
+        action_row = ActionRow(continue_button, stop_button)
+
+        return embed, [state_row, action_row]
+
+    @staticmethod
+    async def format_crystallize_win_embed(bet: int, winnings: int, multiplier: float) -> Embed:
+        embed = Embed(
+            title="Процес зупинено!",
+            description=(
+                f"Ви вчасно зупинили кристалізацію та зафіксували свій прибуток!\n\n"
+                f"-# **Ваша ставка:** {bet} 💠\n"
+                f"-# **Підсумковий множник:** x{multiplier:.2f}\n"
+                f"-# **Виграш:** {winnings} 💠"
+            ),
+            color=0x4CAF50
+        )
+        embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
+        return embed
+
+    @staticmethod
+    async def format_crystallize_loss_embed(bet: int) -> Embed:
+        embed = Embed(
+            title="Повна кристалізація!",
+            description=(
+                f"Жадібність взяла гору\nКристал повністю поглинув вашу ставку\n\n"
+                f"-# **Втрачено:** {bet} 💠"
+            ),
+            color=0xE53935
+        )
+        embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
         return embed
 
 

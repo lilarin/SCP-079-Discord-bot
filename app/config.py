@@ -17,12 +17,12 @@ class Config:
     def __init__(self):
         load_dotenv()
 
-        # Core Application Settings
+        # Core Application configuration
         self.discord_bot_token = self._get_env_variable("DISCORD_BOT_TOKEN")
         self.database_url = self._get_env_variable("SUPABASE_DIRECT_URL")
         self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        # File System Paths
+        # File System Paths configuration
         self.assets_dir_path = os.path.join(self.project_root, "assets")
         self.cards_dir_path = os.path.join(self.assets_dir_path, "cards")
         self.shop_cards_path = os.path.join(self.assets_dir_path, "configs", "shop_cards.json")
@@ -31,12 +31,12 @@ class Config:
         self.primary_font_path = os.path.join(self.assets_dir_path, "fonts", "BauhausDemi.ttf")
         self.secondary_font_path = os.path.join(self.assets_dir_path, "fonts", "Inter_18pt-Bold.ttf")
 
-        # Image, card and work prompts Configuration
+        # Image, card and work prompts configuration
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
         self.cards: Dict[str, CardConfig] = self._load_cards_from_json()
         self.work_prompts: Dict[str, WorkPrompts] = self._load_work_prompts_from_json()
 
-        # SCP Article Scraper Settings
+        # SCP Article Scraper configuration
         self.wiki_url = "http://scp-ukrainian.wikidot.com"
         self.scp_classes = {
             "Безпечний": "safe",
@@ -79,7 +79,7 @@ class Config:
             f"{self.wiki_url}/scp-series-9"
         ]
 
-        # UI & Pagination Settings
+        # UI & Pagination configuration
         self.leaderboard_options = {
             "Переглянуті статті": "articles",
             "Баланс": "balance",
@@ -89,10 +89,17 @@ class Config:
         self.shop_items_per_page = 4
         self.inventory_items_per_page = 5
 
+        # Economy configuration
         self.legal_work_reward_range: Tuple[int, int] = (50, 150)
         self.non_legal_work_success_chance: float = 0.5
         self.non_legal_work_reward_range: Tuple[int, int] = (200, 500)
         self.non_legal_work_penalty_range: Tuple[int, int] = (100, 300)
+
+        # Mini-games configuration
+        self.crystallize_initial_chance: float = 0.05
+        self.crystallize_initial_multiplier_range: Tuple[float, float] = (0.7, 0.9)
+        self.crystallize_chance_increment_range: Tuple[float, float] = (0.07, 0.18)
+        self.crystallize_multiplier_increment_range: Tuple[float, float] = (0.1, 0.14)
 
     def get_font(self, font_path: str, size: int) -> ImageFont.FreeTypeFont:
         if (font_path, size) not in self.fonts:
@@ -199,7 +206,7 @@ class Config:
 config = Config()
 logger, log_listener = config.setup_logging()
 
-# Tortoise ORM Settings
+# Tortoise ORM configuration
 # Used directly by the ORM initialization.
 db_url = urlparse(config.database_url)
 tortoise_orm = {
