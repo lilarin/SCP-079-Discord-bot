@@ -16,7 +16,7 @@ class User(Model):
     )
 
     inventory: fields.ManyToManyRelation["Item"] = fields.ManyToManyField(
-        "models.Item", related_name="owners", through="user_items"
+        "models.Item", related_name="owners", through="users_items"
     )
 
     class Meta:
@@ -70,19 +70,6 @@ class Item(Model):
 
     def __str__(self):
         return f"{self.name} (Qty: {self.quantity})"
-
-
-class UserItem(Model):
-    id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField("models.User", related_name="inventory_items")
-    item = fields.ForeignKeyField("models.Item", related_name="owned_by_users")
-
-    class Meta:
-        table = "user_items"
-        unique_together = ("user", "item")
-
-    def __str__(self):
-        return f"Item {self.item.id} owned by User {self.user.id}"
 
 
 class SCPObject(Model):
