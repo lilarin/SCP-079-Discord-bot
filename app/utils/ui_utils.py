@@ -1,11 +1,11 @@
 import asyncio
-from typing import List, Tuple
-from typing import Optional
+from typing import List, Tuple, Optional
 
 from disnake import Embed, File, Role, ButtonStyle, User
 from disnake.ui import ActionRow, Button
 
 from app.config import config
+from app.core.enums import Color
 from app.core.models import SCPObject, Item
 
 
@@ -49,7 +49,7 @@ class UIUtils:
             disable_previous_page_button: bool = False,
             disable_next_page_button: bool = False,
             disable_last_page_button: bool = False,
-    ) -> ActionRow:
+    ) -> Optional[ActionRow]:
         buttons = [
             Button(
                 style=ButtonStyle.grey,
@@ -135,7 +135,7 @@ class UIUtils:
         embed = Embed(
             title="Баланс репутації користувача",
             description="",
-            color=0xffffff
+            color=Color.WHITE.value
         )
 
         embed.description += f"Поточний баланс – {balance} 💠 "
@@ -150,7 +150,7 @@ class UIUtils:
     async def format_shop_embed(items: List[Item], offset: int = 0) -> Embed:
         embed = Embed(
             title="Магазин",
-            color=0xffffff
+            color=Color.WHITE.value
         )
 
         if not items:
@@ -176,7 +176,7 @@ class UIUtils:
     async def format_inventory_embed(user: User, items: List[Item], offset: int = 0) -> Embed:
         embed = Embed(
             title="Інвентар",
-            color=0xffffff
+            color=Color.WHITE.value
         )
         embed.set_thumbnail(url=user.display_avatar.url)
 
@@ -184,36 +184,34 @@ class UIUtils:
             embed.description = "Ваш інвентар порожній"
             return embed
 
-        description = []
-        for i, item in enumerate(items):
-            description.append(
-                f"{offset + i + 1}. **{item.name}**\n"
-                f"-# **{item.description}**\n"
-                f"-# ID: `{item.item_id}`"
-            )
+        description = [
+            f"{offset + i + 1}. **{item.name}**\n"
+            f"-# **{item.description}**\n"
+            f"-# ID: `{item.item_id}`"
+            for i, item in enumerate(items)
+        ]
 
         embed.description = "\n\n".join(description)
         return embed
 
     @staticmethod
     async def format_legal_work_embed(prompt: str, reward: int) -> Embed:
-        embed = Embed(
+        return Embed(
             title="Результат роботи",
             description=f"{prompt}\n\n-# **Зароблено:** {reward} 💠",
-            color=0x4CAF50
+            color=Color.GREEN.value
         )
-        return embed
 
     @staticmethod
     async def format_non_legal_work_embed(prompt: str, amount: int, is_success: bool) -> Embed:
         if is_success:
             title = "Результат ризикованої роботи"
             description = f"{prompt}\n\n-# **Зароблено:** {amount} 💠"
-            color = 0x4CAF50
+            color = Color.GREEN.value
         else:
             title = "Результат ризикованої роботи"
             description = f"{prompt}\n\n-# **Втрачено:** {amount} 💠"
-            color = 0xE53935
+            color = Color.RED.value
 
         embed = Embed(
             title=title,
@@ -232,7 +230,7 @@ class UIUtils:
                 "Ваша ставка кристалізується\n"
                 "Збільшуйте множник, але пам'ятайте про ризик!"
             ),
-            color=0xFFB9BC
+            color=Color.LIGHT_PINK.value
         )
         embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
 
@@ -281,7 +279,7 @@ class UIUtils:
                 f"-# **Підсумковий множник:** x{multiplier:.2f}\n"
                 f"-# **Виграш:** {winnings} 💠"
             ),
-            color=0x4CAF50
+            color=Color.GREEN.value
         )
         embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
         return embed
@@ -294,7 +292,7 @@ class UIUtils:
                 f"Жадібність взяла гору\nКристал повністю поглинув вашу ставку\n\n"
                 f"-# **Втрачено:** {bet} 💠"
             ),
-            color=0xE53935
+            color=Color.RED.value
         )
         embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
         return embed
@@ -307,7 +305,7 @@ class UIUtils:
                 f"Вам пощастило, продовжимо?\n\n"
                 f"-# **Виграш:** {bet} 💠"
             ),
-            color=0x4CAF50
+            color=Color.GREEN.value
         )
         embed.set_thumbnail(url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
         return embed
@@ -320,7 +318,7 @@ class UIUtils:
                 f"Не пощастило, спробуйте ще\n\n"
                 f"-# **Втрачено:** {bet} 💠"
             ),
-            color=0xE53935
+            color=Color.RED.value
         )
         embed.set_thumbnail(url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
         return embed
@@ -334,7 +332,7 @@ class UIUtils:
         embed = Embed(
             title='SCP-330 – "Візьми тільки дві"',
             description="Ви не можете згадати, чи брали цукерки до цього...",
-            color=0xFF8C00
+            color=Color.ORANGE.value
         )
         embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
 
@@ -389,7 +387,7 @@ class UIUtils:
                 f"Ви вирішили не випробовувати долю і пішли\n\n"
                 f"-# **Виграш:** {winnings} 💠"
             ),
-            color=0x4CAF50
+            color=Color.GREEN.value
         )
         embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
         return embed
@@ -402,7 +400,7 @@ class UIUtils:
                 f"Ви взяли забагато цукерок і поплатились за це\n\n"
                 f"-# **Втрачено:** {bet} 💠"
             ),
-            color=0xE53935
+            color=Color.RED.value
         )
         embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
         return embed
@@ -415,7 +413,7 @@ class UIUtils:
         embed = Embed(
             title="Протокол когнітивного тесту D-72",
             description=f"**Поточне значення:** `{current_number}`\nЧи буде наступне значення більше чи менше?",
-            color=0x3498DB
+            color=Color.BLUE.value
         )
         embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
         state_buttons = [
@@ -477,7 +475,7 @@ class UIUtils:
                 f"-# **Підсумковий множник:** x{multiplier:.2f}\n"
                 f"-# **Виграш:** {winnings} 💠"
             ),
-            color=0x2ECC71
+            color=Color.GREEN.value
         )
         embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
         return embed
@@ -491,9 +489,10 @@ class UIUtils:
                 f"-# **Серія перемог:** {win_streak}\n"
                 f"-# **Втрачено:** {bet} 💠"
             ),
-            color=0xE74C3C
+            color=Color.RED.value
         )
         embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
         return embed
+
 
 ui_utils = UIUtils()
