@@ -3,7 +3,6 @@ import random
 import disnake
 
 from app.config import config
-from app.core.models import User
 from app.core.schemas import CrystallizationState
 from app.services.economy_management_service import economy_management_service
 from app.utils.response_utils import response_utils
@@ -32,17 +31,6 @@ class CrystallizationService:
 
     @staticmethod
     async def start_game(interaction: disnake.ApplicationCommandInteraction, bet: int):
-        user_id = interaction.user.id
-        db_user, _ = await User.get_or_create(user_id=user_id)
-
-        if db_user.balance < bet:
-            await response_utils.edit_ephemeral_response(
-                interaction, "У вас недостатньо коштів для цієї ставки"
-            )
-            return
-
-        await economy_management_service.update_user_balance(user_id, -bet)
-
         initial_multiplier = round(random.uniform(*config.crystallize_initial_multiplier_range), 2)
         initial_loss_chance = config.crystallize_initial_chance * 100
 
@@ -53,7 +41,7 @@ class CrystallizationService:
             loss_chance=initial_loss_chance,
             is_first_turn=True
         )
-        await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
+        await response_utils.send_response(interaction, embed=embed, components=components)
 
     async def continue_game(self, interaction: disnake.MessageInteraction):
         state = self._parse_state_from_components(interaction.message.components)

@@ -4,7 +4,6 @@ from typing import Tuple
 import disnake
 
 from app.config import config
-from app.core.models import User
 from app.services.economy_management_service import economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -27,15 +26,6 @@ class CandyGameService:
 
     @staticmethod
     async def start_game(interaction: disnake.ApplicationCommandInteraction, bet: int):
-        user_id = interaction.user.id
-        db_user, _ = await User.get_or_create(user_id=user_id)
-
-        if db_user.balance < bet:
-            await response_utils.edit_ephemeral_response(interaction, "У вас недостатньо коштів для цієї ставки")
-            return
-
-        await economy_management_service.update_user_balance(user_id, -bet)
-
         pre_taken_candies = random.choices([0, 1, 2], weights=config.candy_pre_taken_weights, k=1)[0]
         player_taken_candies = 0
 
@@ -50,7 +40,7 @@ class CandyGameService:
             potential_win=potential_win,
             current_multiplier=current_multiplier
         )
-        await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
+        await response_utils.send_response(interaction, embed=embed, components=components)
 
     async def take_candy(self, interaction: disnake.MessageInteraction):
         bet, pre_taken, player_taken = self._parse_state_from_components(interaction.message.components)

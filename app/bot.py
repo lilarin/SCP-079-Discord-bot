@@ -5,13 +5,14 @@ import disnake
 from disnake.ext import commands
 
 from app.config import config, logger
-from app.core.decorators import target_is_user
+from app.core.decorators import target_is_user, remove_bet_from_balance
 from app.modals.dossier_modal import DossierModal
 from app.core.models import User
 from app.services.articles_service import article_service
 from app.services.economy_management_service import economy_management_service
 from app.services.game_candy_service import candy_game_service
 from app.services.game_coin_service import coin_flip_service
+from app.services.game_conguard_service import coguard_service
 from app.services.game_crystallization_service import crystallization_service
 from app.services.inventory_service import inventory_service
 from app.services.keycard_service import keycard_service
@@ -402,15 +403,11 @@ async def edit_player_balance_reputation(
 
 @bot.slash_command(name="кристалізація", description="Почати процес кристалізації")
 @commands.guild_only()
+@remove_bet_from_balance
 async def game_crystallize(
     interaction: disnake.ApplicationCommandInteraction,
     bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
 ):
-    await response_utils.wait_for_response(interaction)
-    if bet <= 0:
-        await response_utils.send_response(interaction, message="Ставка має бути більше нуля.")
-        return
-
     try:
         await crystallization_service.start_game(interaction, bet)
     except Exception as exception:
@@ -422,15 +419,11 @@ async def game_crystallize(
 
 @bot.slash_command(name="монетка", description="Підкинути монетку та випробувати вдачу")
 @commands.guild_only()
+@remove_bet_from_balance
 async def game_coin_flip(
     interaction: disnake.ApplicationCommandInteraction,
     bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
 ):
-    await response_utils.wait_for_response(interaction)
-    if bet <= 0:
-        await response_utils.edit_response(interaction, message="Ставка має бути більше нуля.")
-        return
-
     try:
         await coin_flip_service.play_game(interaction, bet)
     except Exception as exception:
@@ -442,20 +435,32 @@ async def game_coin_flip(
 
 @bot.slash_command(name="цукерки", description="Випробуйте свою вдачу з SCP-330")
 @commands.guild_only()
-async def candy_game(
+@remove_bet_from_balance
+async def game_candy(
     interaction: disnake.ApplicationCommandInteraction,
     bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
 ):
-    await response_utils.wait_for_response(interaction)
-    if bet <= 0:
-        await response_utils.send_response(interaction, message="Ставка має бути більше нуля.")
-        return
-
     try:
         await candy_game_service.start_game(interaction, bet)
     except Exception as exception:
-        await response_utils.edit_ephemeral_response(
+        await response_utils.send_response(
             interaction, message="Виникла помилка під час запуску гри."
+        )
+        logger.error(exception)
+
+
+@bot.slash_command(name="когнітивна-стійкість", description="Пройти тест на когнітивну стійкість")
+@commands.guild_only()
+@remove_bet_from_balance
+async def game_coguard(
+    interaction: disnake.ApplicationCommandInteraction,
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+):
+    try:
+        await coguard_service.start_game(interaction, bet)
+    except Exception as exception:
+        await response_utils.send_response(
+            interaction, message="Виникла помилка під час запуску тесту."
         )
         logger.error(exception)
 
@@ -480,18 +485,20 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
         if "game" in interaction_component_id:
             if interaction_component_id == "game_crystallize_continue":
                 await crystallization_service.continue_game(interaction)
-                return
-
-            if interaction_component_id == "game_crystallize_stop":
+            elif interaction_component_id == "game_crystallize_stop":
                 await crystallization_service.cash_out(interaction)
-                return
-
-            if interaction_component_id == "game_candy_take":
+            elif interaction_component_id == "game_candy_take":
                 await candy_game_service.take_candy(interaction)
-                return
-            if interaction_component_id == "game_candy_leave":
+            elif interaction_component_id == "game_candy_leave":
                 await candy_game_service.leave_game(interaction)
-                return
+            elif interaction_component_id == "game_coguard_higher":
+                await coguard_service.play_turn(interaction, 'higher')
+            elif interaction_component_id == "game_coguard_lower":
+                await coguard_service.play_turn(interaction, 'lower')
+            elif interaction_component_id == "game_coguard_cashout":
+                await coguard_service.cash_out(interaction)
+
+            return
 
         current_page = int(interaction.message.components[0].children[2].label)
 
