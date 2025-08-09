@@ -299,5 +299,31 @@ class UIUtils:
         embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
         return embed
 
+    @staticmethod
+    async def format_coin_flip_win_embed(bet: int) -> Embed:
+        embed = Embed(
+            title="Перемога!",
+            description=(
+                f"Вам пощастило, продовжимо?\n\n"
+                f"-# **Виграш:** {bet} 💠"
+            ),
+            color=0x4CAF50
+        )
+        embed.set_thumbnail(url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
+        return embed
+
+    @staticmethod
+    async def format_coin_flip_loss_embed(bet: int) -> Embed:
+        embed = Embed(
+            title="Програш!",
+            description=(
+                f"Не пощастило, спробуйте ще\n\n"
+                f"-# **Втрачено:** {bet} 💠"
+            ),
+            color=0xE53935
+        )
+        embed.set_thumbnail(url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
+        return embed
+
 
 ui_utils = UIUtils()

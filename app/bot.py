@@ -10,6 +10,7 @@ from app.modals.dossier_modal import DossierModal
 from app.core.models import User
 from app.services.articles_service import article_service
 from app.services.economy_management_service import economy_management_service
+from app.services.game_coin_service import coin_flip_service
 from app.services.game_crystallization_service import crystallization_service
 from app.services.inventory_service import inventory_service
 from app.services.keycard_service import keycard_service
@@ -400,7 +401,7 @@ async def edit_player_balance_reputation(
 
 @bot.slash_command(name="кристалізація", description="Почати процес кристалізації")
 @commands.guild_only()
-async def crystallize(
+async def game_crystallize(
     interaction: disnake.ApplicationCommandInteraction,
     bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
 ):
@@ -413,10 +414,29 @@ async def crystallize(
         await crystallization_service.start_game(interaction, bet)
     except Exception as exception:
         await response_utils.send_response(
-            interaction, message="Виникла помилка під час запуску гри."
+            interaction, message="Виникла помилка під час гри в кристалізацію"
         )
         logger.error(exception)
 
+
+@bot.slash_command(name="монетка", description="Підкинути монетку та випробувати вдачу")
+@commands.guild_only()
+async def game_coin_flip(
+    interaction: disnake.ApplicationCommandInteraction,
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+):
+    await response_utils.wait_for_response(interaction)
+    if bet <= 0:
+        await response_utils.edit_response(interaction, message="Ставка має бути більше нуля.")
+        return
+
+    try:
+        await coin_flip_service.play_game(interaction, bet)
+    except Exception as exception:
+        await response_utils.send_response(
+            interaction, message="Виникла помилка під час гри в монетку"
+        )
+        logger.error(exception)
 
 
 @bot.event
