@@ -20,21 +20,24 @@ class UIUtils:
             color=int(color.lstrip("#"), 16),
         )
 
-        from app.bot import bot
+        if top_users:
+            from app.bot import bot
 
-        user_fetch_tasks = [bot.get_or_fetch_user(user_id) for user_id, _ in top_users]
+            user_fetch_tasks = [bot.get_or_fetch_user(user_id) for user_id, _ in top_users]
 
-        fetched_users = await asyncio.gather(*user_fetch_tasks)
+            fetched_users = await asyncio.gather(*user_fetch_tasks)
 
-        description_lines = []
-        for i, (user_id, count) in enumerate(top_users, 1):
-            user = fetched_users[i - 1]
-            if user:
-                description_lines.append(
-                    f"{i + offset}. {user.mention} (`{user.name}`) – **{count} {symbol}**"
-                )
+            description_lines = []
+            for i, (user_id, count) in enumerate(top_users, 1):
+                user = fetched_users[i - 1]
+                if user:
+                    description_lines.append(
+                        f"{i + offset}. {user.mention} (`{user.name}`) – **{count} {symbol}**"
+                    )
 
-        embed.description = "\n".join(description_lines)
+            embed.description = "\n".join(description_lines)
+        else:
+            embed.description = "Поки тут нікого немає, це твій шанс!"
         embed.description += f"\n-# {hint}"
         return embed
 
@@ -47,40 +50,40 @@ class UIUtils:
             disable_next_page_button: bool = False,
             disable_last_page_button: bool = False,
     ) -> ActionRow:
-        first_page_button = Button(
-            style=ButtonStyle.grey,
-            label="🡸",
-            custom_id=f"first_page_{criteria}_button",
-            disabled=disable_first_page_button,
-        )
-        previous_page_button = Button(
-            style=ButtonStyle.grey,
-            label="❮",
-            custom_id=f"previous_page_{criteria}_button",
-            disabled=disable_previous_page_button,
-        )
-        current_page_button = Button(
-            style=ButtonStyle.grey,
-            label=str(current_page_text),
-            custom_id=f"current_page_{criteria}_button",
-            disabled=True,
-        )
-        next_page_button = Button(
-            style=ButtonStyle.grey,
-            label="❯",
-            custom_id=f"next_page_{criteria}_button",
-            disabled=disable_next_page_button,
-        )
-        last_page_button = Button(
-            style=ButtonStyle.grey,
-            label="🡺",
-            custom_id=f"last_page_{criteria}_button",
-            disabled=disable_last_page_button,
-        )
-        return ActionRow(
-            first_page_button, previous_page_button, current_page_button,
-            next_page_button, last_page_button,
-        )
+        buttons = [
+            Button(
+                style=ButtonStyle.grey,
+                label="🡸",
+                custom_id=f"first_page_{criteria}_button",
+                disabled=disable_first_page_button,
+            ),
+            Button(
+                style=ButtonStyle.grey,
+                label="❮",
+                custom_id=f"previous_page_{criteria}_button",
+                disabled=disable_previous_page_button,
+            ),
+            Button(
+                style=ButtonStyle.grey,
+                label=str(current_page_text),
+                custom_id=f"current_page_{criteria}_button",
+                disabled=True,
+            ),
+            Button(
+                style=ButtonStyle.grey,
+                label="❯",
+                custom_id=f"next_page_{criteria}_button",
+                disabled=disable_next_page_button,
+            ),
+            Button(
+                style=ButtonStyle.grey,
+                label="🡺",
+                custom_id=f"last_page_{criteria}_button",
+                disabled=disable_last_page_button,
+            )
+        ]
+
+        return ActionRow(*buttons) if not all(button.disabled for button in buttons) else None
 
     @staticmethod
     async def format_new_user_embed(user_mention: str, card: File, color: int) -> Embed:
@@ -166,9 +169,7 @@ class UIUtils:
             description_lines.append("\n".join(item_details))
 
         embed.description = "\n\n".join(description_lines)
-        embed.set_thumbnail(
-            url="https://media.discordapp.net/attachments/614115775376261120/1402411530548543629/plate_1.png"
-        )
+        embed.set_thumbnail( url="https://imgur.com/XmqvWK9.png")
         return embed
 
     @staticmethod
