@@ -325,5 +325,87 @@ class UIUtils:
         embed.set_thumbnail(url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
         return embed
 
+    @staticmethod
+    async def format_candy_game_embed(
+            bet: int, pre_taken_candies: int, player_taken_candies: int,
+            potential_win: int, current_multiplier: float,
+            swap_colors: bool = False, is_first_turn: bool = False
+    ) -> Tuple[Embed, List[ActionRow]]:
+        embed = Embed(
+            title='SCP-330 – "Візьми тільки дві"',
+            description="Ви не можете згадати, чи брали цукерки до цього...",
+            color=0xFF8C00
+        )
+        embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+
+        state_buttons = [
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Ставка: {bet} 💠",
+                custom_id="candy_display_bet",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Множник: x{current_multiplier:.1f}",
+                custom_id="candy_display_multiplier",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Ви взяли: {player_taken_candies}",
+                custom_id=f"candy_state_{player_taken_candies}_{pre_taken_candies}",
+                disabled=True
+            ),
+        ]
+        state_row = ActionRow(*state_buttons)
+
+        take_button_color, leave_button_color = (
+            ButtonStyle.primary, ButtonStyle.green
+        ) if not swap_colors else (
+            ButtonStyle.green, ButtonStyle.primary
+        )
+
+        take_button = Button(
+            style=take_button_color,
+            label="Взяти цукерку",
+            custom_id="game_candy_take"
+        )
+        leave_button = Button(
+            style=leave_button_color,
+            label=f"Забрати {potential_win} 💠",
+            custom_id="game_candy_leave",
+            disabled=is_first_turn
+        )
+        action_row = ActionRow(take_button, leave_button)
+
+        return embed, [state_row, action_row]
+
+    @staticmethod
+    async def format_candy_win_embed(winnings: int) -> Embed:
+        embed = Embed(
+            title="Ви вчасно зупинились!",
+            description=(
+                f"Ви вирішили не випробовувати долю і пішли\n\n"
+                f"-# **Виграш:** {winnings} 💠"
+            ),
+            color=0x4CAF50
+        )
+        embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+        return embed
+
+    @staticmethod
+    async def format_candy_loss_embed(bet: int) -> Embed:
+        embed = Embed(
+            title="Жадібність вас погубила!",
+            description=(
+                f"Ви взяли забагато цукерок і поплатились за це\n\n"
+                f"-# **Втрачено:** {bet} 💠"
+            ),
+            color=0xE53935
+        )
+        embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+        return embed
+
 
 ui_utils = UIUtils()

@@ -10,6 +10,7 @@ from app.modals.dossier_modal import DossierModal
 from app.core.models import User
 from app.services.articles_service import article_service
 from app.services.economy_management_service import economy_management_service
+from app.services.game_candy_service import candy_game_service
 from app.services.game_coin_service import coin_flip_service
 from app.services.game_crystallization_service import crystallization_service
 from app.services.inventory_service import inventory_service
@@ -439,6 +440,26 @@ async def game_coin_flip(
         logger.error(exception)
 
 
+@bot.slash_command(name="цукерки", description="Випробуйте свою вдачу з SCP-330")
+@commands.guild_only()
+async def candy_game(
+    interaction: disnake.ApplicationCommandInteraction,
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+):
+    await response_utils.wait_for_response(interaction)
+    if bet <= 0:
+        await response_utils.send_response(interaction, message="Ставка має бути більше нуля.")
+        return
+
+    try:
+        await candy_game_service.start_game(interaction, bet)
+    except Exception as exception:
+        await response_utils.edit_ephemeral_response(
+            interaction, message="Виникла помилка під час запуску гри."
+        )
+        logger.error(exception)
+
+
 @bot.event
 async def on_button_click(interaction: disnake.MessageInteraction) -> None:
     await interaction.response.defer()
@@ -463,6 +484,13 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
 
             if interaction_component_id == "game_crystallize_stop":
                 await crystallization_service.cash_out(interaction)
+                return
+
+            if interaction_component_id == "game_candy_take":
+                await candy_game_service.take_candy(interaction)
+                return
+            if interaction_component_id == "game_candy_leave":
+                await candy_game_service.leave_game(interaction)
                 return
 
         current_page = int(interaction.message.components[0].children[2].label)

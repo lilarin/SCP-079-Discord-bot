@@ -4,7 +4,7 @@ import logging.handlers
 import os
 import queue
 import sys
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, List
 from urllib.parse import urlparse
 
 from PIL import Image, ImageFont
@@ -100,6 +100,8 @@ class Config:
         self.crystallize_initial_multiplier_range: Tuple[float, float] = (0.7, 0.9)
         self.crystallize_chance_increment_range: Tuple[float, float] = (0.07, 0.18)
         self.crystallize_multiplier_increment_range: Tuple[float, float] = (0.1, 0.14)
+        self.candy_pre_taken_weights: List[float] = [0.30, 0.5, 0.20]
+        self.candy_win_multipliers: Dict[int, float] = {1: 1.1, 2: 1.8}
 
     def get_font(self, font_path: str, size: int) -> ImageFont.FreeTypeFont:
         if (font_path, size) not in self.fonts:

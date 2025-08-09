@@ -33,3 +33,10 @@ class CrystallizationState:
     bet: int
     multiplier: float
     loss_chance: float
+
+
+@dataclass
+class CandyGameState:
+    bet: int
+    pre_taken_candies: int
+    player_taken_candies: int
