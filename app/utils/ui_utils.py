@@ -407,5 +407,93 @@ class UIUtils:
         embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
         return embed
 
+    @staticmethod
+    async def format_coguard_embed(
+            bet: int, multiplier: float, potential_win: int, current_number: int,
+            win_streak: int, is_first_turn: bool = False
+    ) -> Tuple[Embed, List[ActionRow]]:
+        embed = Embed(
+            title="Протокол когнітивного тесту D-72",
+            description=f"**Поточне значення:** `{current_number}`\nЧи буде наступне значення більше чи менше?",
+            color=0x3498DB
+        )
+        embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
+        state_buttons = [
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Ставка: {bet} 💠",
+                custom_id="coguard_display_bet",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Множник: x{multiplier:.2f}",
+                custom_id="coguard_display_multiplier",
+                disabled=True),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Число: {current_number}",
+                custom_id="coguard_display_number",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Правильних відповідей: {win_streak}",
+                custom_id="coguard_display_streak",
+                disabled=True)
+        ]
+        state_row = ActionRow(*state_buttons)
+
+        higher_button = Button(
+            style=ButtonStyle.primary,
+            label="Більше",
+            emoji="⬆️",
+            custom_id="game_coguard_higher"
+        )
+        lower_button = Button(
+            style=ButtonStyle.primary,
+            label="Менше",
+            emoji="⬇️",
+            custom_id="game_coguard_lower"
+        )
+        cashout_button = Button(
+            style=ButtonStyle.green,
+            label=f"Забрати {potential_win} 💠",
+            custom_id="game_coguard_cashout",
+            disabled=is_first_turn
+        )
+        action_row = ActionRow(higher_button, lower_button, cashout_button)
+
+        return embed, [state_row, action_row]
+
+    @staticmethod
+    async def format_coguard_win_embed(bet: int, winnings: int, multiplier: float, win_streak: int) -> Embed:
+        embed = Embed(
+            title="Тест успішно пройдено!",
+            description=(
+                f"Ви вчасно зупинились та підтвердили свою когнітивну стабільність\n\n"
+                f"-# **Ваша ставка:** {bet} 💠\n"
+                f"-# **Серія перемог:** {win_streak}\n"
+                f"-# **Підсумковий множник:** x{multiplier:.2f}\n"
+                f"-# **Виграш:** {winnings} 💠"
+            ),
+            color=0x2ECC71
+        )
+        embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
+        return embed
+
+    @staticmethod
+    async def format_coguard_loss_embed(bet: int, win_streak: int) -> Embed:
+        embed = Embed(
+            title="Когнітивний збій!",
+            description=(
+                f"Ваша інтуїція вас підвела, тест провалено\n\n"
+                f"-# **Серія перемог:** {win_streak}\n"
+                f"-# **Втрачено:** {bet} 💠"
+            ),
+            color=0xE74C3C
+        )
+        embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
+        return embed
 
 ui_utils = UIUtils()

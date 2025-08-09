@@ -40,3 +40,11 @@ class CandyGameState:
     bet: int
     pre_taken_candies: int
     player_taken_candies: int
+
+
+@dataclass
+class CoguardState:
+    bet: int
+    multiplier: float
+    current_number: int
+    win_streak: int
