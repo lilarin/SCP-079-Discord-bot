@@ -1,7 +1,8 @@
-from dataclasses import dataclass
-from typing import Tuple, List
+from dataclasses import dataclass, field
+from typing import Tuple, List, Literal, Set
 
 from PIL import Image
+from disnake import Member
 
 
 @dataclass
@@ -48,3 +49,14 @@ class CoguardState:
     multiplier: float
     current_number: int
     win_streak: int
+
+
+@dataclass
+class SCP173GameState:
+    host: Member
+    bet: int
+    mode: Literal["normal", "last_man_standing"]
+    players: Set[Member] = field(default_factory=set)
+    message_id: int = 0
+    channel_id: int = 0
+    is_started: bool = False
