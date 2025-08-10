@@ -18,18 +18,18 @@ class Config:
         load_dotenv()
 
         # Core Application configuration
-        self.discord_bot_token = self._get_env_variable("DISCORD_BOT_TOKEN")
-        self.database_url = self._get_env_variable("SUPABASE_DIRECT_URL")
-        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.discord_bot_token: str = self._get_env_variable("DISCORD_BOT_TOKEN")
+        self.database_url: str = self._get_env_variable("SUPABASE_DIRECT_URL")
+        self.project_root: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         # File System Paths configuration
-        self.assets_dir_path = os.path.join(self.project_root, "assets")
-        self.cards_dir_path = os.path.join(self.assets_dir_path, "cards")
-        self.shop_cards_path = os.path.join(self.assets_dir_path, "configs", "shop_cards.json")
-        self.work_prompts_path = os.path.join(self.assets_dir_path, "configs", "work_prompts.json")
-        self.article_template_path = os.path.join(self.assets_dir_path, "articles", "article.png")
-        self.primary_font_path = os.path.join(self.assets_dir_path, "fonts", "BauhausDemi.ttf")
-        self.secondary_font_path = os.path.join(self.assets_dir_path, "fonts", "Inter_18pt-Bold.ttf")
+        self.assets_dir_path: str = os.path.join(self.project_root, "assets")
+        self.cards_dir_path: str = os.path.join(self.assets_dir_path, "cards")
+        self.shop_cards_path: str = os.path.join(self.assets_dir_path, "configs", "shop_cards.json")
+        self.work_prompts_path: str = os.path.join(self.assets_dir_path, "configs", "work_prompts.json")
+        self.article_template_path: str = os.path.join(self.assets_dir_path, "articles", "article.png")
+        self.primary_font_path: str = os.path.join(self.assets_dir_path, "fonts", "BauhausDemi.ttf")
+        self.secondary_font_path: str = os.path.join(self.assets_dir_path, "fonts", "Inter_18pt-Bold.ttf")
 
         # Image, card and work prompts configuration
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
@@ -37,8 +37,8 @@ class Config:
         self.work_prompts: Dict[str, WorkPrompts] = self._load_work_prompts_from_json()
 
         # SCP Article Scraper configuration
-        self.wiki_url = "http://scp-ukrainian.wikidot.com"
-        self.scp_classes = {
+        self.wiki_url: str = "http://scp-ukrainian.wikidot.com"
+        self.scp_classes: Dict[str, str] = {
             "Безпечний": "safe",
             "Евклід": "euclid",
             "Кетер": "keter",
@@ -46,7 +46,7 @@ class Config:
             "Особливий": "exotic",
             "Метаклас": "meta",
         }
-        self.scp_class_config = {
+        self.scp_class_config: Dict[Optional[str], Tuple[str, str]] = {
             None: ("#AAAAAA", "📁"),
             "safe": ("#6AAB64", "📗"),
             "euclid": ("#FF9F52", "📙"),
@@ -55,7 +55,7 @@ class Config:
             "exotic": ("#D74D97", "📔"),
             "meta": ("#326D9E", "📘")
         }
-        self.scp_ranges = {
+        self.scp_ranges: Dict[str, str] = {
             "001-999": "1",
             "1000-1999": "2",
             "2000-2999": "3",
@@ -66,7 +66,7 @@ class Config:
             "7000-7999": "8",
             "8000-8999": "9",
         }
-        self.scrape_urls = [
+        self.scrape_urls: List[str] = [
             f"{self.wiki_url}/scp-series-ua",
             f"{self.wiki_url}/scp-series",
             f"{self.wiki_url}/scp-series-2",
@@ -80,14 +80,14 @@ class Config:
         ]
 
         # UI & Pagination configuration
-        self.leaderboard_options = {
+        self.leaderboard_options: Dict[str, str] = {
             "Переглянуті статті": "articles",
             "Баланс": "balance",
             "Репутація": "reputation"
         }
-        self.leaderboard_items_per_page = 10
-        self.shop_items_per_page = 4
-        self.inventory_items_per_page = 5
+        self.leaderboard_items_per_page: int = 10
+        self.shop_items_per_page: int = 4
+        self.inventory_items_per_page: int = 5
 
         # Economy configuration
         self.legal_work_reward_range: Tuple[int, int] = (50, 150)
@@ -104,6 +104,7 @@ class Config:
         self.candy_win_multipliers: Dict[int, float] = {1: 1.1, 2: 1.8}
         self.coguard_initial_multiplier_range: Tuple[float, float] = (0.7, 0.8)
         self.coguard_multiplier_increment_range: Tuple[float, float] = (0.1, 0.2)
+        self.staring_max_players: int = 6
 
     def get_font(self, font_path: str, size: int) -> ImageFont.FreeTypeFont:
         if (font_path, size) not in self.fonts:
@@ -118,7 +119,7 @@ class Config:
             exit(1)
         return value
 
-    def _load_cards_from_json(self) -> Optional[Dict[str, CardConfig]]:
+    def _load_cards_from_json(self) -> Dict[str, CardConfig]:
         """Loads card configurations from a JSON file."""
         try:
             with open(self.shop_cards_path, "r", encoding="utf-8") as f:
@@ -150,7 +151,7 @@ class Config:
             logging.error(f"Missing key in card data from {self.shop_cards_path}: {e}")
             exit(1)
 
-    def _load_work_prompts_from_json(self) -> Optional[Dict[str, WorkPrompts]]:
+    def _load_work_prompts_from_json(self) -> Dict[str, WorkPrompts]:
         """Loads work prompt configurations from a JSON file."""
         try:
             with open(self.work_prompts_path, "r", encoding="utf-8") as f:
