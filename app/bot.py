@@ -14,6 +14,7 @@ from app.services.game_candy_service import candy_game_service
 from app.services.game_coin_service import coin_flip_service
 from app.services.game_conguard_service import coguard_service
 from app.services.game_crystallization_service import crystallization_service
+from app.services.game_scp173_service import scp173_game_service
 from app.services.inventory_service import inventory_service
 from app.services.keycard_service import keycard_service
 from app.services.leaderboard_service import leaderboard_service
@@ -465,9 +466,38 @@ async def game_coguard(
         logger.error(exception)
 
 
+@bot.slash_command(name="піжмурки", description="Зіграти в піжмурки проти інших гравців з SCP-173")
+@commands.guild_only()
+@remove_bet_from_balance
+async def game_scp173(
+    interaction: disnake.ApplicationCommandInteraction,
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+    mode: str = commands.Param(
+        description="Режим гри",
+        choices={
+            "Звичайний": "normal",
+            "До останнього": "last_man_standing"
+        }
+    )
+):
+    try:
+        await scp173_game_service.start_lobby(interaction, bet, mode)
+    except Exception as exception:
+        await response_utils.send_response(
+            interaction, message="Виникла помилка під час запуску гри."
+        )
+        logger.error(exception)
+
+
 @bot.event
 async def on_button_click(interaction: disnake.MessageInteraction) -> None:
     await interaction.response.defer()
+
+    interaction_component_id = interaction.component.custom_id
+
+    if interaction_component_id == "game_scp173_join":
+        await scp173_game_service.handle_join(interaction)
+        return
 
     if interaction.user != interaction.message.interaction_metadata.user:
         await response_utils.send_ephemeral_response(
@@ -480,8 +510,6 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
         return
 
     try:
-        interaction_component_id = interaction.component.custom_id
-
         if "game" in interaction_component_id:
             if interaction_component_id == "game_crystallize_continue":
                 await crystallization_service.continue_game(interaction)
@@ -497,7 +525,11 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
                 await coguard_service.play_turn(interaction, 'lower')
             elif interaction_component_id == "game_coguard_cashout":
                 await coguard_service.cash_out(interaction)
-
+            elif interaction_component_id == "game_scp173_join":
+                await scp173_game_service.handle_join(interaction)
+            elif interaction_component_id == "game_scp173_start":
+                await scp173_game_service.handle_start(interaction)
+                return
             return
 
         current_page = int(interaction.message.components[0].children[2].label)

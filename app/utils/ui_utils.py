@@ -7,6 +7,7 @@ from disnake.ui import ActionRow, Button
 from app.config import config
 from app.core.enums import Color
 from app.core.models import SCPObject, Item
+from app.core.schemas import SCP173GameState
 
 
 class UIUtils:
@@ -307,7 +308,8 @@ class UIUtils:
             ),
             color=Color.GREEN.value
         )
-        embed.set_thumbnail(url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
+        embed.set_thumbnail(
+            url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
         return embed
 
     @staticmethod
@@ -320,7 +322,8 @@ class UIUtils:
             ),
             color=Color.RED.value
         )
-        embed.set_thumbnail(url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
+        embed.set_thumbnail(
+            url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
         return embed
 
     @staticmethod
@@ -334,7 +337,8 @@ class UIUtils:
             description="Ви не можете згадати, чи брали цукерки до цього...",
             color=Color.ORANGE.value
         )
-        embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+        embed.set_thumbnail(
+            url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
 
         state_buttons = [
             Button(
@@ -389,7 +393,8 @@ class UIUtils:
             ),
             color=Color.GREEN.value
         )
-        embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+        embed.set_thumbnail(
+            url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
         return embed
 
     @staticmethod
@@ -402,7 +407,8 @@ class UIUtils:
             ),
             color=Color.RED.value
         )
-        embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+        embed.set_thumbnail(
+            url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
         return embed
 
     @staticmethod
@@ -492,6 +498,137 @@ class UIUtils:
             color=Color.RED.value
         )
         embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
+        return embed
+
+    @staticmethod
+    async def format_scp173_lobby_embed(game_state: SCP173GameState) -> Embed:
+        embed = Embed(
+            title="Гра в піжмурки з SCP-173",
+            description="**Очікування гравців...**\n\nХто кліпне очима - помре",
+            color=Color.WHITE.value
+        )
+        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055429795950/image.png")
+
+        player_list = "\n".join(
+            [f"{i + 1}. {player.mention}" for i, player in enumerate(list(game_state.players))]
+        )
+        embed.add_field(name="Учасники:", value=player_list if player_list else "Поки нікого немає...", inline=False)
+        embed.set_footer(text="Гра почнеться автоматично через 60 секунд, або коли лобі заповниться")
+        return embed
+
+    @staticmethod
+    async def init_scp173_lobby_components(game_state: SCP173GameState) -> List[ActionRow]:
+        is_full = len(game_state.players) >= 6
+        mode_text = "До останнього" if game_state.mode == 'last_man_standing' else "Звичайний"
+
+        state_row = ActionRow(
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Ставка: {game_state.bet} 💠",
+                custom_id="game_scp173_bet_display",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"{len(game_state.players)}/6",
+                custom_id="game_scp173_count_display",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Режим: {mode_text}",
+                custom_id="game_scp173_mode_display",
+                disabled=True
+            )
+        )
+
+        action_row = ActionRow(
+            Button(
+                style=ButtonStyle.green,
+                label="Приєднатися",
+                custom_id="game_scp173_join",
+                disabled=is_full),
+            Button(
+                style=ButtonStyle.primary,
+                label="Розпочати гру",
+                custom_id="game_scp173_start"
+            )
+        )
+
+        return [state_row, action_row]
+
+    @staticmethod
+    async def format_scp173_start_game_embed(game_state: SCP173GameState) -> Embed:
+        player_list = "\n".join([f"{i + 1}. {player.mention}" for i, player in enumerate(list(game_state.players))])
+        embed = Embed(
+            title="Гра почалася, не кліпайте очима!", description="Світло тьмяніє...", color=Color.BLACK.value
+        )
+        embed.add_field(name="Учасники:", value=player_list, inline=False)
+        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055035662386/image.png")
+        return embed
+
+    @staticmethod
+    async def init_scp173_game_components(game_state: SCP173GameState) -> List[ActionRow]:
+        mode_text = "До останнього" if game_state.mode == 'last_man_standing' else "Звичайний"
+        state_row = ActionRow(
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Ставка: {game_state.bet} 💠",
+                custom_id="game_scp173_bet_display",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"{len(game_state.players)}/{config.staring_max_players }",
+                custom_id="game_scp173_count_display",
+                disabled=True
+            ),
+            Button(
+                style=ButtonStyle.secondary,
+                label=f"Режим: {mode_text}",
+                custom_id="game_scp173_mode_display",
+                disabled=True
+            )
+        )
+        return [state_row]
+
+    @staticmethod
+    async def format_scp173_single_winner_embed(winner: User, pot: int) -> Embed:
+        embed = Embed(
+            title="Єдиний виживший!",
+            description=(
+                f"{winner.mention} виходить з камери утримання неушкодженим\n\n"
+                f"-# **Виграш:** {pot} 💠"
+            ),
+            color=Color.GREEN.value
+        )
+        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055429795950/image.png")
+        return embed
+
+    @staticmethod
+    async def format_scp173_multiple_winners_embed(winners: List[User], winnings_per_player: int) -> Embed:
+        winner_mentions = ", ".join([w.mention for w in winners])
+        embed = Embed(
+            title="Переможці!",
+            description=(
+                f"Смерть вашого колеги дала вам шанс вижити\n\n"
+                f"**Вижили:** {winner_mentions}\n\n"
+                f"-# **Виграш кожного:** {winnings_per_player} 💠"
+            ),
+            color=Color.GREEN.value
+        )
+        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055429795950/image.png")
+
+        return embed
+
+    @staticmethod
+    async def format_scp173_no_survivors_embed() -> Embed:
+        embed = Embed(
+            title="Ніхто не вижив",
+            description="Скульптура перемогла",
+            color=Color.RED.value
+        )
+        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055035662386/image.png")
         return embed
 
 
