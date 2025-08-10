@@ -12,3 +12,5 @@ class Color(Enum):
     WHITE = 0xFFFFFF
     BLUE = 0x3498DB
     ORANGE = 0xFF8C00
+    BLACK = 0x1e1e1e
+    YELLOW = 0xffdd53
