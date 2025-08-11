@@ -525,8 +525,6 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
                 await coguard_service.play_turn(interaction, 'lower')
             elif interaction_component_id == "game_coguard_cashout":
                 await coguard_service.cash_out(interaction)
-            elif interaction_component_id == "game_scp173_join":
-                await scp173_game_service.handle_join(interaction)
             elif interaction_component_id == "game_scp173_start":
                 await scp173_game_service.handle_start(interaction)
                 return
