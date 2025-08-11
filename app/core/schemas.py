@@ -56,7 +56,7 @@ class SCP173GameState:
     host: Member
     bet: int
     mode: Literal["normal", "last_man_standing"]
-    players: Set[Member] = field(default_factory=set)
+    players: List[Member] = field(default_factory=list)
     message_id: int = 0
     channel_id: int = 0
     is_started: bool = False
