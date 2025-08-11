@@ -308,8 +308,7 @@ class UIUtils:
             ),
             color=Color.GREEN.value
         )
-        embed.set_thumbnail(
-            url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
+        embed.set_thumbnail(url="https://imgur.com/n4znTOU.png")
         return embed
 
     @staticmethod
@@ -322,8 +321,7 @@ class UIUtils:
             ),
             color=Color.RED.value
         )
-        embed.set_thumbnail(
-            url="https://static.wikia.nocookie.net/scp-secret-laboratory-official/images/f/f0/Coin.PNG/revision/latest?cb=20200413205841")
+        embed.set_thumbnail(url="https://imgur.com/n4znTOU.png")
         return embed
 
     @staticmethod
@@ -337,8 +335,7 @@ class UIUtils:
             description="Ви не можете згадати, чи брали цукерки до цього...",
             color=Color.ORANGE.value
         )
-        embed.set_thumbnail(
-            url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+        embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
 
         state_buttons = [
             Button(
@@ -393,8 +390,7 @@ class UIUtils:
             ),
             color=Color.GREEN.value
         )
-        embed.set_thumbnail(
-            url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+        embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
         return embed
 
     @staticmethod
@@ -407,8 +403,7 @@ class UIUtils:
             ),
             color=Color.RED.value
         )
-        embed.set_thumbnail(
-            url="https://png.pngtree.com/png-clipart/20250517/original/pngtree-assorted-food-and-candy-in-metal-bowl-png-image_19368124.png")
+        embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
         return embed
 
     @staticmethod
@@ -421,7 +416,7 @@ class UIUtils:
             description=f"**Поточне значення:** `{current_number}`\nЧи буде наступне значення більше чи менше?",
             color=Color.BLUE.value
         )
-        embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
+        embed.set_thumbnail(url="https://imgur.com/pAW9s4O.png")
         state_buttons = [
             Button(
                 style=ButtonStyle.secondary,
@@ -477,13 +472,13 @@ class UIUtils:
             description=(
                 f"Ви вчасно зупинились та підтвердили свою когнітивну стабільність\n\n"
                 f"-# **Ваша ставка:** {bet} 💠\n"
-                f"-# **Серія перемог:** {win_streak}\n"
+                f"-# **Серія правильних відповідей:** {win_streak}\n"
                 f"-# **Підсумковий множник:** x{multiplier:.2f}\n"
                 f"-# **Виграш:** {winnings} 💠"
             ),
             color=Color.GREEN.value
         )
-        embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
+        embed.set_thumbnail(url="https://imgur.com/pAW9s4O.png")
         return embed
 
     @staticmethod
@@ -492,12 +487,12 @@ class UIUtils:
             title="Когнітивний збій!",
             description=(
                 f"Ваша інтуїція вас підвела, тест провалено\n\n"
-                f"-# **Серія перемог:** {win_streak}\n"
+                f"-# **Серія    правильних відповідей:** {win_streak}\n"
                 f"-# **Втрачено:** {bet} 💠"
             ),
             color=Color.RED.value
         )
-        embed.set_thumbnail(url="https://static.wikitide.net/scpfwiki/8/8d/BEARDEDS_SCPF.png")
+        embed.set_thumbnail(url="https://imgur.com/pAW9s4O.png")
         return embed
 
     @staticmethod
@@ -507,10 +502,13 @@ class UIUtils:
             description="**Очікування гравців...**\n\nХто кліпне очима - помре",
             color=Color.WHITE.value
         )
-        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055429795950/image.png")
+        embed.set_thumbnail(url="https://imgur.com/PJPoIes.png")
 
         player_list = "\n".join(
-            [f"{i + 1}. {player.mention}" for i, player in enumerate(list(game_state.players))]
+            [
+                f"{i + 1}. {player.mention}"
+                for i, player in enumerate(list(game_state.players))
+            ]
         )
         embed.add_field(name="Учасники:", value=player_list if player_list else "Поки нікого немає...", inline=False)
         embed.set_footer(text="Гра почнеться автоматично через 60 секунд, або коли лобі заповниться")
@@ -530,7 +528,7 @@ class UIUtils:
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"{len(game_state.players)}/6",
+                label=f"{len(game_state.players)}/{config.staring_max_players}",
                 custom_id="game_scp173_count_display",
                 disabled=True
             ),
@@ -558,13 +556,26 @@ class UIUtils:
         return [state_row, action_row]
 
     @staticmethod
-    async def format_scp173_start_game_embed(game_state: SCP173GameState) -> Embed:
-        player_list = "\n".join([f"{i + 1}. {player.mention}" for i, player in enumerate(list(game_state.players))])
-        embed = Embed(
-            title="Гра почалася, не кліпайте очима!", description="Світло тьмяніє...", color=Color.BLACK.value
+    async def format_scp173_start_game_embed(game_state: SCP173GameState, round_logs: Optional[List[dict]] = None) -> Embed:
+        player_list = "\n".join(
+            [
+                f"{i + 1}. {player.mention}"
+                for i, player in enumerate(list(game_state.players))
+            ]
         )
+        embed = Embed(
+            title="Гра почалася, не кліпайте очима!",
+            description="Світло тьмяніє...",
+            color=Color.BLACK.value
+        )
+        embed.set_thumbnail(url="https://imgur.com/fBmiMNB.png")
         embed.add_field(name="Учасники:", value=player_list, inline=False)
-        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055035662386/image.png")
+
+        if round_logs:
+            for round_field in round_logs:
+                field_value = round_field.get("value") or "..."
+                embed.add_field(name=round_field.get("name"), value=field_value, inline=round_field.get("inline", False))
+
         return embed
 
     @staticmethod
@@ -602,7 +613,7 @@ class UIUtils:
             ),
             color=Color.GREEN.value
         )
-        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055429795950/image.png")
+        embed.set_thumbnail(url="https://imgur.com/PJPoIes.png")
         return embed
 
     @staticmethod
@@ -617,7 +628,7 @@ class UIUtils:
             ),
             color=Color.GREEN.value
         )
-        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055429795950/image.png")
+        embed.set_thumbnail(url="https://imgur.com/PJPoIes.png")
 
         return embed
 
@@ -628,7 +639,7 @@ class UIUtils:
             description="Скульптура перемогла",
             color=Color.RED.value
         )
-        embed.set_thumbnail(url="https://media.discordapp.net/attachments/614115775376261120/1404119055035662386/image.png")
+        embed.set_thumbnail(url="https://imgur.com/fBmiMNB.png")
         return embed
 
 

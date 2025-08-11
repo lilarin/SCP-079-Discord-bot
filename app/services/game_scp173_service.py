@@ -24,7 +24,7 @@ class SCP173GameService:
             host=host,
             bet=bet,
             mode=mode,
-            players={host},
+            players=[host],
             channel_id=interaction.channel_id
         )
         embed = await ui_utils.format_scp173_lobby_embed(game_state)
@@ -61,10 +61,11 @@ class SCP173GameService:
             return await response_utils.send_ephemeral_response(interaction, "Лобі повне")
         db_user, _ = await User.get_or_create(user_id=user.id)
         if db_user.balance < game_state.bet:
-            return await response_utils.send_ephemeral_response(interaction,
-                                                                f"Недостатньо коштів. Потрібно {game_state.bet} 💠")
+            return await response_utils.send_ephemeral_response(
+                interaction, f"У вас недостатньо коштів для цієї ставки"
+            )
         await economy_management_service.update_user_balance(user.id, -game_state.bet)
-        game_state.players.add(user)
+        game_state.players.append(user)
         embed = await ui_utils.format_scp173_lobby_embed(game_state)
         components = await ui_utils.init_scp173_lobby_components(game_state)
         await response_utils.edit_response(interaction, embed=embed, components=components)
@@ -74,12 +75,14 @@ class SCP173GameService:
     async def handle_start(self, interaction: disnake.MessageInteraction):
         message_id = interaction.message.id
         if message_id not in self.games or self.games[message_id].is_started:
-            return await response_utils.send_ephemeral_response(interaction, "Ця гра вже закінчилася або почалася")
+            return await response_utils.send_ephemeral_response(
+                interaction, "Ця гра вже закінчилася або почалася"
+            )
         game_state = self.games[message_id]
-        if interaction.author.id != game_state.host.id:
-            return await response_utils.send_ephemeral_response(interaction, "Тільки хост може розпочати гру")
         if len(game_state.players) < 2:
-            return await response_utils.send_ephemeral_response(interaction, "Потрібно щонайменше 2 гравці для старту")
+            return await response_utils.send_ephemeral_response(
+                interaction, "Потрібно щонайменше 2 гравці для старту"
+            )
         await self.run_game(interaction.channel, message_id)
 
     async def run_game(self, channel: disnake.TextChannel, message_id: int):
@@ -99,9 +102,18 @@ class SCP173GameService:
         survivors = list(game_state.players)
         total_players_at_start = len(survivors)
         round_number = 0
+        round_fields = []
 
         while len(survivors) > 1:
             round_number += 1
+            current_round_log = []
+            round_field_name = f"Раунд {round_number}"
+            round_fields.append({"name": round_field_name, "value": "...", "inline": False})
+
+            embed_in_progress = await ui_utils.format_scp173_start_game_embed(game_state, round_logs=round_fields)
+            await response_utils.edit_message(message, embed=embed_in_progress, components=info_components)
+            await asyncio.sleep(2)
+
             random.shuffle(survivors)
             current_round_survivors = []
             a_death_occurred = False
@@ -113,13 +125,14 @@ class SCP173GameService:
                 await asyncio.sleep(2)
                 if random.random() < death_chance:
                     a_death_occurred = True
-                    await response_utils.send_new_message(
-                        channel,
-                        message=f"**{player.mention}** кліпнув очима! Скульптура не пробачає помилок"
-                    )
+                    current_round_log.append(f"**{player.mention}** кліпнув та помер!")
                 else:
-                    await response_utils.send_new_message(channel, message=f"**{player.mention}** не кліпнув очима")
+                    current_round_log.append(f"**{player.mention}** не кліпнув")
                     current_round_survivors.append(player)
+
+                round_fields[-1]["value"] = "\n".join(current_round_log)
+                embed_in_progress = await ui_utils.format_scp173_start_game_embed(game_state, round_logs=round_fields)
+                await response_utils.edit_message(message, embed=embed_in_progress, components=info_components)
 
             survivors = current_round_survivors
 
@@ -147,14 +160,16 @@ class SCP173GameService:
             if len(survivors) <= 1:
                 break
 
-            description = f"**Раунд {round_number} завершено!**\n\n"
             if not a_death_occurred:
-                description += "Дивно... ніхто не кліпав очима. "
-            description += f"**{len(survivors)}** співробітників продовжують дивитися"
+                round_summary = "-# Дивно... ніхто не кліпав очима"
+            else:
+                round_summary = "-# Скульптура не пробачає помилок"
+            current_round_log.append(round_summary)
+            round_fields[-1]["value"] = "\n".join(current_round_log)
 
-            await response_utils.send_new_message(
-                channel, embed=Embed(description=description, color=Color.YELLOW.value)
-            )
+            embed_in_progress = await ui_utils.format_scp173_start_game_embed(game_state, round_logs=round_fields)
+            await response_utils.edit_message(message, embed=embed_in_progress, components=info_components)
+
             await asyncio.sleep(4)
 
         if len(survivors) == 1:
