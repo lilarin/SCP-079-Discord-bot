@@ -14,7 +14,7 @@ from app.services.game_candy_service import candy_game_service
 from app.services.game_coin_service import coin_flip_service
 from app.services.game_conguard_service import coguard_service
 from app.services.game_crystallization_service import crystallization_service
-from app.services.game_scp173_service import scp173_game_service
+from app.services.game_staring_service import scp173_game_service
 from app.services.inventory_service import inventory_service
 from app.services.keycard_service import keycard_service
 from app.services.leaderboard_service import leaderboard_service
