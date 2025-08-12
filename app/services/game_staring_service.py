@@ -3,10 +3,8 @@ import random
 from typing import Dict
 
 import disnake
-from disnake import Embed
 
 from app.config import config
-from app.core.enums import Color
 from app.core.models import User
 from app.core.schemas import SCP173GameState
 from app.services.economy_management_service import economy_management_service
@@ -14,11 +12,13 @@ from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
 
 
-class SCP173GameService:
+class StaringGameService:
     def __init__(self):
         self.games: Dict[int, SCP173GameState] = {}
 
-    async def start_lobby(self, interaction: disnake.ApplicationCommandInteraction, bet: int, mode: str):
+    async def start_lobby(
+            self, interaction: disnake.ApplicationCommandInteraction, bet: int, mode: str
+    ) -> None:
         host = interaction.author
         game_state = SCP173GameState(
             host=host,
@@ -49,7 +49,7 @@ class SCP173GameService:
             else:
                 await self.run_game(interaction.channel, message.id)
 
-    async def handle_join(self, interaction: disnake.MessageInteraction):
+    async def handle_join(self, interaction: disnake.MessageInteraction) -> None:
         message_id = interaction.message.id
         if message_id not in self.games or self.games[message_id].is_started:
             return await response_utils.send_ephemeral_response(interaction, "Ця гра вже закінчилася або почалася")
@@ -72,7 +72,7 @@ class SCP173GameService:
         if len(game_state.players) == config.staring_max_players:
             await self.run_game(interaction.channel, message_id)
 
-    async def handle_start(self, interaction: disnake.MessageInteraction):
+    async def handle_start(self, interaction: disnake.MessageInteraction) -> None:
         message_id = interaction.message.id
         if message_id not in self.games or self.games[message_id].is_started:
             return await response_utils.send_ephemeral_response(
@@ -85,7 +85,7 @@ class SCP173GameService:
             )
         await self.run_game(interaction.channel, message_id)
 
-    async def run_game(self, channel: disnake.TextChannel, message_id: int):
+    async def run_game(self, channel: disnake.TextChannel, message_id: int) -> None:
         if message_id not in self.games or self.games[message_id].is_started:
             return
 
@@ -170,7 +170,7 @@ class SCP173GameService:
             embed_in_progress = await ui_utils.format_scp173_start_game_embed(game_state, round_logs=round_fields)
             await response_utils.edit_message(message, embed=embed_in_progress, components=info_components)
 
-            await asyncio.sleep(4)
+            await asyncio.sleep(3)
 
         if len(survivors) == 1:
             winner = survivors[0]
@@ -186,4 +186,4 @@ class SCP173GameService:
             del self.games[message_id]
 
 
-scp173_game_service = SCP173GameService()
+staring_game_service = StaringGameService()
