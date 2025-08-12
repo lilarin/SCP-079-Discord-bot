@@ -505,7 +505,7 @@ async def game_scp173(
 @remove_bet_from_balance
 async def game_hole(
     interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
     group_bet: str = commands.Param(
         description="Виберіть групову ставку (не можна використовувати разом зі ставкою на предмет)",
         choices=list(config.hole_group_bet_options.keys()),
