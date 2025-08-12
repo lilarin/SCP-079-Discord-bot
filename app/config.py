@@ -100,11 +100,95 @@ class Config:
         self.crystallize_initial_multiplier_range: Tuple[float, float] = (0.7, 0.9)
         self.crystallize_chance_increment_range: Tuple[float, float] = (0.07, 0.18)
         self.crystallize_multiplier_increment_range: Tuple[float, float] = (0.1, 0.14)
+
         self.candy_pre_taken_weights: List[float] = [0.30, 0.5, 0.20]
         self.candy_win_multipliers: Dict[int, float] = {1: 1.1, 2: 1.8}
+
         self.coguard_initial_multiplier_range: Tuple[float, float] = (0.7, 0.8)
         self.coguard_multiplier_increment_range: Tuple[float, float] = (0.1, 0.2)
+
         self.staring_max_players: int = 6
+        self.staring_lobby_duration: int = 60
+
+        self.hole_game_duration: int = 30
+        self.hole_items: Dict[int, str] = {
+            0: "SCP-500 (0)",
+            1: "COM-15 (1)",
+            2: "COM-18 (2)",
+            3: "FSP-9 (3)",
+            4: "Crossvec (4)",
+            5: "MTF-E11-SR (5)",
+            6: "AK (6)",
+            7: "Дробовик (7)",
+            8: "Logicer (8)",
+            9: "FR-MG-0 (9)",
+            10: ".44 Револьвер (10)",
+            11: "COM-45 (11)",
+            12: "A7 (12)",
+            13: "Світлошумова граната (13)",
+            14: "Осколково-фугасна граната (14)",
+            15: "SCP-127 (15)",
+            16: "3-X Руйнівник частинок (16)",
+            17: "Micro H.I.D. (17)",
+            18: "Jailbird (18)",
+            19: "Ключ-карта прибиральника (19)",
+            20: "Ключ-карта науковця (20)",
+            21: "Ключ-карта охоронця (21)",
+            22: "Ключ-карта рядового МОГ (22)",
+            23: "Ключ-карта оперативника МОГ (23)",
+            24: "Ключ-карта наукового керівника (24)",
+            25: "Ключ-карта інженера зі стримування (25)",
+            26: "Ключ-карта менеджера зони (26)",
+            27: "Пристрій доступу Повстанців Хаосу (27)",
+            28: "Ключ-карта капітана МОГ (28)",
+            29: "Ключ-карта менеджера комплексу (29)",
+            30: "Ключ-карта O5 (30)",
+            31: "Легка броня (31)",
+            32: "Бойова броня (32)",
+            33: "Важка броня (33)",
+            34: "Адреналін (34)",
+            35: "Аптечка (35)",
+            36: "Рація (36)",
+        }
+        self.hole_group_bet_options: Dict[str, Dict] = {
+            "Зброя (1-18)": {
+                "multiplier": 2,
+                "numbers": set(range(1, 19))
+            },
+            "Спорядження (19-36)": {
+                "multiplier": 2,
+                "numbers": set(range(19, 37))
+            },
+            "1 дюжина (1-12)": {
+                "multiplier": 3,
+                "numbers": set(range(1, 13))
+            },
+            "2 дюжина (13-24)": {
+                "multiplier": 3,
+                "numbers": set(range(13, 25))
+            },
+            "3 дюжина (25-36)": {
+                "multiplier": 3,
+                "numbers": set(range(25, 37))
+            },
+            "1 колонка": {
+                "multiplier": 3,
+                "numbers": set(range(1, 37, 3))
+            },
+            "2 колонка": {
+                "multiplier": 3,
+                "numbers": set(range(2, 37, 3))
+            },
+            "3 колонка": {
+                "multiplier": 3,
+                "numbers": set(range(3, 37, 3))
+            },
+        }
+
+        self.hole_bet_options: Dict[str, Dict] = {
+            **self.hole_group_bet_options,
+            **{name: {"multiplier": 36, "numbers": {num}} for num, name in self.hole_items.items()}
+        }
 
     def get_font(self, font_path: str, size: int) -> ImageFont.FreeTypeFont:
         if (font_path, size) not in self.fonts:

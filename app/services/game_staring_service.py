@@ -33,7 +33,7 @@ class StaringGameService:
         message = await interaction.original_message()
         game_state.message_id = message.id
         self.games[message.id] = game_state
-        await asyncio.sleep(60)
+        await asyncio.sleep(config.staring_lobby_duration)
         if message.id in self.games and not self.games[message.id].is_started:
             current_state = self.games[message.id]
             if len(current_state.players) < 2:

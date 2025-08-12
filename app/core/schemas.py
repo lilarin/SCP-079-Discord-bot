@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Tuple, List, Literal, Set
+from typing import Tuple, List, Literal
 
 from PIL import Image
-from disnake import Member
+from disnake import Member, Message, User
 
 
 @dataclass
@@ -60,3 +60,16 @@ class SCP173GameState:
     message_id: int = 0
     channel_id: int = 0
     is_started: bool = False
+
+
+@dataclass
+class HolePlayerBet:
+    player: User
+    amount: int
+    choice: str
+
+
+@dataclass
+class HoleGameState:
+    message: Message
+    bets: List[HolePlayerBet] = field(default_factory=list)

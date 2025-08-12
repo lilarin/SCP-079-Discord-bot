@@ -14,6 +14,7 @@ from app.services.game_candy_service import candy_game_service
 from app.services.game_coin_service import coin_flip_service
 from app.services.game_conguard_service import coguard_service
 from app.services.game_crystallization_service import crystallization_service
+from app.services.game_hole_service import hole_game_service
 from app.services.game_staring_service import staring_game_service
 from app.services.inventory_service import inventory_service
 from app.services.keycard_service import keycard_service
@@ -412,6 +413,7 @@ async def game_crystallize(
     try:
         await crystallization_service.start_game(interaction, bet)
     except Exception as exception:
+        await economy_management_service.update_user_balance(interaction.author.id, bet)
         await response_utils.send_response(
             interaction, message="Виникла помилка під час гри в кристалізацію"
         )
@@ -428,6 +430,7 @@ async def game_coin_flip(
     try:
         await coin_flip_service.play_game(interaction, bet)
     except Exception as exception:
+        await economy_management_service.update_user_balance(interaction.author.id, bet)
         await response_utils.send_response(
             interaction, message="Виникла помилка під час гри в монетку"
         )
@@ -444,8 +447,9 @@ async def game_candy(
     try:
         await candy_game_service.start_game(interaction, bet)
     except Exception as exception:
+        await economy_management_service.update_user_balance(interaction.author.id, bet)
         await response_utils.send_response(
-            interaction, message="Виникла помилка під час запуску гри."
+            interaction, message="Виникла помилка під час запуску гри в цукерки"
         )
         logger.error(exception)
 
@@ -460,8 +464,9 @@ async def game_coguard(
     try:
         await coguard_service.start_game(interaction, bet)
     except Exception as exception:
+        await economy_management_service.update_user_balance(interaction.author.id, bet)
         await response_utils.send_response(
-            interaction, message="Виникла помилка під час запуску тесту."
+            interaction, message="Виникла помилка під час запуску тесту"
         )
         logger.error(exception)
 
@@ -483,8 +488,58 @@ async def game_scp173(
     try:
         await staring_game_service.start_lobby(interaction, bet, mode)
     except Exception as exception:
+        await economy_management_service.update_user_balance(interaction.author.id, bet)
         await response_utils.send_response(
-            interaction, message="Виникла помилка під час запуску гри."
+            interaction, message="Виникла помилка під час запуску гри в піжмурки"
+        )
+        logger.error(exception)
+
+
+@bot.slash_command(name="діра", description="Зробіть ставку в аномальній рулетці")
+@commands.guild_only()
+@remove_bet_from_balance
+async def game_hole(
+    interaction: disnake.ApplicationCommandInteraction,
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+    group_bet: str = commands.Param(
+        description="Виберіть групову ставку (не можна використовувати разом зі ставкою на предмет)",
+        choices=list(config.hole_group_bet_options.keys()),
+        default=None,
+        name="група"
+    ),
+    item_bet: str = commands.Param(
+        description="Виберіть конкретний предмет (не можна використовувати з груповою ставкою)",
+        autocomplete=hole_game_service.item_autocomplete,
+        default=None,
+        name="предмет"
+    )
+):
+    if (group_bet and item_bet) or (not group_bet and not item_bet):
+        await economy_management_service.update_user_balance(interaction.author.id, bet)
+        await response_utils.send_response(
+            interaction, "Необхідно обрати **один** тип ставки", delete_after=5
+        )
+        return
+
+    if item_bet and item_bet not in config.hole_items.values():
+        await economy_management_service.update_user_balance(interaction.author.id, bet)
+        await response_utils.send_response(
+            interaction, f"Опцію '{item_bet}' не знайдено, оберіть зі списку", delete_after=5
+        )
+        return
+
+    final_choice = group_bet or item_bet
+
+    try:
+        if hole_game_service.is_game_active(interaction.channel.id):
+            await hole_game_service.join_game(interaction, bet, final_choice)
+        else:
+            await hole_game_service.create_game(interaction, bet, final_choice)
+
+    except Exception as exception:
+        await economy_management_service.update_user_balance(interaction.author.id, bet)
+        await response_utils.send_response(
+            interaction, message="Виникла помилка під час гри в діру"
         )
         logger.error(exception)
 

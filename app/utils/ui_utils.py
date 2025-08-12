@@ -7,7 +7,7 @@ from disnake.ui import ActionRow, Button
 from app.config import config
 from app.core.enums import Color
 from app.core.models import SCPObject, Item
-from app.core.schemas import SCP173GameState
+from app.core.schemas import SCP173GameState, HoleGameState
 
 
 class UIUtils:
@@ -510,42 +510,29 @@ class UIUtils:
                 for i, player in enumerate(list(game_state.players))
             ]
         )
-        embed.add_field(name="Учасники:", value=player_list if player_list else "Поки нікого немає...", inline=False)
-        embed.set_footer(text="Гра почнеться автоматично через 60 секунд, або коли лобі заповниться")
-        return embed
-
-    @staticmethod
-    async def init_scp173_lobby_components(game_state: SCP173GameState) -> List[ActionRow]:
-        is_full = len(game_state.players) >= 6
-        mode_text = "До останнього" if game_state.mode == 'last_man_standing' else "Звичайний"
-
-        state_row = ActionRow(
-            Button(
-                style=ButtonStyle.secondary,
-                label=f"Ставка: {game_state.bet} 💠",
-                custom_id="game_scp173_bet_display",
-                disabled=True
-            ),
-            Button(
-                style=ButtonStyle.secondary,
-                label=f"{len(game_state.players)}/{config.staring_max_players}",
-                custom_id="game_scp173_count_display",
-                disabled=True
-            ),
-            Button(
-                style=ButtonStyle.secondary,
-                label=f"Режим: {mode_text}",
-                custom_id="game_scp173_mode_display",
-                disabled=True
+        embed.add_field(
+            name="Учасники:",
+            value=player_list if player_list else "Поки нікого немає...", inline=False
+        )
+        embed.set_footer(
+            text=(
+                f"Гра розпочнеться автоматично через "
+                f"{config.staring_lobby_duration} секунд, або коли лобі заповниться"
             )
         )
+        return embed
+
+    async def init_scp173_lobby_components(self, game_state: SCP173GameState) -> List[ActionRow]:
+        is_full = len(game_state.players) >= config.staring_max_players
+        state_row = await self.init_scp173_game_components(game_state)
 
         action_row = ActionRow(
             Button(
                 style=ButtonStyle.green,
                 label="Приєднатися",
                 custom_id="game_scp173_join",
-                disabled=is_full),
+                disabled=is_full
+            ),
             Button(
                 style=ButtonStyle.primary,
                 label="Розпочати гру",
@@ -556,7 +543,8 @@ class UIUtils:
         return [state_row, action_row]
 
     @staticmethod
-    async def format_scp173_start_game_embed(game_state: SCP173GameState, round_logs: Optional[List[dict]] = None) -> Embed:
+    async def format_scp173_start_game_embed(game_state: SCP173GameState,
+                                             round_logs: Optional[List[dict]] = None) -> Embed:
         player_list = "\n".join(
             [
                 f"{i + 1}. {player.mention}"
@@ -574,13 +562,14 @@ class UIUtils:
         if round_logs:
             for round_field in round_logs:
                 field_value = round_field.get("value") or "..."
-                embed.add_field(name=round_field.get("name"), value=field_value, inline=round_field.get("inline", False))
+                embed.add_field(name=round_field.get("name"), value=field_value,
+                                inline=round_field.get("inline", False))
 
         return embed
 
     @staticmethod
     async def init_scp173_game_components(game_state: SCP173GameState) -> List[ActionRow]:
-        mode_text = "До останнього" if game_state.mode == 'last_man_standing' else "Звичайний"
+        mode_text = "До останнього" if game_state.mode == "last_man_standing" else "Звичайний"
         state_row = ActionRow(
             Button(
                 style=ButtonStyle.secondary,
@@ -590,7 +579,7 @@ class UIUtils:
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"{len(game_state.players)}/{config.staring_max_players }",
+                label=f"{len(game_state.players)}/{config.staring_max_players}",
                 custom_id="game_scp173_count_display",
                 disabled=True
             ),
@@ -640,6 +629,46 @@ class UIUtils:
             color=Color.RED.value
         )
         embed.set_thumbnail(url="https://imgur.com/fBmiMNB.png")
+        return embed
+
+    @staticmethod
+    async def format_hole_lobby_embed(game_state: HoleGameState) -> Embed:
+        embed = Embed(
+            title="Аномальна рулетка",
+            color=Color.WHITE.value
+        )
+        embed.set_thumbnail(url="https://imgur.com/vHlPfOR.png")
+
+        embed.description = "Поточні ставки:\n"
+        for i, bet in enumerate(game_state.bets):
+            embed.description += (
+                f"{i + 1}. {bet.player.mention} **{bet.amount}** 💠 на `{bet.choice}`\n"
+            )
+
+        embed.set_footer(text=f"Гра розпочнеться автоматично через {config.hole_game_duration} секунд")
+        return embed
+
+    @staticmethod
+    async def format_hole_results_embed(
+            winning_item: str, winners: List[Tuple[User, int, str]]
+    ) -> Embed:
+        embed = Embed(
+            title="Діра повернула предмет",
+            description=f"``{winning_item}``\n",
+            color=Color.GREEN.value if winners else Color.RED.value
+        )
+        embed.set_thumbnail(url="https://imgur.com/vHlPfOR.png")
+
+        if winners:
+            winner_lines = []
+            for i, (player, payout) in enumerate(winners):
+                winner_lines.append(
+                    f"{i + 1}. {player.mention} виграв **{payout}** 💠"
+                )
+            embed.add_field(name="Переможці:", value="\n".join(winner_lines), inline=False)
+        else:
+            embed.description += "\nДіра поглинула всі ставки"
+
         return embed
 
 
