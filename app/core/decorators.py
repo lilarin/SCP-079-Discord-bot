@@ -28,13 +28,17 @@ def remove_bet_from_balance(func):
 
         await response_utils.wait_for_response(interaction)
         if bet <= 0:
-            await response_utils.send_response(interaction, message="Ставка має бути більше нуля")
+            await response_utils.send_response(
+                interaction, message="Ставка має бути більше нуля", delete_after=5
+            )
             return
 
         db_user, _ = await User.get_or_create(user_id=interaction.user.id)
 
         if db_user.balance < bet:
-            await response_utils.send_response(interaction, "У вас недостатньо коштів для цієї ставки")
+            await response_utils.send_response(
+                interaction, "У вас недостатньо коштів для цієї ставки", delete_after=5
+            )
             return
 
         await economy_management_service.update_user_balance(interaction.user.id, -bet)

@@ -84,7 +84,7 @@ async def on_member_join(member):
 @target_is_user
 async def view_card(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", default=None),
+        user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
     member = user or interaction.user
@@ -135,15 +135,18 @@ async def get_random_article(
         interaction: disnake.ApplicationCommandInteraction,
         object_class=commands.Param(
             choices=list(config.scp_classes.keys()),
-            description="Клас об'єкту (необов'язково)", default=None
+            description="Клас об'єкту (необов'язково)",
+            default=None, name="клас"
         ),
         object_range=commands.Param(
             choices=list(config.scp_ranges.keys()),
-            description="Діапазон номеру об'єкту (необов'язково)", default=None
+            description="Діапазон номеру об'єкту (необов'язково)",
+            default=None, name="діапазон"
         ),
         skip_viewed: bool = commands.Param(
             choices=[True, False],
-            description="Виключити вже переглянуті? (необов'язково, увімкнено)", default=True
+            description="Виключити вже переглянуті? (необов'язково, увімкнено)",
+            default=True, name="пропустити-переглянуті"
         )
 ):
     await response_utils.wait_for_response(interaction)
@@ -198,7 +201,8 @@ async def top_articles(
         interaction: disnake.ApplicationCommandInteraction,
         criteria=commands.Param(
             choices=list(config.leaderboard_options.keys()),
-            description="Критерій для перегляду списку лідерів"
+            description="Критерій для перегляду списку лідерів",
+            name="критерій"
         ),
 ):
     await response_utils.wait_for_response(interaction)
@@ -218,7 +222,7 @@ async def top_articles(
 @target_is_user
 async def view_balance(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", default=None),
+        user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
     member = user or interaction.user
@@ -249,7 +253,7 @@ async def shop(interaction: disnake.ApplicationCommandInteraction):
 @commands.guild_only()
 async def buy_item(
         interaction: disnake.ApplicationCommandInteraction,
-        item_id: str = commands.Param(description="ID товару"),
+        item_id: str = commands.Param(description="ID товару", name="предмет"),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
 
@@ -294,7 +298,7 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
 @commands.guild_only()
 async def equip_item(
     interaction: disnake.ApplicationCommandInteraction,
-    item_id: str = commands.Param(description="ID картки, яку ви хочете екіпірувати"),
+    item_id: str = commands.Param(description="ID картки, яку ви хочете екіпірувати", name="картка"),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
 
@@ -385,8 +389,8 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
 @target_is_user
 async def edit_player_balance_reputation(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача"),
-        amount: int = commands.Param(description="Кількість репутації"),
+        user: disnake.User = commands.Param(description="Оберіть користувача", name="користувач"),
+        amount: int = commands.Param(description="Кількість репутації для збільшення, або зменшення", name="репутація"),
 ):
     await response_utils.wait_for_response(interaction)
 
@@ -408,7 +412,7 @@ async def edit_player_balance_reputation(
 @remove_bet_from_balance
 async def game_crystallize(
     interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
 ):
     try:
         await crystallization_service.start_game(interaction, bet)
@@ -425,7 +429,7 @@ async def game_crystallize(
 @remove_bet_from_balance
 async def game_coin_flip(
     interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
 ):
     try:
         await coin_flip_service.play_game(interaction, bet)
@@ -442,7 +446,7 @@ async def game_coin_flip(
 @remove_bet_from_balance
 async def game_candy(
     interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
 ):
     try:
         await candy_game_service.start_game(interaction, bet)
@@ -459,7 +463,7 @@ async def game_candy(
 @remove_bet_from_balance
 async def game_coguard(
     interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
 ):
     try:
         await coguard_service.start_game(interaction, bet)
@@ -476,13 +480,14 @@ async def game_coguard(
 @remove_bet_from_balance
 async def game_scp173(
     interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000),
+    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
     mode: str = commands.Param(
-        description="Режим гри",
+        description="Режим гри для лоббі",
         choices={
             "Звичайний": "normal",
             "До останнього": "last_man_standing"
-        }
+        },
+        name="режим-гри"
     )
 ):
     try:
