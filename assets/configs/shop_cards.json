@@ -83,28 +83,28 @@
       "embed": "#808080"
     }
   },
-  "keycard_engineering": {
-    "name": "Карта Інженера Стримування",
-    "description": "Видається інженерно-технічному персоналу. Надає доступ до систем життєзабезпечення камер стримування, панелей управління Тесла-воріт та сервісних тунелів.",
-    "price": 30000,
-    "quantity_range": [2, 6],
-    "image_file": "keycard-8.png",
-    "colors": {
-      "primary": "#FFC2BA",
-      "secondary": "#E1A597",
-      "embed": "#BB8D83"
-    }
-  },
   "keycard_zone_manager": {
     "name": "Карта Менеджера Зони",
     "description": "Карта для керівників середньої ланки та менеджерів окремих зон. Надає розширений доступ до офісів, лабораторій та контрольних пунктів у межах своєї зони відповідальності.",
-    "price": 10000,
+    "price": 30000,
     "quantity_range": [1, 4],
-    "image_file": "keycard-9.png",
+    "image_file": "keycard-8.png",
     "colors": {
       "primary": "#8BF3E8",
       "secondary": "#13C5B3",
       "embed": "#258F84"
+    }
+  },
+    "keycard_engineering": {
+    "name": "Карта Інженера Стримування",
+    "description": "Видається інженерно-технічному персоналу. Надає доступ до систем життєзабезпечення камер стримування, панелей управління Тесла-воріт та сервісних тунелів.",
+    "price": 10000,
+    "quantity_range": [2, 6],
+    "image_file": "keycard-9.png",
+    "colors": {
+      "primary": "#FFC2BA",
+      "secondary": "#E1A597",
+      "embed": "#BB8D83"
     }
   },
   "keycard_major_scientist": {
