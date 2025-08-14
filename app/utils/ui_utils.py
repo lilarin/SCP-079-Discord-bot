@@ -540,7 +540,7 @@ class UIUtils:
             )
         )
 
-        return [state_row, action_row]
+        return [state_row[0], action_row]
 
     @staticmethod
     async def format_scp173_start_game_embed(game_state: SCP173GameState,

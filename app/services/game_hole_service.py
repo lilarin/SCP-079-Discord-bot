@@ -33,15 +33,13 @@ class HoleGameService:
 
         if any(p_bet.player.id == player.id for p_bet in game_state.bets):
             await economy_management_service.update_user_balance(player.id, bet)
-            await response_utils.send_ephemeral_response(
-                interaction, "Ви вже зробили ставку в цій грі."
+            await response_utils.send_response(
+                interaction, "Ви вже зробили ставку в активній гру", delete_after=5
             )
             return
 
         await response_utils.send_response(
-            interaction,
-            message=f"{player.mention} приєднався до гри",
-            delete_after=5
+            interaction, message=f"{player.mention} приєднався до гри", delete_after=5
         )
 
         game_state.bets.append(
