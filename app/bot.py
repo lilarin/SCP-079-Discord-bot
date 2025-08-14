@@ -427,7 +427,7 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
 async def edit_player_balance_reputation(
         interaction: disnake.ApplicationCommandInteraction,
         user: disnake.User = commands.Param(description="Оберіть користувача", name="користувач"),
-        amount: int = commands.Param(description="Кількість репутації для збільшення, або зменшення", name="репутація"),
+        amount: int = commands.Param(description="Кількість репутації для збільшення, або зменшення", name="баланс"),
 ):
     await response_utils.wait_for_response(interaction)
 
