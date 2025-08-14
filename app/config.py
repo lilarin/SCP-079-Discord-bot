@@ -22,6 +22,7 @@ class Config:
         self.discord_bot_token: str = self._get_env_variable("DISCORD_BOT_TOKEN")
         self.database_url: str = self._get_env_variable("SUPABASE_DIRECT_URL")
         self.project_root: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.timezone: str = "Europe/Kiev"
 
         # File System Paths configuration
         self.assets_dir_path: str = os.path.join(self.project_root, "assets")
