@@ -1,14 +1,16 @@
 import asyncio
-import io
 from io import BytesIO
 from typing import Tuple, Optional
 
 from PIL import Image, ImageDraw
-from disnake import File
+from cachetools import TTLCache
+from disnake import File, User, Member
 
 from app.config import config
+from app.core.schemas import CardConfig
 from app.utils.keycard_utils import keycard_utils
-from app.utils.ui_utils import ui_utils
+
+keycard_cache = TTLCache(maxsize=500, ttl=259200)
 
 
 class KeyCardService:
@@ -138,20 +140,24 @@ class KeyCardService:
 
         return File(fp=image_buffer, filename="keycard.png")
 
-    async def generate_image(self, member, template) -> BytesIO:
-        try:
-            user_code = await keycard_utils.get_user_code(member.joined_at.timestamp())
-        except AttributeError:
-            user_code = ""
+    async def get_or_generate_image(self, user: User | Member, template: CardConfig) -> File:
+        cache_key = (
+            user.id,
+            template.name,
+            user.display_name,
+            user.joined_at.timestamp() if hasattr(user, "joined_at") and user.joined_at else None,
+            getattr(user.avatar, "key", None),
+            getattr(user.avatar_decoration, "key", None)
+        )
 
-        user_name = await keycard_utils.process_username(member.display_name)
+        cached_file = keycard_cache.get(cache_key)
+        if cached_file:
+            cached_file.fp.seek(0)
+            return cached_file
 
-        avatar = io.BytesIO(await member.avatar.read())
-        avatar_decoration = member.avatar_decoration
-        if avatar_decoration:
-            avatar_decoration = io.BytesIO(await avatar_decoration.read())
+        user_id, user_name, user_code, avatar, avatar_decoration = await keycard_utils.collect_user_data(user)
 
-        image = await asyncio.to_thread(
+        image_file = await asyncio.to_thread(
             self._process_template,
             template.image,
             user_name,
@@ -162,22 +168,10 @@ class KeyCardService:
             avatar_decoration,
         )
 
-        return image
+        keycard_cache[cache_key] = image_file
 
-    @staticmethod
-    async def create_profile_embed(card, color, dossier, role):
-        return await ui_utils.format_user_embed(
-            card=card,
-            color=color,
-            dossier=dossier,
-            role=role,
-        )
-
-    async def create_new_user_embed(self, member, template):
-        card = await self.generate_image(member, template)
-        embed = await ui_utils.format_new_user_embed(member.mention, card, template.embed_color)
-
-        return embed
+        image_file.fp.seek(0)
+        return image_file
 
 
 keycard_service = KeyCardService()

@@ -75,7 +75,8 @@ async def on_member_join(member):
         templates = list(config.cards.values())
         template = templates[-1]
 
-        embed = await keycard_service.create_new_user_embed(member, template)
+        card = await keycard_service.generate_image(member, template)
+        embed = await ui_utils.format_new_user_embed(member.mention, card, template.embed_color)
 
         await member.guild.system_channel.send(embed=embed)
 
@@ -111,16 +112,14 @@ async def view_card(
             templates = list(config.cards.values())
             template = templates[-1]
 
-        image = await keycard_service.generate_image(member, template)
-
-        db_user, created = await User.get_or_create(user_id=member.id)
+        image = await keycard_service.get_or_generate_image(member, template)
 
         try:
             top_role = member.top_role if member.top_role != interaction.guild.default_role else None
         except AttributeError:
             top_role = None
 
-        embed = await keycard_service.create_profile_embed(
+        embed = await ui_utils.format_user_embed(
             card=image,
             color=template.embed_color,
             dossier=db_user.dossier if not created else None,
