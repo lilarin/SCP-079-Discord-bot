@@ -6,22 +6,24 @@ from disnake.ext import commands
 
 from app.config import config, logger
 from app.core.decorators import target_is_user, remove_bet_from_balance
-from app.modals.dossier_modal import DossierModal
 from app.core.models import User
-from app.services.articles_service import article_service
-from app.services.economy_management_service import economy_management_service
-from app.services.game_candy_service import candy_game_service
-from app.services.game_coin_service import coin_flip_service
-from app.services.game_conguard_service import coguard_service
-from app.services.game_crystallization_service import crystallization_service
-from app.services.game_hole_service import hole_game_service
-from app.services.game_staring_service import staring_game_service
-from app.services.inventory_service import inventory_service
-from app.services.keycard_service import keycard_service
-from app.services.leaderboard_service import leaderboard_service
-from app.services.scp_objects_service import scp_objects_service
-from app.services.shop_service import shop_service
-from app.services.work_service import work_service
+from app.modals.dossier_modal import DossierModal
+from app.services import (
+    article_service,
+    economy_management_service,
+    candy_game_service,
+    coin_flip_service,
+    coguard_service,
+    crystallization_service,
+    hole_game_service,
+    staring_game_service,
+    inventory_service,
+    keycard_service,
+    leaderboard_service,
+    scp_objects_service,
+    shop_service,
+    work_service
+)
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
 from app.utils.ui_utils import ui_utils
@@ -189,7 +191,6 @@ async def get_random_article(
 @bot.slash_command(name="досьє", description="Заповнити своє досьє")
 @commands.guild_only()
 async def view_card(interaction: disnake.ApplicationCommandInteraction):
-
     try:
         db_user, _ = await User.get_or_create(user_id=interaction.user.id)
 
@@ -305,8 +306,8 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
 @bot.slash_command(name="екіпірувати", description="Екіпірувати картку доступу з інвентаря")
 @commands.guild_only()
 async def equip_item(
-    interaction: disnake.ApplicationCommandInteraction,
-    item_id: str = commands.Param(description="ID картки, яку ви хочете екіпірувати", name="картка"),
+        interaction: disnake.ApplicationCommandInteraction,
+        item_id: str = commands.Param(description="ID картки, яку ви хочете екіпірувати", name="картка"),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
 
@@ -393,7 +394,8 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="змінити-баланс-користувача", description="Збільшити, або зменшити баланс на певну кількість репутації")
+@bot.slash_command(name="змінити-баланс-користувача",
+                   description="Збільшити, або зменшити баланс на певну кількість репутації")
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
 @target_is_user
@@ -417,13 +419,14 @@ async def edit_player_balance_reputation(
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=commands.BucketType.user)
 @bot.slash_command(name="кристалізація", description="Почати процес кристалізації")
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_crystallize(
-    interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        interaction: disnake.ApplicationCommandInteraction,
+        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
 ):
     try:
         await crystallization_service.start_game(interaction, bet)
@@ -435,13 +438,14 @@ async def game_crystallize(
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=commands.BucketType.user)
 @bot.slash_command(name="монетка", description="Підкинути монетку та випробувати вдачу")
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_coin_flip(
-    interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        interaction: disnake.ApplicationCommandInteraction,
+        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
 ):
     try:
         await coin_flip_service.play_game(interaction, bet)
@@ -453,13 +457,14 @@ async def game_coin_flip(
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=commands.BucketType.user)
 @bot.slash_command(name="цукерки", description="Випробуйте свою вдачу з SCP-330")
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_candy(
-    interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        interaction: disnake.ApplicationCommandInteraction,
+        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
 ):
     try:
         await candy_game_service.start_game(interaction, bet)
@@ -471,13 +476,14 @@ async def game_candy(
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=commands.BucketType.user)
 @bot.slash_command(name="когнітивна-стійкість", description="Пройти тест на когнітивну стійкість")
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_coguard(
-    interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        interaction: disnake.ApplicationCommandInteraction,
+        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
 ):
     try:
         await coguard_service.start_game(interaction, bet)
@@ -493,16 +499,16 @@ async def game_coguard(
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_scp173(
-    interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
-    mode: str = commands.Param(
-        description="Режим гри для лоббі",
-        choices={
-            "Звичайний": "normal",
-            "До останнього": "last_man_standing"
-        },
-        name="режим-гри"
-    )
+        interaction: disnake.ApplicationCommandInteraction,
+        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        mode: str = commands.Param(
+            description="Режим гри для лоббі",
+            choices={
+                "Звичайний": "normal",
+                "До останнього": "last_man_standing"
+            },
+            name="режим-гри"
+        )
 ):
     try:
         await staring_game_service.start_lobby(interaction, bet, mode)
@@ -514,25 +520,26 @@ async def game_scp173(
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=commands.BucketType.user)
 @bot.slash_command(name="діра", description="Зробіть ставку в аномальній рулетці")
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_hole(
-    interaction: disnake.ApplicationCommandInteraction,
-    bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
-    group_bet: str = commands.Param(
-        description="Виберіть групову ставку (не можна використовувати разом зі ставкою на предмет)",
-        choices=list(config.hole_group_bet_options.keys()),
-        default=None,
-        name="група"
-    ),
-    item_bet: str = commands.Param(
-        description="Виберіть конкретний предмет (не можна використовувати з груповою ставкою)",
-        autocomplete=hole_game_service.item_autocomplete,
-        default=None,
-        name="предмет"
-    )
+        interaction: disnake.ApplicationCommandInteraction,
+        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        group_bet: str = commands.Param(
+            description="Виберіть групову ставку (не можна використовувати разом зі ставкою на предмет)",
+            choices=list(config.hole_group_bet_options.keys()),
+            default=None,
+            name="група"
+        ),
+        item_bet: str = commands.Param(
+            description="Виберіть конкретний предмет (не можна використовувати з груповою ставкою)",
+            autocomplete=hole_game_service.item_autocomplete,
+            default=None,
+            name="предмет"
+        )
 ):
     if (group_bet and item_bet) or (not group_bet and not item_bet):
         await economy_management_service.update_user_balance(interaction.author.id, bet)
