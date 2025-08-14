@@ -134,7 +134,7 @@ async def view_card(
         await response_utils.send_response(interaction, "Виникла помилка під час отримання користувача")
         logger.error(exception)
     except Exception as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час виконання команди")
+        await response_utils.send_response(interaction, "Виникла помилка під час отримання картки користувача")
         logger.error(exception)
 
 
@@ -171,7 +171,7 @@ async def get_random_article(
 
         if found_all:
             await response_utils.send_response(
-                interaction, message="Ви переглянули всі статті за цими фільтрами.", delete_after=5
+                interaction, message="Ви переглянули всі статті за цими фільтрами", delete_after=10
             )
         elif random_article:
             image = await article_service.create_article_image(random_article)
@@ -180,7 +180,7 @@ async def get_random_article(
             await response_utils.send_response(interaction, embed=embed, components=components)
         else:
             await response_utils.send_response(
-                interaction, message="Статті за цими фільтрами не знайдено.", delete_after=5
+                interaction, message="Статті за цими фільтрами не знайдено", delete_after=10
             )
 
     except asyncpg.exceptions.InternalServerError as exception:
@@ -231,17 +231,42 @@ async def top_articles(
 @target_is_user
 async def view_balance(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
+        user: disnake.User = commands.Param(description="Оберіть користувача", name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
-    member = user or interaction.user
 
     try:
-        embed = await economy_management_service.create_user_balance_message(member.id)
+        embed = await economy_management_service.create_user_balance_message(user.id)
         await response_utils.send_response(interaction, embed=embed)
 
     except Exception as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання балансу користувача")
+        await response_utils.send_response(
+            interaction, "Виникла помилка під час отримання балансу користувача"
+        )
+        logger.error(exception)
+
+
+@bot.slash_command(name="переказ", description="Надіслати власні 💠 іншому користувачу")
+@commands.guild_only()
+async def transfer_balance(
+        interaction: disnake.ApplicationCommandInteraction,
+        recipient: disnake.User = commands.Param(description="Оберіть отримувача", name="отримувач"),
+        amount: int = commands.Param(description="Сума для переводу", name="сума", ge=100),
+):
+    await response_utils.wait_for_response(interaction)
+
+    try:
+        success, message = await economy_management_service.transfer_balance(interaction.author.id, recipient.id,
+                                                                             amount)
+        if success:
+            await response_utils.send_response(interaction, message)
+        else:
+            await response_utils.send_response(interaction, message, delete_after=10)
+
+    except Exception as exception:
+        await response_utils.edit_ephemeral_response(
+            interaction, "Виникла помилка під час виконання переказу"
+        )
         logger.error(exception)
 
 
@@ -278,7 +303,7 @@ async def buy_item(
 
     except Exception as exception:
         await response_utils.send_response(
-            interaction, "Виникла помилка під час виконання покупки."
+            interaction, "Виникла помилка під час виконання покупки"
         )
         logger.error(exception)
 
@@ -298,7 +323,7 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
 
     except Exception as exception:
         await response_utils.edit_ephemeral_response(
-            interaction, message="Виникла помилка під час перегляду інвентаря."
+            interaction, message="Виникла помилка під час перегляду інвентарю"
         )
         logger.error(exception)
 
@@ -323,7 +348,7 @@ async def equip_item(
 
     except Exception as exception:
         await response_utils.edit_ephemeral_response(
-            interaction, message="Виникла помилка під час екіпірування предмету."
+            interaction, message="Виникла помилка під час екіпірування предмету"
         )
         logger.error(exception)
 
@@ -346,7 +371,7 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
 
     except Exception as exception:
         await response_utils.send_response(
-            interaction, "Виникла помилка під час виконання завдання."
+            interaction, "Виникла помилка під час виконання легальної роботи"
         )
         logger.error(exception)
 
@@ -370,7 +395,7 @@ async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
 
     except Exception as exception:
         await response_utils.send_response(
-            interaction, "Виникла помилка під час виконання завдання."
+            interaction, "Виникла помилка під час виконання завдання"
         )
         logger.error(exception)
 
@@ -544,14 +569,14 @@ async def game_hole(
     if (group_bet and item_bet) or (not group_bet and not item_bet):
         await economy_management_service.update_user_balance(interaction.author.id, bet)
         await response_utils.send_response(
-            interaction, "Необхідно обрати **один** тип ставки", delete_after=5
+            interaction, "Необхідно обрати **один** тип ставки", delete_after=10
         )
         return
 
     if item_bet and item_bet not in config.hole_items.values():
         await economy_management_service.update_user_balance(interaction.author.id, bet)
         await response_utils.send_response(
-            interaction, f"Опцію '{item_bet}' не знайдено, оберіть зі списку", delete_after=5
+            interaction, f"Опцію '{item_bet}' не знайдено, оберіть зі списку", delete_after=10
         )
         return
 

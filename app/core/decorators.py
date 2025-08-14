@@ -37,7 +37,12 @@ def remove_bet_from_balance(func):
 
         if db_user.balance < bet:
             await response_utils.send_response(
-                interaction, "У вас недостатньо коштів для цієї ставки", delete_after=5
+                interaction,
+                (
+                    "У вас недостатньо коштів для цієї ставки"
+                    f"\n-# Поточний баланс – {db_user.balance} 💠"
+                ),
+                delete_after=5
             )
             return
 

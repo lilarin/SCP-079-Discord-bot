@@ -2,6 +2,7 @@ from typing import Tuple
 
 from tortoise.exceptions import DoesNotExist
 from tortoise.expressions import Q
+from tortoise.transactions import in_transaction
 
 from app.core.models import User
 from app.utils.ui_utils import ui_utils
@@ -43,6 +44,32 @@ class EconomyManagementService:
     @staticmethod
     async def reset_users_reputation() -> None:
         await User.all().update(reputation=0)
+
+    @staticmethod
+    async def transfer_balance(sender_id: int, receiver_id: int, amount: int) -> Tuple[bool, str]:
+        if sender_id == receiver_id:
+            return False, "Ви не можете переказати кошти самому собі"
+
+        if amount <= 0:
+            return False, "Сума переводу повинна бути більше нуля"
+
+        async with in_transaction():
+            sender, _ = await User.get_or_create(user_id=sender_id)
+            if sender.balance < amount:
+                return False, (
+                    "У вас недостатньо коштів для переказу\n"
+                    f"-# Поточний баланс – {sender.balance} 💠"
+                )
+
+            receiver, _ = await User.get_or_create(user_id=receiver_id)
+
+            sender.balance -= amount
+            await sender.save(update_fields=["balance"])
+
+            receiver.balance += amount
+            await receiver.save(update_fields=["balance"])
+
+        return True, f"Ви успішно переказали {amount} 💠 користувачу <@{receiver_id}>"
 
 
 economy_management_service = EconomyManagementService()
