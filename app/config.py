@@ -8,6 +8,7 @@ from typing import Dict, Tuple, Optional, List
 from urllib.parse import urlparse
 
 from PIL import Image, ImageFont
+from disnake.ext.commands import BucketType
 from dotenv import load_dotenv
 
 from app.core.schemas import CardConfig, WorkPrompts, NonLegalPrompts
@@ -205,6 +206,13 @@ class Config:
             **self.hole_group_bet_options,
             **{name: {"multiplier": 36, "numbers": {num}} for num, name in self.hole_items.items()}
         }
+
+        # Cooldowns configuration
+        self.cooldown_type: BucketType = BucketType.user # user for total cooldown between guilds, guild for guild-based cooldown
+        self.games_cooldown_rate: float = 3
+        self.games_cooldown_time_minutes: float = 120
+        self.work_cooldown_time_minutes: float = 240
+        self.article_cooldown_time_minutes: float = 0.5
 
     def get_font(self, font_path: str, size: int) -> ImageFont.FreeTypeFont:
         if (font_path, size) not in self.fonts:

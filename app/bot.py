@@ -23,6 +23,7 @@ from app.services.scp_objects_service import scp_objects_service
 from app.services.shop_service import shop_service
 from app.services.work_service import work_service
 from app.utils.response_utils import response_utils
+from app.utils.time_utils import time_utils
 from app.utils.ui_utils import ui_utils
 
 bot = commands.InteractionBot(intents=disnake.Intents.all())
@@ -57,6 +58,13 @@ async def on_slash_command_error(interaction, error):
     elif isinstance(error, commands.NoPrivateMessage):
         await response_utils.send_ephemeral_response(interaction, "Команди бота можна використовувати лише на сервері")
         return
+    elif isinstance(error, disnake.ext.commands.errors.CommandOnCooldown):
+        timestamp = await time_utils.get_current()
+        timestamp = round(timestamp.timestamp() + error.retry_after)
+        await response_utils.send_ephemeral_response(
+            interaction,
+            f"Ви поки не можете використати цю команду, спробуйте знову <t:{timestamp}:R>"
+        )
 
     logger.error(error)
 
@@ -129,6 +137,7 @@ async def view_card(
         logger.error(exception)
 
 
+@commands.cooldown(rate=1, per=config.article_cooldown_time_minutes * 60, type=commands.BucketType.user)
 @bot.slash_command(name="випадкова-стаття", description="Отримати посилання на випадкову статтю за фільтрами")
 @commands.guild_only()
 async def get_random_article(
@@ -319,6 +328,7 @@ async def equip_item(
         logger.error(exception)
 
 
+@commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=commands.BucketType.user)
 @bot.slash_command(name="робота", description="Виконати безпечне завдання для фонду")
 @commands.guild_only()
 async def legal_work(interaction: disnake.ApplicationCommandInteraction):
@@ -341,6 +351,7 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
+@commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=commands.BucketType.user)
 @bot.slash_command(name="ризикована-робота", description="Взятися за ризиковану справу")
 @commands.guild_only()
 async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
@@ -407,6 +418,7 @@ async def edit_player_balance_reputation(
         logger.error(exception)
 
 
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
 @bot.slash_command(name="кристалізація", description="Почати процес кристалізації")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -424,6 +436,7 @@ async def game_crystallize(
         logger.error(exception)
 
 
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
 @bot.slash_command(name="монетка", description="Підкинути монетку та випробувати вдачу")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -441,6 +454,7 @@ async def game_coin_flip(
         logger.error(exception)
 
 
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
 @bot.slash_command(name="цукерки", description="Випробуйте свою вдачу з SCP-330")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -458,6 +472,7 @@ async def game_candy(
         logger.error(exception)
 
 
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
 @bot.slash_command(name="когнітивна-стійкість", description="Пройти тест на когнітивну стійкість")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -500,6 +515,7 @@ async def game_scp173(
         logger.error(exception)
 
 
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=commands.BucketType.user)
 @bot.slash_command(name="діра", description="Зробіть ставку в аномальній рулетці")
 @commands.guild_only()
 @remove_bet_from_balance
