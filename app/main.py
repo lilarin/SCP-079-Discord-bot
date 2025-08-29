@@ -10,8 +10,8 @@ if __name__ == "__main__":
         logger.info("Starting bot...")
         log_listener.start()
         asyncio.run(Tortoise.init(tortoise_orm))
-        logger.info("Tortoise-ORM started.")
+        logger.info("Tortoise-ORM started")
         bot.run(config.discord_bot_token)
     finally:
         asyncio.run(Tortoise.close_connections())
-        logger.info("Tortoise-ORM connections closed.")
+        logger.info("Tortoise-ORM connections closed")
