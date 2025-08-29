@@ -1,3 +1,4 @@
+import asyncio
 from typing import Tuple
 
 from disnake import User
@@ -6,30 +7,27 @@ from tortoise.expressions import Q
 from tortoise.transactions import in_transaction
 
 from app.core.models import User as UserModel
+from app.services.economy_logging_service import economy_logging_service
 from app.utils.ui_utils import ui_utils
 
 
 class EconomyManagementService:
     @staticmethod
-    async def set_user_balance(user_id: int, amount: int) -> None:
+    async def update_user_balance(user_id: int, amount: int, reason: str) -> None:
         user, is_created = await UserModel.get_or_create(user_id=user_id)
         if not user:
             raise DoesNotExist(f"Користувача з ID {user_id} не знайдено")
-        await user.set_balance(amount)
 
-    @staticmethod
-    async def set_user_reputation(user_id: int, amount: int) -> None:
-        user, is_created = await UserModel.get_or_create(user_id=user_id)
-        if not user:
-            raise DoesNotExist(f"Користувача з ID {user_id} не знайдено")
-        await user.set_reputation(amount)
-
-    @staticmethod
-    async def update_user_balance(user_id: int, amount: int) -> None:
-        user, is_created = await UserModel.get_or_create(user_id=user_id)
-        if not user:
-            raise DoesNotExist(f"Користувача з ID {user_id} не знайдено")
         await user.update_balance(amount)
+
+        asyncio.create_task(
+            economy_logging_service.log_balance_change(
+                user_id=user_id,
+                amount=amount,
+                new_balance=user.balance,
+                reason=reason
+            )
+        )
 
     @staticmethod
     async def create_user_balance_message(user: User) -> Tuple[int, int]:
@@ -71,6 +69,24 @@ class EconomyManagementService:
 
             receiver.balance += amount
             await receiver.save(update_fields=["balance"])
+
+            asyncio.create_task(
+                economy_logging_service.log_balance_change(
+                    user_id=sender_id,
+                    amount=-amount,
+                    new_balance=sender.balance,
+                    reason=f"Переказ коштів користувачу <@{receiver_id}>"
+                )
+            )
+
+            asyncio.create_task(
+                economy_logging_service.log_balance_change(
+                    user_id=receiver_id,
+                    amount=amount,
+                    new_balance=receiver.balance,
+                    reason=f"Отримання коштів від <@{sender_id}>"
+                )
+            )
 
         return True, f"Ви успішно переказали {amount} 💠 користувачу <@{receiver_id}>"
 

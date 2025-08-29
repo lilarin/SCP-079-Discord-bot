@@ -59,7 +59,14 @@ class ResponseUtils:
             message: Optional[str] = None,
             embed: Optional[Embed] = None
     ) -> None:
-        await channel.send(content=message, embed=embed)
+        await channel.send(content=message, embed=embed, flags=MessageFlags(suppress_notifications=True))
+
+    @staticmethod
+    async def send_error_response(interaction,) -> None:
+        await interaction.edit_original_response(
+            content="Хтось зламав код, але не переймайтесь, скоро це виправлять!", delete_after=10
+        )
+
 
 
 response_utils = ResponseUtils()

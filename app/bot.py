@@ -23,7 +23,8 @@ from app.services import (
     scp_objects_service,
     shop_service,
     work_service,
-    achievement_service
+    achievement_service,
+    economy_logging_service
 )
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
@@ -38,6 +39,7 @@ async def on_ready():
         await scp_objects_service.update_scp_objects()
         await shop_service.sync_card_items()
         await achievement_service.sync_achievements()
+        await economy_logging_service.init_logging(bot)
     except asyncpg.exceptions.InternalServerError as exception:
         logger.error(exception)
     logger.info(f"Виконано вхід як {bot.user}")
@@ -118,15 +120,12 @@ async def view_card(
 
         await response_utils.send_response(interaction, embed=embed)
 
-    except asyncpg.exceptions.InternalServerError as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання даних користувача")
-        logger.error(exception)
     except Exception as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання картки користувача")
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
-@commands.cooldown(rate=1, per=config.article_cooldown_time_minutes * 60, type=commands.BucketType.user)
+@commands.cooldown(rate=1, per=config.article_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="випадкова-стаття", description="Отримати посилання на випадкову статтю за фільтрами")
 @commands.guild_only()
 async def get_random_article(
@@ -172,7 +171,7 @@ async def get_random_article(
             )
 
     except asyncpg.exceptions.InternalServerError as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання cтатті")
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -186,9 +185,7 @@ async def view_card(interaction: disnake.ApplicationCommandInteraction):
             modal=DossierModal(user=interaction.user, db_user=db_user)
         )
     except asyncpg.exceptions.InternalServerError as exception:
-        await response_utils.wait_for_ephemeral_response(
-            interaction, "Виникла помилка під час отримання користувача"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -210,7 +207,7 @@ async def top_articles(
         await response_utils.send_response(interaction, embed=embed, components=components)
 
     except Exception as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання топу")
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -229,9 +226,7 @@ async def view_balance(
         await response_utils.send_response(interaction, embed=embed)
 
     except Exception as exception:
-        await response_utils.send_response(
-            interaction, "Виникла помилка під час отримання балансу користувача"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -253,9 +248,7 @@ async def transfer_balance(
             await response_utils.send_response(interaction, message, delete_after=10)
 
     except Exception as exception:
-        await response_utils.edit_ephemeral_response(
-            interaction, "Виникла помилка під час виконання переказу"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -268,7 +261,7 @@ async def shop(interaction: disnake.ApplicationCommandInteraction):
         await response_utils.send_response(interaction, embed=embed, components=components)
 
     except Exception as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час відкриття магазину")
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -291,9 +284,7 @@ async def buy_item(
         await response_utils.edit_ephemeral_response(interaction, message=message)
 
     except Exception as exception:
-        await response_utils.send_response(
-            interaction, "Виникла помилка під час виконання покупки"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -311,9 +302,7 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
         await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
 
     except Exception as exception:
-        await response_utils.edit_ephemeral_response(
-            interaction, message="Виникла помилка під час перегляду інвентарю"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -336,13 +325,11 @@ async def equip_item(
         await response_utils.edit_ephemeral_response(interaction, message=message)
 
     except Exception as exception:
-        await response_utils.edit_ephemeral_response(
-            interaction, message="Виникла помилка під час екіпірування предмету"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
-@commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=commands.BucketType.user)
+@commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="робота", description="Виконати безпечне завдання для фонду")
 @commands.guild_only()
 async def legal_work(interaction: disnake.ApplicationCommandInteraction):
@@ -359,13 +346,11 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
         await response_utils.send_response(interaction, embed=embed)
 
     except Exception as exception:
-        await response_utils.send_response(
-            interaction, "Виникла помилка під час виконання легальної роботи"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
-@commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=commands.BucketType.user)
+@commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="ризикована-робота", description="Взятися за ризиковану справу")
 @commands.guild_only()
 async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
@@ -383,9 +368,7 @@ async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
         await response_utils.send_response(interaction, embed=embed)
 
     except Exception as exception:
-        await response_utils.send_response(
-            interaction, "Виникла помилка під час виконання завдання"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
@@ -402,14 +385,11 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
         )
 
     except Exception as exception:
-        await response_utils.send_response(
-            interaction, "Виникла помилка під час скидання репутації всіх гравців"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
-@bot.slash_command(name="змінити-баланс-користувача",
-                   description="Збільшити, або зменшити баланс на певну кількість репутації")
+@bot.slash_command(name="змінити-баланс-користувача", description="Збільшити, або зменшити баланс на певну кількість репутації")
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
 @target_is_user
@@ -421,20 +401,23 @@ async def edit_player_balance_reputation(
     await response_utils.wait_for_response(interaction)
 
     try:
-        await economy_management_service.update_user_balance(user.id, amount)
+        await economy_management_service.update_user_balance(
+            user.id, amount, (
+                f"Зміна балансу користувачу\n"
+                f"-# Викликано користувачем {interaction.user.mention}"
+            )
+        )
+
         await response_utils.send_response(
             interaction, f"Баланс гравця {user.mention} було змінено"
         )
 
     except Exception as exception:
-        await response_utils.send_response(
-            interaction, "Виникла помилка під час зміни поточної репутації гравцю"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="кристалізація", description="Почати процес кристалізації")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -445,15 +428,14 @@ async def game_crystallize(
     try:
         await crystallization_service.start_game(interaction, bet)
     except Exception as exception:
-        await economy_management_service.update_user_balance(interaction.author.id, bet)
-        await response_utils.send_response(
-            interaction, message="Виникла помилка під час гри в кристалізацію"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
+        await economy_management_service.update_user_balance(
+            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+        )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="монетка", description="Підкинути монетку та випробувати вдачу")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -464,15 +446,14 @@ async def game_coin_flip(
     try:
         await coin_flip_service.play_game(interaction, bet)
     except Exception as exception:
-        await economy_management_service.update_user_balance(interaction.author.id, bet)
-        await response_utils.send_response(
-            interaction, message="Виникла помилка під час гри в монетку"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
+        await economy_management_service.update_user_balance(
+            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+        )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="цукерки", description="Випробуйте свою вдачу з SCP-330")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -483,15 +464,14 @@ async def game_candy(
     try:
         await candy_game_service.start_game(interaction, bet)
     except Exception as exception:
-        await economy_management_service.update_user_balance(interaction.author.id, bet)
-        await response_utils.send_response(
-            interaction, message="Виникла помилка під час запуску гри в цукерки"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
+        await economy_management_service.update_user_balance(
+            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+        )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="когнітивна-стійкість", description="Пройти тест на когнітивну стійкість")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -502,11 +482,11 @@ async def game_coguard(
     try:
         await coguard_service.start_game(interaction, bet)
     except Exception as exception:
-        await economy_management_service.update_user_balance(interaction.author.id, bet)
-        await response_utils.send_response(
-            interaction, message="Виникла помилка під час запуску тесту"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
+        await economy_management_service.update_user_balance(
+            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+        )
 
 
 @bot.slash_command(name="піжмурки", description="Зіграти в піжмурки проти інших гравців з SCP-173")
@@ -527,15 +507,14 @@ async def game_scp173(
     try:
         await staring_game_service.start_lobby(interaction, bet, mode)
     except Exception as exception:
-        await economy_management_service.update_user_balance(interaction.author.id, bet)
-        await response_utils.send_response(
-            interaction, message="Виникла помилка під час запуску гри в піжмурки"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
+        await economy_management_service.update_user_balance(
+            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+        )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=commands.BucketType.user)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="діра", description="Зробіть ставку в аномальній рулетці")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -556,14 +535,18 @@ async def game_hole(
         )
 ):
     if (group_bet and item_bet) or (not group_bet and not item_bet):
-        await economy_management_service.update_user_balance(interaction.author.id, bet)
+        await economy_management_service.update_user_balance(
+            interaction.author.id, bet, f"Неправильна ставка під час гри {interaction.data.name}"
+        )
         await response_utils.send_response(
             interaction, "Необхідно обрати **один** тип ставки", delete_after=10
         )
         return
 
     if item_bet and item_bet not in config.hole_items.values():
-        await economy_management_service.update_user_balance(interaction.author.id, bet)
+        await economy_management_service.update_user_balance(
+            interaction.author.id, bet, f"Неправильна ставка під час гри {interaction.data.name}"
+        )
         await response_utils.send_response(
             interaction, f"Опцію '{item_bet}' не знайдено, оберіть зі списку", delete_after=10
         )
@@ -578,11 +561,11 @@ async def game_hole(
             await hole_game_service.create_game(interaction, bet, final_choice)
 
     except Exception as exception:
-        await economy_management_service.update_user_balance(interaction.author.id, bet)
-        await response_utils.send_response(
-            interaction, message="Виникла помилка під час гри в діру"
-        )
+        await response_utils.send_error_response(interaction)
         logger.error(exception)
+        await economy_management_service.update_user_balance(
+            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+        )
 
 
 @bot.slash_command(name="досягнення-користувача", description="Показати отримані досягнення")

@@ -13,10 +13,11 @@ class CoinFlipService:
         is_win = random.choice([True, False])
 
         if is_win:
-            await economy_management_service.update_user_balance(interaction.user.id, bet)
-            embed = await ui_utils.format_coin_flip_win_embed(bet=bet)
+            await economy_management_service.update_user_balance(
+                interaction.user.id, bet * 2, f"Перемога у грі `{interaction.data.name}`"
+            )
+            embed = await ui_utils.format_coin_flip_win_embed(bet=bet * 2)
         else:
-            await economy_management_service.update_user_balance(interaction.user.id, -bet)
             embed = await ui_utils.format_coin_flip_loss_embed(bet=bet)
 
         await response_utils.send_response(interaction, embed=embed)

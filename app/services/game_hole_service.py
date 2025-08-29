@@ -32,7 +32,9 @@ class HoleGameService:
         game_state = self.games[channel_id]
 
         if any(p_bet.player.id == player.id for p_bet in game_state.bets):
-            await economy_management_service.update_user_balance(player.id, bet)
+            await economy_management_service.update_user_balance(
+                player.id, bet, "Повернення повторної ставки у активній грі `діра`"
+            )
             await response_utils.send_response(
                 interaction, "Ви вже зробили ставку в активній гру", delete_after=5
             )
@@ -80,7 +82,9 @@ class HoleGameService:
             bet_option = config.hole_bet_options[p_bet.choice]
             if winning_number in bet_option["numbers"]:
                 payout = p_bet.amount * bet_option["multiplier"]
-                await economy_management_service.update_user_balance(p_bet.player.id, payout)
+                await economy_management_service.update_user_balance(
+                    p_bet.player.id, payout, "Перемога у грі `діра`"
+                )
                 winners.append((p_bet.player, payout))
 
         result_embed = await ui_utils.format_hole_results_embed(

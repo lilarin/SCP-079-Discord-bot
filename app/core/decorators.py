@@ -46,7 +46,8 @@ def remove_bet_from_balance(func):
             )
             return
 
-        await economy_management_service.update_user_balance(interaction.user.id, -bet)
+        reason = f"Ставка у грі `{interaction.application_command.name}`"
+        await economy_management_service.update_user_balance(interaction.user.id, -bet, reason=reason)
 
         await func(interaction, *args, **kwargs)
 

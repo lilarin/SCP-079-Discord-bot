@@ -80,7 +80,7 @@ class CrystallizationService:
         winnings_label = interaction.component.label
         winnings = int(winnings_label.split(' ')[1])
 
-        await economy_management_service.update_user_balance(user_id, winnings)
+        await economy_management_service.update_user_balance(user_id, winnings, "Перемога у грі `кристалізація`")
 
         state = self._parse_state_from_components(interaction.message.components)
         win_embed = await ui_utils.format_crystallize_win_embed(

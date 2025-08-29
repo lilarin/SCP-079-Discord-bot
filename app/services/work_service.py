@@ -24,7 +24,7 @@ class WorkService:
 
         reward = random.randint(*config.legal_work_reward_range)
 
-        await economy_management_service.update_user_balance(user_id, reward)
+        await economy_management_service.update_user_balance(user_id, reward, "Виконнаня легальної роботи")
 
         return prompt, reward
 
@@ -38,11 +38,11 @@ class WorkService:
         if is_success:
             prompt = random.choice(non_legal_prompts.success)
             amount = random.randint(*config.non_legal_work_reward_range)
-            await economy_management_service.update_user_balance(user_id, amount)
+            await economy_management_service.update_user_balance(user_id, amount, "Вдале виконання ризикованої роботи")
         else:
             prompt = random.choice(non_legal_prompts.failure)
             amount = random.randint(*config.non_legal_work_penalty_range)
-            await economy_management_service.update_user_balance(user_id, -amount)
+            await economy_management_service.update_user_balance(user_id, -amount, "Невдале виконання ризикованої роботи")
 
         return prompt, amount, is_success
 
