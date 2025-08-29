@@ -140,12 +140,31 @@ class ShopService:
 
                 if user.balance < item.price:
                     return (
-                        "У вас недостатньо коштів"
+                        "У вас недостатньо коштів\n"
                         f"-# Поточний баланс – {user.balance} 💠"
                     )
 
                 if await user.inventory.filter(id=item.id).exists():
                     return "Ви вже маєте цей предмет у своєму інвентарі"
+
+                card_config = config.cards.get(item_id)
+                if card_config and card_config.required_achievements:
+                    required_ids = set(card_config.required_achievements)
+                    user_ach_ids = set(
+                        await user.achievements.all().values_list("achievement_id", flat=True)
+                    )
+
+                    missing_ids = required_ids - user_ach_ids
+                    if missing_ids:
+                        missing_ach = "\n* ".join([
+                            f"{config.achievements[ach_id].name} {config.achievements[ach_id].icon}"
+                            for ach_id in missing_ids
+                            if ach_id in config.achievements
+                        ])
+                        return (
+                            f"Для покупки цього предмета вам не вистачає наступних досягнень:\n* "
+                            f"{missing_ach}"
+                        )
 
                 user.balance -= item.price
                 item.quantity -= 1
