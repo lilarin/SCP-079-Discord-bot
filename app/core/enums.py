@@ -14,3 +14,5 @@ class Color(Enum):
     ORANGE = 0xFF8C00
     BLACK = 0x1e1e1e
     YELLOW = 0xffdd53
+    CARNATION = 0xf5575a
+    HELIOTROPE = 0xb166f7
