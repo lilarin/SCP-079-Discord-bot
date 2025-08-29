@@ -1,4 +1,3 @@
-import json
 import logging
 import logging.handlers
 import os
@@ -7,11 +6,12 @@ import sys
 from typing import Dict, Tuple, Optional, List
 from urllib.parse import urlparse
 
-from PIL import Image, ImageFont
+from PIL import ImageFont
 from disnake.ext.commands import BucketType
 from dotenv import load_dotenv
 
-from app.core.schemas import CardConfig, WorkPrompts, NonLegalPrompts
+from app.core.schemas import CardConfig, WorkPrompts, AchievementConfig
+from app.utils.configs_load_utils import configs_load_utils
 
 
 class Config:
@@ -29,14 +29,16 @@ class Config:
         self.cards_dir_path: str = os.path.join(self.assets_dir_path, "cards")
         self.shop_cards_path: str = os.path.join(self.assets_dir_path, "configs", "shop_cards.json")
         self.work_prompts_path: str = os.path.join(self.assets_dir_path, "configs", "work_prompts.json")
+        self.achievements_config_path: str = os.path.join(self.assets_dir_path, "configs", "achievements.json")
         self.article_template_path: str = os.path.join(self.assets_dir_path, "articles", "article.png")
         self.primary_font_path: str = os.path.join(self.assets_dir_path, "fonts", "BauhausDemi.ttf")
         self.secondary_font_path: str = os.path.join(self.assets_dir_path, "fonts", "Inter_18pt-Bold.ttf")
 
         # Image, card and work prompts configuration
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
-        self.cards: Dict[str, CardConfig] = self._load_cards_from_json()
-        self.work_prompts: Dict[str, WorkPrompts] = self._load_work_prompts_from_json()
+        self.cards: Dict[str, CardConfig] = configs_load_utils.load_cards_from_json(self.shop_cards_path, self.cards_dir_path)
+        self.work_prompts: Dict[str, WorkPrompts] = configs_load_utils.load_work_prompts_from_json(self.work_prompts_path)
+        self.achievements: Dict[str, AchievementConfig] = configs_load_utils.load_achievements_from_json(self.achievements_config_path)
 
         # SCP Article Scraper configuration
         self.wiki_url: str = "http://scp-ukrainian.wikidot.com"
@@ -88,8 +90,9 @@ class Config:
             "Репутація": "reputation"
         }
         self.leaderboard_items_per_page: int = 10
-        self.shop_items_per_page: int = 4
+        self.shop_items_per_page: int = 3
         self.inventory_items_per_page: int = 5
+        self.achievements_per_page: int = 7
 
         # Economy configuration
         self.legal_work_reward_range: Tuple[int, int] = (50, 150)
@@ -209,7 +212,7 @@ class Config:
         }
 
         # Cooldowns configuration
-        self.cooldown_type: BucketType = BucketType.user # user for total cooldown between guilds, guild for guild-based cooldown
+        self.cooldown_type: BucketType = BucketType.user  # user for total cooldown between guilds, guild for guild-based cooldown
         self.games_cooldown_rate: float = 3
         self.games_cooldown_time_minutes: float = 120
         self.work_cooldown_time_minutes: float = 240
@@ -227,69 +230,6 @@ class Config:
             logger.error(f"{var_name} environment variable is not set!")
             exit(1)
         return value
-
-    def _load_cards_from_json(self) -> Dict[str, CardConfig]:
-        """Loads card configurations from a JSON file."""
-        try:
-            with open(self.shop_cards_path, "r", encoding="utf-8") as f:
-                raw_data = json.load(f)
-
-            loaded_cards: Dict[str, CardConfig] = {}
-            for key, data in raw_data.items():
-                full_image_path = os.path.join(self.cards_dir_path, data["image_file"])
-                loaded_cards[key] = CardConfig(
-                    name=data["name"],
-                    description=data["description"],
-                    price=data["price"],
-                    quantity_range=tuple(data["quantity_range"]),
-                    image=Image.open(full_image_path),
-                    primary_color=int(data["colors"]["primary"].lstrip("#"), 16),
-                    secondary_color=int(data["colors"]["secondary"].lstrip("#"), 16),
-                    embed_color=int(data["colors"]["embed"].lstrip("#"), 16)
-                )
-            logging.info(f"Successfully loaded {len(loaded_cards)} card configurations from JSON.")
-            return loaded_cards
-
-        except FileNotFoundError:
-            logging.error(f"Card config file not found at {self.shop_cards_path}")
-            exit(1)
-        except json.JSONDecodeError:
-            logging.error(f"Could not decode JSON from {self.shop_cards_path}. Check for syntax errors.")
-            exit(1)
-        except KeyError as e:
-            logging.error(f"Missing key in card data from {self.shop_cards_path}: {e}")
-            exit(1)
-
-    def _load_work_prompts_from_json(self) -> Dict[str, WorkPrompts]:
-        """Loads work prompt configurations from a JSON file."""
-        try:
-            with open(self.work_prompts_path, "r", encoding="utf-8") as f:
-                raw_data = json.load(f)
-
-            loaded_prompts: Dict[str, WorkPrompts] = {}
-            for key, data in raw_data.items():
-                non_legal_data = data["non-legal"]
-                non_legal_prompts_obj = NonLegalPrompts(
-                    success=non_legal_data["success"],
-                    failure=non_legal_data["failure"]
-                )
-
-                loaded_prompts[key] = WorkPrompts(
-                    legal=data["legal"],
-                    non_legal=non_legal_prompts_obj
-                )
-            logging.info(f"Successfully loaded {len(loaded_prompts)} work prompt configurations from JSON.")
-            return loaded_prompts
-
-        except FileNotFoundError:
-            logging.error(f"Work prompts config file not found at {self.work_prompts_path}")
-            exit(1)
-        except json.JSONDecodeError:
-            logging.error(f"Could not decode JSON from {self.work_prompts_path}. Check for syntax errors.")
-            exit(1)
-        except KeyError as e:
-            logging.error(f"Missing key in work prompts data from {self.work_prompts_path}: {e}")
-            exit(1)
 
     @staticmethod
     def setup_logging():

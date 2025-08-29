@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Tuple, List, Literal
+from typing import Tuple, List, Literal, Optional
 
 from PIL import Image
 from disnake import Member, Message, User
@@ -15,6 +15,7 @@ class CardConfig:
     primary_color: int
     secondary_color: int
     embed_color: int
+    required_achievements: Optional[List[str]]
 
 
 @dataclass
@@ -27,6 +28,13 @@ class NonLegalPrompts:
 class WorkPrompts:
     legal: List[str]
     non_legal: NonLegalPrompts
+
+
+@dataclass
+class AchievementConfig:
+    name: str
+    description: str
+    icon: str
 
 
 @dataclass
