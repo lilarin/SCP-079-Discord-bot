@@ -88,7 +88,8 @@ class Config:
         self.leaderboard_options: Dict[str, str] = {
             "Переглянуті статті": "articles",
             "Баланс": "balance",
-            "Репутація": "reputation"
+            "Репутація": "reputation",
+            "Досягнення": "achievements"
         }
         self.leaderboard_items_per_page: int = 10
         self.shop_items_per_page: int = 3

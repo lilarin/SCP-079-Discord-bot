@@ -14,11 +14,11 @@ class UIUtils:
     @staticmethod
     async def format_leaderboard_embed(
             top_users: List[Tuple[int, int]], top_criteria: str,
-            hint: str, symbol: str, color: str, offset: int = 0
+            hint: str, symbol: str, color: int, offset: int = 0
     ) -> Embed:
         embed = Embed(
             title=f"Топ користувачів {top_criteria}",
-            color=int(color.lstrip("#"), 16),
+            color=color,
         )
 
         if top_users:
