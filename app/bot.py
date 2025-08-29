@@ -22,7 +22,8 @@ from app.services import (
     leaderboard_service,
     scp_objects_service,
     shop_service,
-    work_service
+    work_service,
+    achievement_service
 )
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
@@ -33,8 +34,12 @@ bot = commands.InteractionBot(intents=disnake.Intents.all())
 
 @bot.event
 async def on_ready():
-    await scp_objects_service.update_scp_objects()
-    await shop_service.sync_card_items()
+    try:
+        await scp_objects_service.update_scp_objects()
+        await shop_service.sync_card_items()
+        await achievement_service.sync_achievements()
+    except asyncpg.exceptions.InternalServerError as exception:
+        logger.error(exception)
     logger.info(f"Виконано вхід як {bot.user}")
     await asyncio.sleep(1)
     await bot.change_presence(
@@ -231,12 +236,13 @@ async def top_articles(
 @target_is_user
 async def view_balance(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", name="користувач"),
+        user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
+    target_user = user or interaction.author
 
     try:
-        embed = await economy_management_service.create_user_balance_message(user.id)
+        embed = await economy_management_service.create_user_balance_message(target_user)
         await response_utils.send_response(interaction, embed=embed)
 
     except Exception as exception:
@@ -596,6 +602,38 @@ async def game_hole(
         logger.error(exception)
 
 
+@bot.slash_command(name="досягнення-користувача", description="Показати отримані досягнення")
+@commands.guild_only()
+@target_is_user
+async def achievements(
+        interaction: disnake.ApplicationCommandInteraction,
+        user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
+):
+    await response_utils.wait_for_response(interaction)
+    target_user = user or interaction.author
+
+    try:
+        embed, components = await achievement_service.init_achievements_message(target_user)
+        await response_utils.send_response(interaction, embed=embed, components=components)
+
+    except Exception as e:
+        logger.error(f"Помилка при отриманні досягнень: {e}")
+        await response_utils.send_response(interaction, "Не вдалося завантажити досягнення", delete_after=10)
+
+
+@bot.slash_command(name="список-досягнень", description="Показати список та статистику отримання досягнень на сервері")
+@commands.guild_only()
+async def achievement_stats(interaction: disnake.ApplicationCommandInteraction):
+    await response_utils.wait_for_ephemeral_response(interaction)
+
+    try:
+        embed, components = await achievement_service.init_stats_message()
+        await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
+    except Exception as e:
+        logger.error(f"Помилка при отриманні статистики досягнень: {e}")
+        await response_utils.edit_ephemeral_response(interaction, "Не вдалося завантажити список досягнень ")
+
+
 @bot.event
 async def on_button_click(interaction: disnake.MessageInteraction) -> None:
     await interaction.response.defer()
@@ -681,6 +719,54 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
                 user, current_page, offset
             )
 
+            await interaction.edit_original_message(embed=embed, components=components)
+            return
+
+        if "achievements_stats" in interaction_component_id:
+            if "previous" in interaction_component_id:
+                offset = (current_page - 2) * config.achievements_per_page
+                current_page -= 1
+            elif "next" in interaction_component_id:
+                offset = current_page * config.achievements_per_page
+                current_page += 1
+            elif "last" in interaction_component_id:
+                total_count = await achievement_service.get_total_achievements_count()
+                offset, current_page = await achievement_service.get_last_page_offset(
+                    total_count=total_count, limit=config.achievements_per_page
+                )
+            else:
+                current_page = 1
+                offset = 0
+
+            embed, components = await achievement_service.edit_stats_message(current_page, offset)
+            await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
+            return
+
+        if "achievements" in interaction_component_id:
+            target_user_id = interaction.message.components[0].children[2].custom_id
+            if target_user_id != str(interaction.message.interaction_metadata.user.id):
+                target_user = await bot.get_or_fetch_user(int(target_user_id))
+            else:
+                target_user = interaction.message.interaction_metadata.user
+
+            if "previous" in interaction_component_id:
+                offset = (current_page - 2) * config.achievements_per_page
+                current_page -= 1
+            elif "next" in interaction_component_id:
+                offset = current_page * config.achievements_per_page
+                current_page += 1
+            elif "last" in interaction_component_id:
+                total_count = await achievement_service.get_total_user_achievements_count(target_user.id)
+                offset, current_page = await achievement_service.get_last_page_offset(
+                    total_count=total_count, limit=config.achievements_per_page
+                )
+            else:
+                current_page = 1
+                offset = 0
+
+            embed, components = await achievement_service.edit_achievements_message(
+                target_user, current_page, offset
+            )
             await interaction.edit_original_message(embed=embed, components=components)
             return
 
