@@ -6,7 +6,7 @@ from disnake.ui import ActionRow, Button
 
 from app.config import config
 from app.core.enums import Color
-from app.core.models import SCPObject, Item
+from app.core.models import SCPObject, Item, Achievement
 from app.core.schemas import SCP173GameState, HoleGameState
 
 
@@ -50,6 +50,7 @@ class UIUtils:
             disable_previous_page_button: bool = False,
             disable_next_page_button: bool = False,
             disable_last_page_button: bool = False,
+            target_user_id: str = None
     ) -> Optional[ActionRow]:
         buttons = [
             Button(
@@ -67,7 +68,7 @@ class UIUtils:
             Button(
                 style=ButtonStyle.grey,
                 label=str(current_page_text),
-                custom_id=f"current_page_{criteria}_button",
+                custom_id=f"current_page_{criteria}_button" if not target_user_id else str(target_user_id),
                 disabled=True,
             ),
             Button(
@@ -132,7 +133,7 @@ class UIUtils:
         return embed, ActionRow(name_confirm)
 
     @staticmethod
-    async def format_balance_embed(balance: int, reputation: int, position: int) -> Embed:
+    async def format_balance_embed(user_avatar_url: User, balance: int, reputation: int, position: int) -> Embed:
         embed = Embed(
             title="Баланс репутації користувача",
             description="",
@@ -144,6 +145,8 @@ class UIUtils:
 
         if position:
             embed.description += f"\n-# **#{position} у рейтингу серед співробітників**"
+
+        embed.set_thumbnail(url=user_avatar_url)
 
         return embed
 
@@ -165,8 +168,25 @@ class UIUtils:
                 f"Ціна: **{item.price}** 💠",
                 f"Кількість: **{item.quantity}**",
                 f"-# **{item.description}**",
-                f"-# ID: `{item.item_id}`"
             ]
+
+            card_config = config.cards.get(item.item_id)
+
+            if card_config and card_config.required_achievements:
+
+                required_ach = []
+                for ach_id in card_config.required_achievements:
+                    ach_config = config.achievements.get(ach_id)
+                    if ach_config:
+                        required_ach.append(f"{ach_config.name} {ach_config.icon}")
+
+                if required_ach:
+                    requirements_str = "\n-# * ".join(required_ach)
+                    item_details.append(f"-# Необхідні досягнення: \n-# * {requirements_str}")
+
+            item_details.extend([
+                f"-# ID: `{item.item_id}`"
+            ])
             description_lines.append("\n".join(item_details))
 
         embed.description = "\n\n".join(description_lines)
@@ -668,6 +688,50 @@ class UIUtils:
             embed.add_field(name="Переможці:", value="\n".join(winner_lines), inline=False)
         else:
             embed.description += "\nДіра поглинула всі ставки"
+
+        return embed
+
+    @staticmethod
+    async def format_achievements_embed(
+            target_user: User, achievements: List[Achievement], offset: int = 0
+    ) -> Embed:
+        embed = Embed(
+            title=f"Досягнення користувача {target_user.display_name}",
+            color=Color.YELLOW.value
+        )
+        embed.set_thumbnail(url=target_user.display_avatar.url)
+
+        if not achievements:
+            embed.description = "У цього користувача поки немає досягнень"
+        else:
+            description_lines = [
+                f"{offset + i + 1}. **{ach.name}** {ach.icon} \n-# {ach.description}"
+                for i, ach in enumerate(achievements)
+            ]
+            embed.description = "\n\n".join(description_lines)
+
+        return embed
+
+    @staticmethod
+    async def format_achievement_stats_embed(
+            stats: List[Tuple[Achievement, int]],
+            total_players: int,
+            offset: int = 0
+    ) -> Embed:
+        embed = Embed(
+            title="Статистика досягнень на сервері",
+            color=Color.ORANGE.value
+        )
+
+        description_lines = []
+        for i, (ach, count) in enumerate(stats):
+            percentage = (count / total_players) * 100
+            description_lines.append(
+                f"{offset + i + 1}. **{ach.name}** {ach.icon} \n"
+                f"-# {ach.description} – {percentage:.1f}%"
+            )
+
+        embed.description = "\n\n".join(description_lines)
 
         return embed
 
