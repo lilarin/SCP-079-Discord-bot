@@ -4,10 +4,11 @@ from typing import Tuple, Optional
 
 from PIL import Image, ImageDraw
 from cachetools import TTLCache
-from disnake import File, User, Member
+from disnake import File, User as DisnakeUser, Member
 
 from app.config import config
-from app.core.schemas import CardConfig
+from app.core.models import User
+from app.core.schemas import CardConfig, UserProfileData
 from app.utils.keycard_utils import keycard_utils
 
 keycard_cache = TTLCache(maxsize=500, ttl=259200)
@@ -17,6 +18,37 @@ class KeyCardService:
     def __init__(self):
         self.image: Optional[Image.Image] = None
         self.draw: Optional[ImageDraw.Draw] = None
+
+    async def get_user_profile_data(self, member: DisnakeUser | Member) -> UserProfileData:
+        db_user, _ = await User.get_or_create(user_id=member.id)
+        await db_user.fetch_related("equipped_card", "achievements")
+
+        template = None
+        if db_user.equipped_card:
+            equipped_template_id = db_user.equipped_card.item_id
+            if equipped_template_id in config.cards:
+                template = config.cards[equipped_template_id]
+
+        if not template:
+            templates = list(config.cards.values())
+            template = templates[-1]
+
+        card_image = await self.get_or_generate_image(member, template)
+
+        try:
+            top_role = member.top_role if member.top_role != member.guild.default_role else None
+        except AttributeError:
+            top_role = None
+
+        user_achievements_count = len(db_user.achievements)
+
+        return UserProfileData(
+            card_image=card_image,
+            card_template=template,
+            dossier=db_user.dossier,
+            top_role=top_role,
+            achievements_count=user_achievements_count
+        )
 
     @staticmethod
     def _int_to_rgb(color_int: int) -> Tuple[int, int, int]:
@@ -140,7 +172,7 @@ class KeyCardService:
 
         return File(fp=image_buffer, filename="keycard.png")
 
-    async def get_or_generate_image(self, user: User | Member, template: CardConfig) -> File:
+    async def get_or_generate_image(self, user: DisnakeUser | Member, template: CardConfig) -> File:
         cache_key = (
             user.id,
             template.name,

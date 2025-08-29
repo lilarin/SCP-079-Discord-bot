@@ -99,8 +99,11 @@ class UIUtils:
 
     @staticmethod
     async def format_user_embed(
-            card: File, color: int, dossier: Optional[str] = None,
-            role: Optional[Role] = None
+            card: File,
+            color: int,
+            achievements_count: int,
+            dossier: Optional[str] = None,
+            role: Optional[Role] = None,
     ) -> Embed:
         embed = Embed(
             title="Інформація про співробітника фонду",
@@ -110,6 +113,14 @@ class UIUtils:
 
         if role:
             embed.add_field(name="Посада:", value=role.mention, inline=False)
+
+        if achievements_count > 0:
+            embed.add_field(
+                name="Досягнення:",
+                value=f"{achievements_count} / {len(config.achievements)}",
+                inline=False
+            )
+
         if dossier:
             embed.add_field(name="Досьє:", value=dossier, inline=False)
 

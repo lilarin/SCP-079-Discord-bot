@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Tuple, List, Literal, Optional
 
 from PIL import Image
-from disnake import Member, Message, User
+from disnake import Member, Message, User, File, Role
 
 
 @dataclass
@@ -16,6 +16,15 @@ class CardConfig:
     secondary_color: int
     embed_color: int
     required_achievements: Optional[List[str]]
+
+
+@dataclass
+class UserProfileData:
+    card_image: File
+    card_template: CardConfig
+    dossier: Optional[str]
+    top_role: Optional[Role]
+    achievements_count: int
 
 
 @dataclass
