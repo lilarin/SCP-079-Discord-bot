@@ -94,7 +94,7 @@ class ScpObjectsService:
 
         if new_objects_to_create:
             await SCPObject.bulk_create(new_objects_to_create)
-            logger.info(f"Created {len(new_objects_to_create)} SCP objects.")
+            logger.info(f"Created {len(new_objects_to_create)} SCP objects!")
         else:
             logger.info(f"All SCP objects are up-to-date")
 
