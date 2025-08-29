@@ -20,6 +20,7 @@ class Config:
 
         # Core Application configuration
         self.discord_bot_token: str = self._get_env_variable("DISCORD_BOT_TOKEN")
+        self.economy_logging_channel_id: int = int(self._get_env_variable("ECONOMY_LOGGING_CHANNEL_ID"))
         self.database_url: str = self._get_env_variable("SUPABASE_DIRECT_URL")
         self.project_root: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.timezone: str = "Europe/Kiev"
@@ -102,9 +103,9 @@ class Config:
 
         # Mini-games configuration
         self.crystallize_initial_chance: float = 0.05
-        self.crystallize_initial_multiplier_range: Tuple[float, float] = (0.7, 0.9)
-        self.crystallize_chance_increment_range: Tuple[float, float] = (0.07, 0.18)
-        self.crystallize_multiplier_increment_range: Tuple[float, float] = (0.1, 0.14)
+        self.crystallize_initial_multiplier_range: Tuple[float, float] = (0.8, 0.9)
+        self.crystallize_chance_increment_range: Tuple[float, float] = (0.07, 0.16)
+        self.crystallize_multiplier_increment_range: Tuple[float, float] = (0.1, 0.25)
 
         self.candy_pre_taken_weights: List[float] = [0.30, 0.5, 0.20]
         self.candy_win_multipliers: Dict[int, float] = {1: 1.1, 2: 1.8}
@@ -212,7 +213,7 @@ class Config:
         }
 
         # Cooldowns configuration
-        self.cooldown_type: BucketType = BucketType.user  # user for total cooldown between guilds, guild for guild-based cooldown
+        self.cooldown_type: BucketType = BucketType.user  # user for shared cooldown between guilds, guild for guild-based cooldown
         self.games_cooldown_rate: float = 3
         self.games_cooldown_time_minutes: float = 120
         self.work_cooldown_time_minutes: float = 240
@@ -227,7 +228,7 @@ class Config:
     def _get_env_variable(var_name: str) -> str:
         value = os.environ.get(var_name)
         if not value:
-            logger.error(f"{var_name} environment variable is not set!")
+            logging.error(f"{var_name} environment variable is not set!")
             exit(1)
         return value
 
