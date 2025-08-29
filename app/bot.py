@@ -103,40 +103,23 @@ async def view_card(
         user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
-    member = user or interaction.user
+    member = user or interaction.author
 
     try:
-        db_user, created = await User.get_or_create(user_id=member.id)
-        await db_user.fetch_related("equipped_card")
-
-        template = None
-        if db_user.equipped_card:
-            equipped_template_id = db_user.equipped_card.item_id
-            if equipped_template_id in config.cards:
-                template = config.cards[equipped_template_id]
-
-        if not template:
-            templates = list(config.cards.values())
-            template = templates[-1]
-
-        image = await keycard_service.get_or_generate_image(member, template)
-
-        try:
-            top_role = member.top_role if member.top_role != interaction.guild.default_role else None
-        except AttributeError:
-            top_role = None
+        profile_data = await keycard_service.get_user_profile_data(member)
 
         embed = await ui_utils.format_user_embed(
-            card=image,
-            color=template.embed_color,
-            dossier=db_user.dossier if not created else None,
-            role=top_role,
+            card=profile_data.card_image,
+            color=profile_data.card_template.embed_color,
+            dossier=profile_data.dossier,
+            role=profile_data.top_role,
+            achievements_count=profile_data.achievements_count
         )
 
         await response_utils.send_response(interaction, embed=embed)
 
     except asyncpg.exceptions.InternalServerError as exception:
-        await response_utils.send_response(interaction, "Виникла помилка під час отримання користувача")
+        await response_utils.send_response(interaction, "Виникла помилка під час отримання даних користувача")
         logger.error(exception)
     except Exception as exception:
         await response_utils.send_response(interaction, "Виникла помилка під час отримання картки користувача")
