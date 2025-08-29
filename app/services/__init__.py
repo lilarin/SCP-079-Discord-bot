@@ -13,3 +13,4 @@ from .scp_objects_service import scp_objects_service
 from .shop_service import shop_service
 from .work_service import work_service
 from .achievement_service import achievement_service
+from .economy_logging_service import economy_logging_service

@@ -746,5 +746,32 @@ class UIUtils:
 
         return embed
 
+    @staticmethod
+    async def format_balance_log_embed(
+            user_mention: str,
+            avatar_url: Optional[str],
+            amount: int,
+            new_balance: int,
+            reason: str,
+            log_id: int
+    ) -> Embed:
+        color = Color.GREEN.value if amount > 0 else Color.RED.value
+        amount_str = f"+{amount}" if amount > 0 else str(amount)
+
+        embed = Embed(
+            description=f"### {user_mention}",
+            color=color,
+        )
+
+        if avatar_url:
+            embed.set_thumbnail(url=avatar_url)
+
+        embed.add_field(name="Причина:", value=reason, inline=False)
+        embed.add_field(name="Сума", value=f"**{amount_str}** 💠", inline=True)
+        embed.add_field(name="Новий баланс", value=f"**{new_balance}** 💠", inline=True)
+        embed.set_footer(text=f"#{log_id}")
+
+        return embed
+
 
 ui_utils = UIUtils()
