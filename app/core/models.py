@@ -19,9 +19,13 @@ class User(Model):
         "models.Item", related_name="owners", through="users_items"
     )
 
+    achievements: fields.ManyToManyRelation["Achievement"] = fields.ManyToManyField(
+        "models.Achievement", related_name="users", through="users_achievements"
+    )
+
     class Meta:
         table = "users"
-        indexes = ("balance","reputation")
+        indexes = ("balance", "reputation")
         db_constraints = {
             "balance_gte_zero": "CHECK (balance >= 0)",
             "reputation_gte_zero": "CHECK (reputation >= 0)"
@@ -72,6 +76,21 @@ class Item(Model):
         return f"{self.name} (Qty: {self.quantity})"
 
 
+class Achievement(Model):
+    id = fields.IntField(pk=True)
+    achievement_id = fields.CharField(max_length=50, unique=True)
+    name = fields.CharField(max_length=100)
+    description = fields.TextField()
+    icon = fields.CharField(max_length=10, default="🏆")
+
+    class Meta:
+        table = "achievements"
+        indexes = ("achievement_id",)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class SCPObject(Model):
     id = fields.IntField(pk=True)
     number = fields.CharField(max_length=255)
@@ -82,7 +101,7 @@ class SCPObject(Model):
 
     class Meta:
         table = "scp_objects"
-        indexes = ("range","object_class")
+        indexes = ("range", "object_class")
 
     def __str__(self):
         return f"{self.title} ({self.object_class})"
