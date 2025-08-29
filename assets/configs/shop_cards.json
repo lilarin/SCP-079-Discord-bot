@@ -9,7 +9,10 @@
       "primary": "#FBFBFB",
       "secondary": "#A6A6A6",
       "embed": "#0D0D0D"
-    }
+    },
+    "required_achievements": [
+      "zone_authority"
+    ]
   },
   "keycard_redacted": {
     "name": "Карта Адміністратора",
@@ -21,7 +24,10 @@
       "primary": "#343434",
       "secondary": "#717171",
       "embed": "#FBFBFB"
-    }
+    },
+    "required_achievements": [
+      "o5_council"
+    ]
   },
   "keycard_zone_director": {
     "name": "Карта Директора Зони",
@@ -33,7 +39,11 @@
       "primary": "#FFE2E2",
       "secondary": "#E89495",
       "embed": "#730004"
-    }
+    },
+    "required_achievements": [
+      "card_collector",
+      "upcoming_promotion"
+    ]
   },
   "keycard_captain_mog": {
     "name": "Карта Капітана МОГ",
@@ -45,7 +55,12 @@
       "primary": "#C4E4FF",
       "secondary": "#80BFFF",
       "embed": "#1B2C86"
-    }
+    },
+    "required_achievements": [
+      "game_coguard_streak_10",
+      "reputation_100k",
+      "lieutenant_promotion"
+    ]
   },
   "keycard_lieutenant_mog": {
     "name": "Карта Лейтенанта МОГ",
@@ -57,7 +72,12 @@
       "primary": "#3E41E0",
       "secondary": "#5265FC",
       "embed": "#4BA3F5"
-    }
+    },
+    "required_achievements": [
+      "philanthropist",
+      "game_candy_win_2",
+      "sergeant_promotion"
+    ]
   },
   "keycard_sergeant_mog": {
     "name": "Карта Сержанта МОГ",
@@ -69,7 +89,13 @@
       "primary": "#4BA3F5",
       "secondary": "#70BBFF",
       "embed": "#ABD6FF"
-    }
+    },
+    "required_achievements": [
+      "inspector",
+      "thaumiel_secret",
+      "danger_face",
+      "security_promotion"
+    ]
   },
   "keycard_security": {
     "name": "Карта Служби Безпеки",
@@ -81,7 +107,12 @@
       "primary": "#2E2E2E",
       "secondary": "#4F4F4F",
       "embed": "#808080"
-    }
+    },
+    "required_achievements": [
+      "welcome",
+      "personal_file",
+      "workaholic"
+    ]
   },
   "keycard_zone_manager": {
     "name": "Карта Менеджера Зони",
@@ -93,9 +124,14 @@
       "primary": "#8BF3E8",
       "secondary": "#13C5B3",
       "embed": "#258F84"
-    }
+    },
+    "required_achievements": [
+      "game_crystal_win_x3",
+      "reputation_100k",
+      "engineer_promotion"
+    ]
   },
-    "keycard_engineering": {
+  "keycard_engineering": {
     "name": "Карта Інженера Стримування",
     "description": "Видається інженерно-технічному персоналу. Надає доступ до систем життєзабезпечення камер стримування, панелей управління Тесла-воріт та сервісних тунелів.",
     "price": 10000,
@@ -105,7 +141,13 @@
       "primary": "#FFC2BA",
       "secondary": "#E1A597",
       "embed": "#BB8D83"
-    }
+    },
+    "required_achievements": [
+      "thaumiel_secret",
+      "danger_face",
+      "game_scp173_first_death",
+      "major_scientist_promotion"
+    ]
   },
   "keycard_major_scientist": {
     "name": "Карта Старшого Науковця",
@@ -117,7 +159,11 @@
       "primary": "#2E2E2E",
       "secondary": "#717171",
       "embed": "#FFC74B"
-    }
+    },
+    "required_achievements": [
+      "researcher",
+      "scientist_promotion"
+    ]
   },
   "keycard_scientist": {
     "name": "Карта Науковця",
@@ -129,7 +175,12 @@
       "primary": "#484844",
       "secondary": "#858585",
       "embed": "#FFE18C"
-    }
+    },
+    "required_achievements": [
+      "welcome",
+      "personal_file",
+      "first_look"
+    ]
   },
   "keycard_janitor": {
     "name": "Карта Обслуговуючого Персоналу",
