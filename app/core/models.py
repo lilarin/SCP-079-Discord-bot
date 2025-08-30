@@ -46,11 +46,11 @@ class User(Model):
         self.reputation = amount
         await self.save()
 
-    async def update_balance(self, amount: int):
+    async def update_balance(self, amount: int, balance_only: bool = False):
         new_balance = self.balance + amount
         self.balance = max(new_balance, 0)
 
-        if amount > 0:
+        if amount > 0 and not balance_only:
             self.reputation += amount
 
         await self.save()
