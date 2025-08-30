@@ -7,6 +7,7 @@ import disnake
 from app.config import config
 from app.core.models import User
 from app.core.schemas import SCP173GameState
+from app.services import achievement_handler_service
 from app.services.economy_management_service import economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -101,6 +102,10 @@ class StaringGameService:
         start_embed = await ui_utils.format_scp173_start_game_embed(game_state)
         info_components = await ui_utils.init_scp173_game_components(game_state)
         await response_utils.edit_message(message, embed=start_embed, components=info_components)
+
+        asyncio.create_task(achievement_handler_service.handle_scp173_achievements(
+            game_state.host, is_host=True, is_survivor=False, is_first_death=False
+        ))
 
         await asyncio.sleep(3)
 

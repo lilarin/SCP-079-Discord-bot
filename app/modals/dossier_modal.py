@@ -1,6 +1,9 @@
+import asyncio
+
 import disnake
 
 from app.core.models import User
+from app.services import achievement_handler_service
 from app.utils.response_utils import response_utils
 
 
@@ -39,3 +42,5 @@ class DossierModal(disnake.ui.Modal):
         await self.db_user.save()
 
         await response_utils.send_ephemeral_response(interaction, "Досьє оновлено!")
+
+        asyncio.create_task(achievement_handler_service.handle_dossier_achievements(interaction.user))

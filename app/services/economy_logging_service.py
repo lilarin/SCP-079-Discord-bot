@@ -3,6 +3,7 @@ import re
 from typing import Optional
 
 import disnake
+from disnake import User, Member
 from disnake.ext.commands import InteractionBot
 
 from app.config import config, logger
@@ -60,7 +61,7 @@ class EconomyLoggingService:
         return self._channel
 
     async def log_balance_change(
-            self, user_id: int, amount: int, new_balance: int, reason: str
+            self, user: User | Member, amount: int, new_balance: int, reason: str
     ) -> None:
         if not self._bot:
             return
@@ -69,19 +70,12 @@ class EconomyLoggingService:
         if not log_channel:
             return
 
-        try:
-            user = await self._bot.get_or_fetch_user(user_id)
-            user_mention = user.mention
-            avatar_url = user.display_avatar.url if user.display_avatar else user.default_avatar.url
-        except disnake.NotFound:
-            user_mention = f"<@{user_id}>"
-            avatar_url = None
-
+        user_mention = f"<@{user.id}>"
         log_id = await self.get_next()
 
         embed = await ui_utils.format_balance_log_embed(
             user_mention=user_mention,
-            avatar_url=avatar_url,
+            avatar_url=user.display_avatar.url,
             amount=amount,
             new_balance=new_balance,
             reason=reason,

@@ -5,9 +5,11 @@ from typing import List, Dict, Optional, Tuple
 
 import aiohttp
 from bs4 import BeautifulSoup, NavigableString
+from disnake import User
 
 from app.config import config, logger
-from app.core.models import SCPObject, User, ViewedScpObject
+from app.core.models import SCPObject, User as UserModel, ViewedScpObject
+from app.services import achievement_handler_service
 
 
 class ScpObjectsService:
@@ -100,10 +102,10 @@ class ScpObjectsService:
 
     @staticmethod
     async def get_random_scp_object(
+            user: User,
             object_class: Optional[str] = None,
             object_range: Optional[int] = None,
             skip_viewed: bool = False,
-            member_id: Optional[int] = None,
     ) -> Tuple[bool, Optional[SCPObject]]:
         filters = {}
         if object_range is not None:
@@ -111,7 +113,7 @@ class ScpObjectsService:
         if object_class is not None:
             filters["object_class"] = object_class
 
-        db_user, _ = await User.get_or_create(user_id=member_id)
+        db_user, _ = await UserModel.get_or_create(user_id=user.id)
         query = SCPObject.filter(**filters)
 
         if skip_viewed:
@@ -128,6 +130,10 @@ class ScpObjectsService:
         if random_scp_object:
             if db_user:
                 await ViewedScpObject.get_or_create(user=db_user, scp_object=random_scp_object)
+
+            asyncio.create_task(
+                achievement_handler_service.handle_article_achievements(user, random_scp_object)
+            )
 
             return False, random_scp_object
 

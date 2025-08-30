@@ -6,7 +6,7 @@ from disnake.ext import commands
 
 from app.config import config, logger
 from app.core.decorators import target_is_user, remove_bet_from_balance
-from app.core.models import User
+from app.core.models import User as UserModel
 from app.modals.dossier_modal import DossierModal
 from app.services import (
     article_service,
@@ -38,10 +38,10 @@ bot = commands.InteractionBot(intents=disnake.Intents.all())
 @bot.event
 async def on_ready():
     try:
+        await economy_logging_service.init_logging(bot)
         await scp_objects_service.update_scp_objects()
         await shop_service.sync_card_items()
         await achievement_service.sync_achievements()
-        await economy_logging_service.init_logging(bot)
     except asyncpg.exceptions.InternalServerError as exception:
         logger.error(exception)
     logger.info(f"Виконано вхід як {bot.user}")
@@ -76,8 +76,9 @@ async def on_slash_command_error(interaction, error):
             interaction,
             f"Ви поки не можете використати цю команду, спробуйте знову <t:{timestamp}:R>"
         )
+        asyncio.create_task(achievement_handler_service.handle_cooldown_achievement(interaction.user))
 
-    logger.error(error)
+    # logger.error(error)
 
 
 @bot.event
@@ -91,7 +92,7 @@ async def on_member_join(member):
 
         await member.guild.system_channel.send(embed=embed)
 
-        await User.get_or_create(user_id=member.id)
+        await UserModel.get_or_create(user_id=member.id)
 
     except asyncpg.exceptions.InternalServerError as error:
         logger.error(error)
@@ -110,7 +111,12 @@ async def view_card(
     member = user or interaction.user
 
     try:
-        profile_data = await keycard_service.get_user_profile_data(member)
+        try:
+            target: disnake.Member = await interaction.guild.fetch_member(member.id)
+        except disnake.NotFound:
+            target: disnake.User = member
+
+        profile_data = await keycard_service.get_user_profile_data(target)
 
         embed = await ui_utils.format_user_embed(
             card=profile_data.card_image,
@@ -121,6 +127,7 @@ async def view_card(
         )
 
         await response_utils.send_response(interaction, embed=embed)
+        asyncio.create_task(achievement_handler_service.handle_view_card_achievements(interaction.user, member))
 
     except Exception as exception:
         await response_utils.send_error_response(interaction)
@@ -152,10 +159,10 @@ async def get_random_article(
 
     try:
         found_all, random_article = await scp_objects_service.get_random_scp_object(
+            user=interaction.user,
             object_class=config.scp_classes[object_class] if object_class else None,
             object_range=config.scp_ranges[object_range] if object_range else None,
             skip_viewed=skip_viewed,
-            member_id=interaction.user.id,
         )
 
         if found_all:
@@ -181,12 +188,11 @@ async def get_random_article(
 @commands.guild_only()
 async def view_card(interaction: disnake.ApplicationCommandInteraction):
     try:
-        db_user, _ = await User.get_or_create(user_id=interaction.user.id)
+        db_user, _ = await UserModel.get_or_create(user_id=interaction.user.id)
 
         await interaction.response.send_modal(
             modal=DossierModal(user=interaction.user, db_user=db_user)
         )
-        await achievement_handler_service.handle_dossier_achievements(interaction.user)
     except asyncpg.exceptions.InternalServerError as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -243,8 +249,13 @@ async def transfer_balance(
     await response_utils.wait_for_response(interaction)
 
     try:
+        try:
+            target: disnake.Member = await interaction.guild.fetch_member(recipient.id)
+        except disnake.NotFound:
+            target: disnake.User = recipient
+
         success, message = await economy_management_service.transfer_balance(
-            interaction.user.id, recipient.id, amount
+            interaction.user, target, amount
         )
         if success:
             await response_utils.send_response(interaction, message)
@@ -278,10 +289,11 @@ async def buy_item(
     await response_utils.wait_for_ephemeral_response(interaction)
 
     try:
-        await User.get_or_create(user_id=interaction.user.id)
+        db_user, _ = await UserModel.get_or_create(user_id=interaction.user.id)
 
         message = await shop_service.buy_item(
-            user_id=interaction.user.id,
+            user=interaction.user,
+            db_user=db_user,
             item_id=item_id
         )
 
@@ -298,7 +310,7 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
 
     try:
-        db_user, _ = await User.get_or_create(user_id=interaction.user.id)
+        db_user, _ = await UserModel.get_or_create(user_id=interaction.user.id)
 
         await inventory_service.check_for_default_card(user=db_user)
 
@@ -319,7 +331,7 @@ async def equip_item(
     await response_utils.wait_for_ephemeral_response(interaction)
 
     try:
-        await User.get_or_create(user_id=interaction.user.id)
+        await UserModel.get_or_create(user_id=interaction.user.id)
 
         message = await inventory_service.equip_item(
             user_id=interaction.user.id,
@@ -397,10 +409,10 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
 @target_is_user
-async def edit_player_balance_reputation(
+async def edit_player_balance(
         interaction: disnake.ApplicationCommandInteraction,
         user: disnake.User = commands.Param(description="Оберіть користувача", name="користувач"),
-        amount: int = commands.Param(description="Кількість репутації для збільшення, або зменшення", name="баланс"),
+        amount: int = commands.Param(description="Кількість на яку збільшити, або зменшити", name="кількість"),
 ):
     await response_utils.wait_for_response(interaction)
 
@@ -409,7 +421,8 @@ async def edit_player_balance_reputation(
             user, amount, (
                 f"Зміна балансу користувачу\n"
                 f"-# Викликано користувачем {interaction.user.mention}"
-            )
+            ),
+            balance_only=True
         )
 
         await response_utils.send_response(
@@ -556,13 +569,13 @@ async def game_hole(
         )
         return
 
-    final_choice = group_bet or item_bet
+    choice = group_bet or item_bet
 
     try:
         if hole_game_service.is_game_active(interaction.channel.id):
-            await hole_game_service.join_game(interaction, bet, final_choice)
+            await hole_game_service.join_game(interaction, bet, choice)
         else:
-            await hole_game_service.create_game(interaction, bet, final_choice)
+            await hole_game_service.create_game(interaction, bet, choice)
 
     except Exception as exception:
         await response_utils.send_error_response(interaction)
@@ -580,10 +593,15 @@ async def achievements(
         user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
-    target_user = user or interaction.user
+    user = user or interaction.user
 
     try:
-        embed, components = await achievement_service.init_achievements_message(target_user)
+        try:
+            target: disnake.Member = await interaction.guild.fetch_member(user.id)
+        except disnake.NotFound:
+            target: disnake.User = user
+
+        embed, components = await achievement_service.init_achievements_message(target)
         await response_utils.send_response(interaction, embed=embed, components=components)
 
     except Exception as e:

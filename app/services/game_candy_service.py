@@ -1,9 +1,11 @@
+import asyncio
 import random
 from typing import Tuple
 
 import disnake
 
 from app.config import config
+from app.services import achievement_handler_service
 from app.services.economy_management_service import economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -51,6 +53,9 @@ class CandyGameService:
         if total_candies_for_loss >= 3:
             loss_embed = await ui_utils.format_candy_loss_embed(bet=bet)
             await response_utils.edit_response(interaction, embed=loss_embed, components=[])
+            asyncio.create_task(achievement_handler_service.handle_candy_achievements(
+                interaction.user, player_taken, is_loss=True
+            ))
             return
 
         current_multiplier = config.candy_win_multipliers.get(player_taken, 1.0)
@@ -78,6 +83,10 @@ class CandyGameService:
 
         win_embed = await ui_utils.format_candy_win_embed(winnings=winnings)
         await response_utils.edit_response(interaction, embed=win_embed)
+
+        asyncio.create_task(achievement_handler_service.handle_candy_achievements(
+            interaction.user, player_taken, is_loss=False
+        ))
 
 
 candy_game_service = CandyGameService()

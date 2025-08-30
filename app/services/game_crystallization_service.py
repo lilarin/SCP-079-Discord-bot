@@ -1,9 +1,11 @@
+import asyncio
 import random
 
 import disnake
 
 from app.config import config
 from app.core.schemas import CrystallizationState
+from app.services import achievement_handler_service
 from app.services.economy_management_service import economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -50,6 +52,9 @@ class CrystallizationService:
         if random.random() < (current_loss_chance_percent / 100.0):
             loss_embed = await ui_utils.format_crystallize_loss_embed(state.bet)
             await response_utils.edit_response(interaction, embed=loss_embed)
+            asyncio.create_task(achievement_handler_service.handle_crystallization_achievements(
+                interaction.user, state, is_loss=True
+            ))
             return
 
         chance_min, chance_max = config.crystallize_chance_increment_range
@@ -89,6 +94,9 @@ class CrystallizationService:
             multiplier=state.multiplier
         )
         await response_utils.edit_response(interaction, embed=win_embed)
+        asyncio.create_task(achievement_handler_service.handle_crystallization_achievements(
+            interaction.user, state, is_loss=False
+        ))
 
 
 crystallization_service = CrystallizationService()

@@ -5,6 +5,7 @@ import disnake
 
 from app.config import config
 from app.core.schemas import HoleGameState, HolePlayerBet
+from app.services import achievement_handler_service
 from app.services.economy_management_service import economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -86,6 +87,13 @@ class HoleGameService:
                     p_bet.player, payout, "Перемога у грі `діра`"
                 )
                 winners.append((p_bet.player, payout))
+
+                is_jackpot = bet_option["multiplier"] == 36
+                is_o5_win = winning_number == 0
+
+                asyncio.create_task(achievement_handler_service.handle_hole_achievements(
+                    p_bet.player, is_jackpot, is_o5_win, payout
+                ))
 
         result_embed = await ui_utils.format_hole_results_embed(
             winning_item=winning_item_name, winners=winners

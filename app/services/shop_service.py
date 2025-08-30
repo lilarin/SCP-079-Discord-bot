@@ -1,13 +1,14 @@
-import math
+import asyncio
 import random
 from typing import List, Tuple, Optional
 
-from disnake import Embed, Component
+from disnake import Embed, Component, User
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
 from app.config import config, logger
-from app.core.models import Item, ItemType, User
+from app.core.models import Item, ItemType, User as UserModel
+from app.services import achievement_handler_service
 from app.utils.ui_utils import ui_utils
 
 
@@ -116,59 +117,55 @@ class ShopService:
         return embed, components
 
     @staticmethod
-    async def buy_item(user_id: int, item_id: str) -> str:
+    async def buy_item(user: User, db_user: UserModel, item_id: str) -> str:
         try:
             item_info = await Item.get(item_id=item_id)
         except DoesNotExist:
             return "Товар з таким ID не знайдено"
 
-        try:
-            async with in_transaction() as conn:
-                user = await User.get(user_id=user_id).using_db(conn).select_for_update()
-                item = await Item.get(id=item_info.id).using_db(conn).select_for_update()
+        async with in_transaction() as conn:
+            item = await Item.get(id=item_info.id).using_db(conn).select_for_update()
 
-                if item.quantity <= 0:
-                    return "Цей товар закінчився"
+            if item.quantity <= 0:
+                return "Цей товар закінчився"
 
-                if user.balance < item.price:
+            if db_user.balance < item.price:
+                return (
+                    "У вас недостатньо коштів\n"
+                    f"-# Поточний баланс – {db_user.balance} 💠"
+                )
+
+            if await db_user.inventory.filter(id=item.id).exists():
+                return "Ви вже маєте цей предмет у своєму інвентарі"
+
+            card_config = config.cards.get(item_id)
+            if card_config and card_config.required_achievements:
+                required_ids = set(card_config.required_achievements)
+                user_ach_ids = set(
+                    await db_user.achievements.all().values_list("achievement_id", flat=True)
+                )
+
+                missing_ids = required_ids - user_ach_ids
+                if missing_ids:
+                    missing_ach = "\n* ".join([
+                        f"{config.achievements[ach_id].name} {config.achievements[ach_id].icon}"
+                        for ach_id in missing_ids
+                        if ach_id in config.achievements
+                    ])
                     return (
-                        "У вас недостатньо коштів\n"
-                        f"-# Поточний баланс – {user.balance} 💠"
+                        f"Для покупки цього предмета вам не вистачає наступних досягнень:\n* "
+                        f"{missing_ach}"
                     )
 
-                if await user.inventory.filter(id=item.id).exists():
-                    return "Ви вже маєте цей предмет у своєму інвентарі"
+            db_user.balance -= item.price
+            item.quantity -= 1
 
-                card_config = config.cards.get(item_id)
-                if card_config and card_config.required_achievements:
-                    required_ids = set(card_config.required_achievements)
-                    user_ach_ids = set(
-                        await user.achievements.all().values_list("achievement_id", flat=True)
-                    )
+            await db_user.save(using_db=conn, update_fields=['balance'])
+            await item.save(using_db=conn, update_fields=['quantity'])
+            await db_user.inventory.add(item, using_db=conn)
 
-                    missing_ids = required_ids - user_ach_ids
-                    if missing_ids:
-                        missing_ach = "\n* ".join([
-                            f"{config.achievements[ach_id].name} {config.achievements[ach_id].icon}"
-                            for ach_id in missing_ids
-                            if ach_id in config.achievements
-                        ])
-                        return (
-                            f"Для покупки цього предмета вам не вистачає наступних досягнень:\n* "
-                            f"{missing_ach}"
-                        )
-
-                user.balance -= item.price
-                item.quantity -= 1
-
-                await user.save(using_db=conn, update_fields=['balance'])
-                await item.save(using_db=conn, update_fields=['quantity'])
-                await user.inventory.add(item, using_db=conn)
-
-                return f"Ви успішно придбали товар **{item.name}**!"
-        except Exception as e:
-            logger.error(f"Помилка під час транзакції покупки для користувача {user_id}: {e}")
-            return "Під час покупки сталася помилка. Спробуйте ще раз"
+        asyncio.create_task(achievement_handler_service.handle_shop_achievements(user, item_id))
+        return f"Ви успішно придбали товар **{item.name}**!"
 
 
 shop_service = ShopService()

@@ -1,9 +1,11 @@
+import asyncio
 import random
 
 import disnake
 
 from app.config import config
 from app.core.schemas import CoguardState
+from app.services import achievement_handler_service
 from app.services.economy_management_service import economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -64,6 +66,9 @@ class CoguardService:
         if not is_correct:
             loss_embed = await ui_utils.format_coguard_loss_embed(state.bet, state.win_streak)
             await response_utils.edit_response(interaction, embed=loss_embed)
+            asyncio.create_task(achievement_handler_service.handle_coguard_achievements(
+                interaction.user, state, is_loss=True
+            ))
             return
 
         new_win_streak = state.win_streak + 1
@@ -98,6 +103,10 @@ class CoguardService:
             win_streak=state.win_streak
         )
         await response_utils.edit_response(interaction, embed=win_embed)
+
+        asyncio.create_task(achievement_handler_service.handle_coguard_achievements(
+            interaction.user, state, is_loss=False
+        ))
 
 
 coguard_service = CoguardService()

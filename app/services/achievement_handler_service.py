@@ -1,12 +1,12 @@
 from typing import Set
 
 import disnake
+from disnake import User
 from tortoise.exceptions import DoesNotExist
 
 from app.config import logger
 from app.core.enums import ItemType
-from app.core.models import User, SCPObject, Achievement, Item
-from app.core.models import User as UserModel
+from app.core.models import User as UserModel, SCPObject, Achievement, Item
 from app.core.schemas import CrystallizationState, CoguardState
 from app.utils.response_utils import response_utils
 
@@ -15,7 +15,7 @@ class AchievementHandlerService:
     @staticmethod
     async def _grant_achievement(user: disnake.User, achievement_id: str) -> None:
         try:
-            db_user, _ = await UserModel.get_or_create(id=user.id)
+            db_user, _ = await UserModel.get_or_create(user_id=user.id)
             achievement = await Achievement.get(achievement_id=achievement_id)
 
             await db_user.achievements.add(achievement)
@@ -29,19 +29,16 @@ class AchievementHandlerService:
 
     @staticmethod
     async def _get_user_achievements_ids(user_id: int) -> Set[str]:
-        db_user, _ = await User.get_or_create(user_id=user_id)
+        db_user, _ = await UserModel.get_or_create(user_id=user_id)
         achievements = await db_user.achievements.all().values_list("achievement_id", flat=True)
         return set(achievements)
 
-    async def handle_work_cooldown_achievement(self, user: disnake.User):
+    async def handle_cooldown_achievement(self, user: disnake.User):
         achievements = await self._get_user_achievements_ids(user.id)
         if "workaholic" not in achievements:
             await self._grant_achievement(user, "workaholic")
 
-    async def handle_view_card_achievements(
-            self, interaction: disnake.ApplicationCommandInteraction, target_user: disnake.User
-    ):
-        user = interaction.user
+    async def handle_view_card_achievements(self, user: User, target_user: User):
         achievements = await self._get_user_achievements_ids(user.id)
 
         if "welcome" not in achievements:
@@ -56,7 +53,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "personal_file")
 
     async def handle_article_achievements(self, user: disnake.User, article: SCPObject):
-        db_user, _ = await User.get_or_create(user_id=user.id)
+        db_user, _ = await UserModel.get_or_create(user_id=user.id)
         achievements = await self._get_user_achievements_ids(user.id)
 
         viewed_count = await db_user.viewed_objects.all().count()
@@ -88,7 +85,7 @@ class AchievementHandlerService:
     async def handle_economy_achievements(
             self, user: disnake.User, amount_transferred: int = 0
     ):
-        db_user, _ = await User.get_or_create(user_id=user.id)
+        db_user, _ = await UserModel.get_or_create(user_id=user.id)
         achievements = await self._get_user_achievements_ids(user.id)
 
         if db_user.balance >= 1_000_000 and "balance_1m" not in achievements:
@@ -168,7 +165,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "big_winner")
 
     async def handle_shop_achievements(self, user: disnake.User, bought_item_id: str):
-        db_user, _ = await User.get_or_create(user_id=user.id)
+        db_user, _ = await UserModel.get_or_create(user_id=user.id)
         achievements = await self._get_user_achievements_ids(user.id)
 
         if "first_purchase" not in achievements:
