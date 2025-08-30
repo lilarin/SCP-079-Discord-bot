@@ -1,6 +1,15 @@
 from typing import Optional, List
 
-from disnake import MessageFlags, Embed, ActionRow, TextChannel, Message, User, Guild
+from disnake import (
+    MessageFlags,
+    Embed,
+    ActionRow,
+    TextChannel,
+    Message,
+    User,
+    Guild,
+    Forbidden
+)
 
 from app.config import logger
 from app.core.models import Achievement
@@ -75,13 +84,13 @@ class ResponseUtils:
         try:
             await user.send(
                 content=(
-                    f"Ви отримали нове досягнення!\n"
+                    f"## Ви отримали нове досягнення!\n"
                     f"### `{achievement.name}` {achievement.icon}\n"
                     f"-# {achievement.description}"
                 ),
                 flags=MessageFlags(suppress_notifications=True))
-        except Exception as exception:
-            logger.error(f"Could not send DM to user '{user.id}': {exception}")
+        except Forbidden:
+            logger.warning(f"Could not send DM to user '{user.id}'")
 
 
 
