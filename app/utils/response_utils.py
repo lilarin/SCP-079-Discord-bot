@@ -1,6 +1,9 @@
 from typing import Optional, List
 
-from disnake import MessageFlags, Embed, ActionRow, TextChannel, Message
+from disnake import MessageFlags, Embed, ActionRow, TextChannel, Message, User, Guild
+
+from app.config import logger
+from app.core.models import Achievement
 
 
 class ResponseUtils:
@@ -66,6 +69,19 @@ class ResponseUtils:
         await interaction.edit_original_response(
             content="Хтось зламав код, але не переймайтесь, скоро це виправлять!", delete_after=10
         )
+
+    @staticmethod
+    async def send_dm_message(user: User, achievement: Achievement):
+        try:
+            await user.send(
+                content=(
+                    f"Ви отримали нове досягнення!\n"
+                    f"### `{achievement.name}` {achievement.icon}\n"
+                    f"-# {achievement.description}"
+                ),
+                flags=MessageFlags(suppress_notifications=True))
+        except Exception as exception:
+            logger.error(f"Could not send DM to user '{user.id}': {exception}")
 
 
 
