@@ -1,7 +1,7 @@
 import asyncio
 from typing import List, Tuple, Optional
 
-from disnake import Embed, File, Role, ButtonStyle, User
+from disnake import Embed, File, Role, ButtonStyle, User, Member
 from disnake.ui import ActionRow, Button
 
 from app.config import config
@@ -704,7 +704,7 @@ class UIUtils:
 
     @staticmethod
     async def format_achievements_embed(
-            target_user: User, achievements: List[Achievement], offset: int = 0
+            target_user: User | Member, achievements: List[Achievement], offset: int = 0
     ) -> Embed:
         embed = Embed(
             title=f"Досягнення користувача {target_user.display_name}",
