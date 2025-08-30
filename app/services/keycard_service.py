@@ -4,10 +4,10 @@ from typing import Tuple, Optional
 
 from PIL import Image, ImageDraw
 from cachetools import TTLCache
-from disnake import File, User as DisnakeUser, Member
+from disnake import File, User, Member
 
 from app.config import config
-from app.core.models import User
+from app.core.models import User as UserModel
 from app.core.schemas import CardConfig, UserProfileData
 from app.utils.keycard_utils import keycard_utils
 
@@ -19,8 +19,8 @@ class KeyCardService:
         self.image: Optional[Image.Image] = None
         self.draw: Optional[ImageDraw.Draw] = None
 
-    async def get_user_profile_data(self, member: DisnakeUser | Member) -> UserProfileData:
-        db_user, _ = await User.get_or_create(user_id=member.id)
+    async def get_user_profile_data(self, member: User | Member) -> UserProfileData:
+        db_user, _ = await UserModel.get_or_create(user_id=member.id)
         await db_user.fetch_related("equipped_card", "achievements")
 
         template = None
@@ -172,7 +172,7 @@ class KeyCardService:
 
         return File(fp=image_buffer, filename="keycard.png")
 
-    async def get_or_generate_image(self, user: DisnakeUser | Member, template: CardConfig) -> File:
+    async def get_or_generate_image(self, user: User | Member, template: CardConfig) -> File:
         cache_key = (
             user.id,
             template.name,
