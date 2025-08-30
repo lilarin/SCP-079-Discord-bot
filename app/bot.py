@@ -27,7 +27,7 @@ from app.services import (
     economy_logging_service,
     achievement_handler_service
 )
-from app.utils.pagination import pagination_utils
+from app.utils.pagination_utils import pagination_utils
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
 from app.utils.ui_utils import ui_utils

@@ -7,7 +7,6 @@ from disnake import (
     TextChannel,
     Message,
     User,
-    Guild,
     Forbidden
 )
 
