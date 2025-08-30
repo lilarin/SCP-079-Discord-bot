@@ -67,14 +67,13 @@ class CandyGameService:
         await response_utils.edit_response(interaction, embed=embed, components=components)
 
     async def leave_game(self, interaction: disnake.MessageInteraction):
-        user_id = interaction.user.id
         bet, pre_taken, player_taken = self._parse_state_from_components(interaction.message.components)
 
         multiplier = config.candy_win_multipliers.get(player_taken, 1.0)
         winnings = int(bet * multiplier)
 
         await economy_management_service.update_user_balance(
-            user_id, winnings, f"Перемога у грі `цукерки`"
+            interaction.user, winnings, f"Перемога у грі `цукерки`"
         )
 
         win_embed = await ui_utils.format_candy_win_embed(winnings=winnings)

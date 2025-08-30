@@ -17,19 +17,19 @@ class WorkService:
 
         return list(self.work_prompts.keys())[-1]
 
-    async def perform_legal_work(self, user_id: int) -> Tuple[str, int]:
-        db_user, _ = await User.get_or_create(user_id=user_id)
+    async def perform_legal_work(self, user: User) -> Tuple[str, int]:
+        db_user, _ = await User.get_or_create(user_id=user.id)
         work_key = await self._get_user_work_key(db_user)
         prompt = random.choice(self.work_prompts[work_key].legal)
 
         reward = random.randint(*config.legal_work_reward_range)
 
-        await economy_management_service.update_user_balance(user_id, reward, "Виконнаня легальної роботи")
+        await economy_management_service.update_user_balance(user, reward, "Виконнаня легальної роботи")
 
         return prompt, reward
 
-    async def perform_non_legal_work(self, user_id: int) -> Tuple[str, int, bool]:
-        db_user, _ = await User.get_or_create(user_id=user_id)
+    async def perform_non_legal_work(self, user: User) -> Tuple[str, int, bool]:
+        db_user, _ = await User.get_or_create(user_id=user.id)
         work_key = await self._get_user_work_key(db_user)
         non_legal_prompts = self.work_prompts[work_key].non_legal
 
@@ -38,11 +38,11 @@ class WorkService:
         if is_success:
             prompt = random.choice(non_legal_prompts.success)
             amount = random.randint(*config.non_legal_work_reward_range)
-            await economy_management_service.update_user_balance(user_id, amount, "Вдале виконання ризикованої роботи")
+            await economy_management_service.update_user_balance(user, amount, "Вдале виконання ризикованої роботи")
         else:
             prompt = random.choice(non_legal_prompts.failure)
             amount = random.randint(*config.non_legal_work_penalty_range)
-            await economy_management_service.update_user_balance(user_id, -amount, "Невдале виконання ризикованої роботи")
+            await economy_management_service.update_user_balance(user, -amount, "Невдале виконання ризикованої роботи")
 
         return prompt, amount, is_success
 

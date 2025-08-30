@@ -1,4 +1,7 @@
+from .achievement_handler_service import achievement_handler_service
+from .achievement_service import achievement_service
 from .articles_service import article_service
+from .economy_logging_service import economy_logging_service
 from .economy_management_service import economy_management_service
 from .game_candy_service import candy_game_service
 from .game_coin_service import coin_flip_service
@@ -12,5 +15,3 @@ from .leaderboard_service import leaderboard_service
 from .scp_objects_service import scp_objects_service
 from .shop_service import shop_service
 from .work_service import work_service
-from .achievement_service import achievement_service
-from .economy_logging_service import economy_logging_service

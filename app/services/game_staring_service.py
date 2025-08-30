@@ -19,7 +19,7 @@ class StaringGameService:
     async def start_lobby(
             self, interaction: disnake.ApplicationCommandInteraction, bet: int, mode: str
     ) -> None:
-        host = interaction.author
+        host = interaction.user
         game_state = SCP173GameState(
             host=host,
             bet=bet,
@@ -38,7 +38,7 @@ class StaringGameService:
             current_state = self.games[message.id]
             if len(current_state.players) < 2:
                 await economy_management_service.update_user_balance(
-                    current_state.host.id, current_state.bet,
+                    current_state.host, current_state.bet,
                     "Повернення коштів, не вистачило гравців для гри `піжмурки`"
                 )
                 message_to_edit = await interaction.original_message()
@@ -57,7 +57,7 @@ class StaringGameService:
         if message_id not in self.games or self.games[message_id].is_started:
             return await response_utils.send_ephemeral_response(interaction, "Ця гра вже закінчилася або почалася")
         game_state = self.games[message_id]
-        user = interaction.author
+        user = interaction.user
         if user in game_state.players:
             return await response_utils.send_ephemeral_response(interaction, "Ви вже у грі")
         if len(game_state.players) >= config.staring_max_players:
@@ -68,7 +68,7 @@ class StaringGameService:
                 interaction, f"У вас недостатньо коштів для цієї ставки"
             )
         await economy_management_service.update_user_balance(
-            user.id, -game_state.bet, "Ставка у грі `піжмурки`"
+            user, -game_state.bet, "Ставка у грі `піжмурки`"
         )
         game_state.players.append(user)
         embed = await ui_utils.format_scp173_lobby_embed(game_state)
@@ -149,7 +149,7 @@ class StaringGameService:
                 elif len(survivors) == 1:
                     winner = survivors[0]
                     await economy_management_service.update_user_balance(
-                        winner.id, pot, "Перемога у грі `піжмурки`"
+                        winner, pot, "Перемога у грі `піжмурки`"
                     )
                     embed = await ui_utils.format_scp173_single_winner_embed(winner, pot)
                     await response_utils.send_new_message(channel, embed=embed)
@@ -157,7 +157,7 @@ class StaringGameService:
                     winnings_per_player = pot // len(survivors)
                     for winner in survivors:
                         await economy_management_service.update_user_balance(
-                            winner.id, winnings_per_player, "Перемога у грі `піжмурки`"
+                            winner, winnings_per_player, "Перемога у грі `піжмурки`"
                         )
                     embed = await ui_utils.format_scp173_multiple_winners_embed(survivors, winnings_per_player)
                     await response_utils.send_new_message(channel, embed=embed)
@@ -185,7 +185,7 @@ class StaringGameService:
             winner = survivors[0]
             pot = game_state.bet * total_players_at_start
             await economy_management_service.update_user_balance(
-                winner.id, pot, "Перемога у грі `піжмурки`"
+                winner, pot, "Перемога у грі `піжмурки`"
             )
             embed = await ui_utils.format_scp173_single_winner_embed(winner, pot)
             await response_utils.send_new_message(channel, embed=embed)

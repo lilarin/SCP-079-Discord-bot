@@ -7,24 +7,25 @@ from tortoise.expressions import Q
 from tortoise.transactions import in_transaction
 
 from app.core.models import User as UserModel
+from app.services import achievement_handler_service
 from app.services.economy_logging_service import economy_logging_service
 from app.utils.ui_utils import ui_utils
 
 
 class EconomyManagementService:
     @staticmethod
-    async def update_user_balance(user_id: int, amount: int, reason: str) -> None:
-        user, is_created = await UserModel.get_or_create(user_id=user_id)
-        if not user:
-            raise DoesNotExist(f"Користувача з ID {user_id} не знайдено")
+    async def update_user_balance(user: User, amount: int, reason: str) -> None:
+        db_user, _ = await UserModel.get_or_create(user_id=user.id)
+        if not db_user:
+            raise DoesNotExist(f"Користувача з ID {user.id} не знайдено")
 
-        await user.update_balance(amount)
+        await db_user.update_balance(amount)
 
         asyncio.create_task(
             economy_logging_service.log_balance_change(
-                user_id=user_id,
+                user_id=user.id,
                 amount=amount,
-                new_balance=user.balance,
+                new_balance=db_user.balance,
                 reason=reason
             )
         )

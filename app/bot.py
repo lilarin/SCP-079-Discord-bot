@@ -24,7 +24,8 @@ from app.services import (
     shop_service,
     work_service,
     achievement_service,
-    economy_logging_service
+    economy_logging_service,
+    achievement_handler_service
 )
 from app.utils.pagination import pagination_utils
 from app.utils.response_utils import response_utils
@@ -55,7 +56,7 @@ async def on_ready():
 
 @bot.event
 async def on_slash_command(interaction):
-    user = interaction.author
+    user = interaction.user
     command = interaction.data.name
     logger.info(f"Користувач {user} використав команду /{command}")
 
@@ -106,7 +107,7 @@ async def view_card(
         user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
-    member = user or interaction.author
+    member = user or interaction.user
 
     try:
         profile_data = await keycard_service.get_user_profile_data(member)
@@ -185,6 +186,7 @@ async def view_card(interaction: disnake.ApplicationCommandInteraction):
         await interaction.response.send_modal(
             modal=DossierModal(user=interaction.user, db_user=db_user)
         )
+        await achievement_handler_service.handle_dossier_achievements(interaction.user)
     except asyncpg.exceptions.InternalServerError as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -220,7 +222,7 @@ async def view_balance(
         user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
-    target_user = user or interaction.author
+    target_user = user or interaction.user
 
     try:
         embed = await economy_management_service.create_user_balance_message(target_user)
@@ -241,8 +243,9 @@ async def transfer_balance(
     await response_utils.wait_for_response(interaction)
 
     try:
-        success, message = await economy_management_service.transfer_balance(interaction.author.id, recipient.id,
-                                                                             amount)
+        success, message = await economy_management_service.transfer_balance(
+            interaction.user.id, recipient.id, amount
+        )
         if success:
             await response_utils.send_response(interaction, message)
         else:
@@ -337,7 +340,7 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
 
     try:
-        prompt, reward = await work_service.perform_legal_work(user_id=interaction.user.id)
+        prompt, reward = await work_service.perform_legal_work(user=interaction.user)
 
         embed = await ui_utils.format_legal_work_embed(
             prompt=prompt,
@@ -358,7 +361,7 @@ async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
 
     try:
-        prompt, amount, is_success = await work_service.perform_non_legal_work(user_id=interaction.user.id)
+        prompt, amount, is_success = await work_service.perform_non_legal_work(user=interaction.user)
 
         embed = await ui_utils.format_non_legal_work_embed(
             prompt=prompt,
@@ -403,7 +406,7 @@ async def edit_player_balance_reputation(
 
     try:
         await economy_management_service.update_user_balance(
-            user.id, amount, (
+            user, amount, (
                 f"Зміна балансу користувачу\n"
                 f"-# Викликано користувачем {interaction.user.mention}"
             )
@@ -432,7 +435,7 @@ async def game_crystallize(
         await response_utils.send_error_response(interaction)
         logger.error(exception)
         await economy_management_service.update_user_balance(
-            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
         )
 
 
@@ -450,7 +453,7 @@ async def game_coin_flip(
         await response_utils.send_error_response(interaction)
         logger.error(exception)
         await economy_management_service.update_user_balance(
-            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
         )
 
 
@@ -468,7 +471,7 @@ async def game_candy(
         await response_utils.send_error_response(interaction)
         logger.error(exception)
         await economy_management_service.update_user_balance(
-            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
         )
 
 
@@ -486,7 +489,7 @@ async def game_coguard(
         await response_utils.send_error_response(interaction)
         logger.error(exception)
         await economy_management_service.update_user_balance(
-            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
         )
 
 
@@ -511,7 +514,7 @@ async def game_scp173(
         await response_utils.send_error_response(interaction)
         logger.error(exception)
         await economy_management_service.update_user_balance(
-            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
         )
 
 
@@ -537,7 +540,7 @@ async def game_hole(
 ):
     if (group_bet and item_bet) or (not group_bet and not item_bet):
         await economy_management_service.update_user_balance(
-            interaction.author.id, bet, f"Неправильна ставка під час гри {interaction.data.name}"
+            interaction.user, bet, f"Неправильна ставка під час гри {interaction.data.name}"
         )
         await response_utils.send_response(
             interaction, "Необхідно обрати **один** тип ставки", delete_after=10
@@ -546,7 +549,7 @@ async def game_hole(
 
     if item_bet and item_bet not in config.hole_items.values():
         await economy_management_service.update_user_balance(
-            interaction.author.id, bet, f"Неправильна ставка під час гри {interaction.data.name}"
+            interaction.user, bet, f"Неправильна ставка під час гри {interaction.data.name}"
         )
         await response_utils.send_response(
             interaction, f"Опцію '{item_bet}' не знайдено, оберіть зі списку", delete_after=10
@@ -565,7 +568,7 @@ async def game_hole(
         await response_utils.send_error_response(interaction)
         logger.error(exception)
         await economy_management_service.update_user_balance(
-            interaction.author.id, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
         )
 
 
@@ -577,7 +580,7 @@ async def achievements(
         user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
 ):
     await response_utils.wait_for_response(interaction)
-    target_user = user or interaction.author
+    target_user = user or interaction.user
 
     try:
         embed, components = await achievement_service.init_achievements_message(target_user)

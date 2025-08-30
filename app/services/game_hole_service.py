@@ -27,13 +27,13 @@ class HoleGameService:
 
     async def join_game(self, interaction: disnake.ApplicationCommandInteraction, bet: int, choice: str):
         channel_id = interaction.channel.id
-        player = interaction.author
+        player = interaction.user
 
         game_state = self.games[channel_id]
 
         if any(p_bet.player.id == player.id for p_bet in game_state.bets):
             await economy_management_service.update_user_balance(
-                player.id, bet, "Повернення повторної ставки у активній грі `діра`"
+                player, bet, "Повернення повторної ставки у активній грі `діра`"
             )
             await response_utils.send_response(
                 interaction, "Ви вже зробили ставку в активній гру", delete_after=5
@@ -54,7 +54,7 @@ class HoleGameService:
 
     async def create_game(self, interaction: disnake.ApplicationCommandInteraction, bet: int, choice: str):
         channel_id = interaction.channel.id
-        player = interaction.author
+        player = interaction.user
 
         initial_bet = HolePlayerBet(player=player, amount=bet, choice=choice)
         game_state = HoleGameState(message=await interaction.original_response(), bets=[initial_bet])
@@ -83,7 +83,7 @@ class HoleGameService:
             if winning_number in bet_option["numbers"]:
                 payout = p_bet.amount * bet_option["multiplier"]
                 await economy_management_service.update_user_balance(
-                    p_bet.player.id, payout, "Перемога у грі `діра`"
+                    p_bet.player, payout, "Перемога у грі `діра`"
                 )
                 winners.append((p_bet.player, payout))
 

@@ -41,7 +41,7 @@ class AchievementHandlerService:
     async def handle_view_card_achievements(
             self, interaction: disnake.ApplicationCommandInteraction, target_user: disnake.User
     ):
-        user = interaction.author
+        user = interaction.user
         achievements = await self._get_user_achievements_ids(user.id)
 
         if "welcome" not in achievements:

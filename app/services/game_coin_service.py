@@ -14,7 +14,7 @@ class CoinFlipService:
 
         if is_win:
             await economy_management_service.update_user_balance(
-                interaction.user.id, bet * 2, f"Перемога у грі `{interaction.data.name}`"
+                interaction.user, bet * 2, f"Перемога у грі `{interaction.data.name}`"
             )
             embed = await ui_utils.format_coin_flip_win_embed(bet=bet * 2)
         else:
