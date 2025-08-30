@@ -19,8 +19,8 @@ class KeyCardService:
         self.image: Optional[Image.Image] = None
         self.draw: Optional[ImageDraw.Draw] = None
 
-    async def get_user_profile_data(self, member: User | Member) -> UserProfileData:
-        db_user, _ = await UserModel.get_or_create(user_id=member.id)
+    async def get_user_profile_data(self, user: User | Member) -> UserProfileData:
+        db_user, _ = await UserModel.get_or_create(user_id=user.id)
         await db_user.fetch_related("equipped_card", "achievements")
 
         template = None
@@ -33,10 +33,10 @@ class KeyCardService:
             templates = list(config.cards.values())
             template = templates[-1]
 
-        card_image = await self.get_or_generate_image(member, template)
+        card_image = await self.get_or_generate_image(user, template)
 
         try:
-            top_role = member.top_role if member.top_role != member.guild.default_role else None
+            top_role = user.top_role if user.top_role != user.guild.default_role else None
         except AttributeError:
             top_role = None
 
@@ -173,13 +173,18 @@ class KeyCardService:
         return File(fp=image_buffer, filename="keycard.png")
 
     async def get_or_generate_image(self, user: User | Member, template: CardConfig) -> File:
+        (
+            user_id, user_name, user_code,
+            avatar_bytes, avatar_key,
+            decoration_bytes, decoration_key
+        ) = await keycard_utils.collect_user_data(user)
+
         cache_key = (
             user.id,
-            template.name,
-            user.display_name,
-            user.joined_at.timestamp() if hasattr(user, "joined_at") and user.joined_at else None,
-            getattr(user.avatar, "key", None),
-            getattr(user.avatar_decoration, "key", None)
+            user_name,
+            user_code,
+            avatar_key,
+            decoration_key
         )
 
         cached_file = keycard_cache.get(cache_key)
@@ -187,17 +192,15 @@ class KeyCardService:
             cached_file.fp.seek(0)
             return cached_file
 
-        user_id, user_name, user_code, avatar, avatar_decoration = await keycard_utils.collect_user_data(user)
-
         image_file = await asyncio.to_thread(
             self._process_template,
             template.image,
             user_name,
             user_code,
-            avatar,
+            avatar_bytes,
             template.primary_color,
             template.secondary_color,
-            avatar_decoration,
+            decoration_bytes,
         )
 
         keycard_cache[cache_key] = image_file

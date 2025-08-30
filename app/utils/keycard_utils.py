@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Tuple
+from typing import Tuple, Optional
 
 from disnake import User, Member
 
@@ -16,7 +16,9 @@ class KeyCardUtils:
     async def get_user_code(timestamp: float) -> str:
         return "-".join(str(round(timestamp, 1)).split("."))
 
-    async def collect_user_data(self, user: User | Member) -> Tuple[int, str, str, BytesIO, BytesIO]:
+    async def collect_user_data(
+            self, user: User | Member
+    ) -> Tuple[int, str, str, BytesIO, str, Optional[BytesIO], Optional[str]]:
         try:
             user_code = await self.get_user_code(user.joined_at.timestamp())
         except AttributeError:
@@ -24,13 +26,24 @@ class KeyCardUtils:
 
         user_name = await self.process_username(user.display_name)
 
-        avatar = BytesIO(await user.avatar.read())
+        if isinstance(user, User):
+            avatar = user.avatar
+        elif isinstance(user, Member):
+            avatar = user.display_avatar
+        else:
+            avatar = user.default_avatar
+
+        avatar_bytes = BytesIO(await avatar.read())
+        avatar_key = avatar.key
 
         avatar_decoration = user.avatar_decoration
+        avatar_decoration_bytes = None
+        avatar_decoration_key = None
         if avatar_decoration:
-            avatar_decoration = BytesIO(await avatar_decoration.read())
+            avatar_decoration_bytes = BytesIO(await avatar_decoration.read())
+            avatar_decoration_key = avatar_decoration.key
 
-        return user.id, user_name, user_code, avatar, avatar_decoration
+        return user.id, user_name, user_code, avatar_bytes, avatar_key, avatar_decoration_bytes, avatar_decoration_key
 
 
 keycard_utils = KeyCardUtils()
