@@ -1,8 +1,6 @@
-import math
 from typing import Dict, List, Tuple, Optional
 
 from disnake import Embed, Component, User
-from tortoise.exceptions import DoesNotExist
 from tortoise.functions import Count
 
 from app.config import config, logger
@@ -51,24 +49,11 @@ class AchievementService:
         logger.info("Achievement synchronization complete")
 
     @staticmethod
-    async def grant_achievement(user: UserModel, achievement_id: str) -> None:
-        try:
-            if await user.achievements.filter(achievement_id=achievement_id).exists():
-                return
-            achievement = await Achievement.get(achievement_id=achievement_id)
-            await user.achievements.add(achievement)
-            logger.info(f"Granted achievement '{achievement.name}' to user {user.user_id}")
-        except DoesNotExist:
-            logger.warning(f"Attempted to grant a non-existent achievement with id: '{achievement_id}'")
-        except Exception as e:
-            logger.error(f"Error granting achievement '{achievement_id}' to user {user.user_id}: {e}")
-
-    @staticmethod
-    async def get_paginated_user_achievements(
+    async def _get_paginated_user_achievements(
             user_id: int, limit: int, offset: int = 0
     ) -> Tuple[List[Achievement], bool, bool]:
-        user = await UserModel.get(user_id=user_id)
-        achievements_query = user.achievements.all().order_by("id").offset(offset).limit(limit + 1)
+        db_user, _ = await UserModel.get_or_create(user_id=user_id)
+        achievements_query = db_user.achievements.all().order_by("id").offset(offset).limit(limit + 1)
         achievements_raw = await achievements_query
 
         has_next = len(achievements_raw) > limit
@@ -79,20 +64,12 @@ class AchievementService:
 
     @staticmethod
     async def get_total_user_achievements_count(user_id: int) -> int:
-        user = await UserModel.get(user_id=user_id)
+        user, _ = await UserModel.get_or_create(user_id=user_id)
         return await user.achievements.all().count()
-
-    @staticmethod
-    async def get_last_page_offset(total_count: int, limit: int) -> Tuple[int, int]:
-        if total_count == 0:
-            return 0, 1
-        total_pages = math.ceil(total_count / limit)
-        offset = max(0, (total_pages - 1) * limit)
-        return offset, total_pages
 
     async def init_achievements_message(self, user: User) -> Optional[Tuple[Embed, List[Component]]]:
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
-        items, _, has_next = await self.get_paginated_user_achievements(
+        items, _, has_next = await self._get_paginated_user_achievements(
             user_id=user.id, limit=config.achievements_per_page
         )
 
@@ -111,7 +88,7 @@ class AchievementService:
     async def edit_achievements_message(
             self, user: User, page: int, offset: int
     ) -> Optional[Tuple[Embed, List[Component]]]:
-        items, has_previous, has_next = await self.get_paginated_user_achievements(
+        items, has_previous, has_next = await self._get_paginated_user_achievements(
             user_id=user.id, limit=config.achievements_per_page, offset=offset
         )
 
