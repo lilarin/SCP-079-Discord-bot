@@ -40,7 +40,7 @@ async def on_ready():
     try:
         await economy_logging_service.init_logging(bot)
         await scp_objects_service.update_scp_objects()
-        await shop_service.sync_card_items()
+        await shop_service.sync_shop_cards()
         await achievement_service.sync_achievements()
     except asyncpg.exceptions.InternalServerError as exception:
         logger.error(exception)
@@ -280,6 +280,21 @@ async def shop(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
+@bot.slash_command(name="оновити-кількість-товарів", description="Випадковим чином оновити асортимент карток у магазині")
+@commands.guild_only()
+@commands.has_permissions(administrator=True)
+async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
+    await response_utils.wait_for_ephemeral_response(interaction)
+
+    try:
+        await shop_service.update_card_item_quantities()
+        await response_utils.edit_ephemeral_response(interaction, "Асортимент карток було оновлено")
+
+    except Exception as exception:
+        await response_utils.send_error_response(interaction)
+        logger.error(exception)
+
+
 @bot.slash_command(name="купити", description="Купити товар з магазину за його ID")
 @commands.guild_only()
 async def buy_item(
@@ -397,7 +412,7 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
     try:
         await economy_management_service.reset_users_reputation()
         await response_utils.send_response(
-            interaction, "Загальна репутація всіх гравців було скинуто до початкового стану"
+            interaction, "Загальна репутація всіх гравців було скинуто, баланс залишається незмінним"
         )
 
     except Exception as exception:
@@ -405,7 +420,8 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="змінити-баланс-користувача", description="Збільшити, або зменшити баланс на певну кількість репутації")
+@bot.slash_command(name="змінити-баланс-користувача",
+                   description="Збільшити, або зменшити баланс на певну кількість репутації")
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
 @target_is_user
@@ -434,7 +450,8 @@ async def edit_player_balance(
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=config.cooldown_type)
 @bot.slash_command(name="кристалізація", description="Почати процес кристалізації")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -452,7 +469,8 @@ async def game_crystallize(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=config.cooldown_type)
 @bot.slash_command(name="монетка", description="Підкинути монетку та випробувати вдачу")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -470,7 +488,8 @@ async def game_coin_flip(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=config.cooldown_type)
 @bot.slash_command(name="цукерки", description="Випробуйте свою вдачу з SCP-330")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -488,7 +507,8 @@ async def game_candy(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=config.cooldown_type)
 @bot.slash_command(name="когнітивна-стійкість", description="Пройти тест на когнітивну стійкість")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -531,7 +551,8 @@ async def game_scp173(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
+                   type=config.cooldown_type)
 @bot.slash_command(name="діра", description="Зробіть ставку в аномальній рулетці")
 @commands.guild_only()
 @remove_bet_from_balance

@@ -16,8 +16,8 @@ class ShopService:
     def __init__(self):
         self.card_configs = config.cards
 
-    async def sync_card_items(self) -> None:
-        logger.info("Starting shop card items synchronization...")
+    async def sync_shop_cards(self) -> None:
+        logger.info("Starting shop card metadata synchronization...")
 
         if not self.card_configs:
             logger.error("Card config is empty. Skipping synchronization")
@@ -29,25 +29,42 @@ class ShopService:
 
         items_to_create = []
         items_to_update = []
+        update_fields = set()
 
         for template_id, card_config in self.card_configs.items():
-            min_qty, max_qty = card_config.quantity_range
-            new_quantity = random.randint(min_qty, max_qty)
-
             if template_id in existing_items:
                 item = existing_items[template_id]
-                if item.quantity != new_quantity:
-                    item.quantity = new_quantity
+                is_updated = False
+
+                if item.name != card_config.name:
+                    item.name = card_config.name
+                    update_fields.add("name")
+                    is_updated = True
+
+                if item.description != card_config.description:
+                    item.description = card_config.description
+                    update_fields.add("description")
+                    is_updated = True
+
+                if item.price != card_config.price:
+                    item.price = card_config.price
+                    update_fields.add("price")
+                    is_updated = True
+
+                if is_updated:
                     items_to_update.append(item)
             else:
                 logger.info(f"Item '{card_config.name}' ({template_id}) not found. Staging for creation")
+                min_qty, max_qty = card_config.quantity_range
+                initial_quantity = random.randint(min_qty, max_qty)
+
                 new_item = Item(
                     item_id=template_id,
                     name=card_config.name,
                     description=card_config.description,
                     price=card_config.price,
                     item_type=ItemType.CARD,
-                    quantity=new_quantity
+                    quantity=initial_quantity
                 )
                 items_to_create.append(new_item)
 
@@ -56,14 +73,38 @@ class ShopService:
             logger.info(f"Successfully created {len(items_to_create)} new card item(s)")
 
         if items_to_update:
-            await Item.bulk_update(items_to_update, fields=["quantity"])
-            logger.info(f"Successfully updated quantities for {len(items_to_update)} existing card item(s)")
+            await Item.bulk_update(items_to_update, fields=list(update_fields))
+            logger.info(f"Successfully updated metadata for {len(items_to_update)} existing card item(s)")
 
-        total_synced = len(items_to_create) + len(items_to_update)
-        if total_synced == 0:
+        if not items_to_create and not items_to_update:
             logger.info("All card items are already up-to-date. No changes made")
         else:
-            logger.info("Shop synchronization complete")
+            logger.info("Shop data synchronization complete")
+
+    async def update_card_item_quantities(self) -> None:
+        if not self.card_configs:
+            logger.error("Card config is empty. Skipping quantity update")
+            return
+
+        all_card_items = [item async for item in Item.filter(item_type=ItemType.CARD)]
+
+        if not all_card_items:
+            logger.warning("No card items found in the database")
+            return
+
+        items_for_bulk_update = []
+        for item in all_card_items:
+            card_config = self.card_configs.get(item.item_id)
+
+            if not card_config:
+                continue
+
+            min_qty, max_qty = card_config.quantity_range
+            item.quantity = random.randint(min_qty, max_qty)
+            items_for_bulk_update.append(item)
+
+        if items_for_bulk_update:
+            await Item.bulk_update(items_for_bulk_update, fields=["quantity"])
 
     @staticmethod
     async def get_shop_items(limit: int, offset: int = 0) -> Tuple[List[Item], bool, bool]:
