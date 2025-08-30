@@ -123,14 +123,6 @@ class LeaderboardService:
         elif chosen_criteria == "achievements":
             return await self._get_total_achievements_users_count()
 
-    @staticmethod
-    async def get_last_page_offset(total_count: int, limit: int) -> Tuple[int, int]:
-        if total_count == 0:
-            return 0, 0
-        total_pages = math.ceil(total_count / limit)
-        offset = max(0, (total_pages - 1) * limit)
-        return offset, total_pages
-
     async def init_leaderboard_message(self, chosen_criteria: str) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, _, has_next = await self.get_articles_top_users(

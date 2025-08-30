@@ -84,14 +84,6 @@ class ShopService:
     async def get_total_items_count() -> int:
         return await Item.filter(quantity__gt=0).count()
 
-    @staticmethod
-    async def get_last_page_offset(total_count: int, limit: int) -> Tuple[int, int]:
-        if total_count == 0:
-            return 0, 1
-        total_pages = math.ceil(total_count / limit)
-        offset = max(0, (total_pages - 1) * limit)
-        return offset, total_pages
-
     async def init_shop_message(self) -> Optional[Tuple[Embed, List[Component]]]:
         items, _, has_next = await self.get_shop_items(
             limit=config.shop_items_per_page

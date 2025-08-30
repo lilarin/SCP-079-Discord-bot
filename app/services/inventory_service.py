@@ -30,14 +30,6 @@ class InventoryService:
         return await user.inventory.all().count()
 
     @staticmethod
-    async def get_last_page_offset(total_count: int, limit: int) -> Tuple[int, int]:
-        if total_count == 0:
-            return 0, 1
-        total_pages = math.ceil(total_count / limit)
-        offset = max(0, (total_pages - 1) * limit)
-        return offset, total_pages
-
-    @staticmethod
     async def check_for_default_card(user: User) -> None:
         if not config.cards:
             return

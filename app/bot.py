@@ -26,6 +26,7 @@ from app.services import (
     achievement_service,
     economy_logging_service
 )
+from app.utils.pagination import pagination_utils
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
 from app.utils.ui_utils import ui_utils
@@ -652,7 +653,7 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
                 current_page += 1
             elif "last" in interaction_component_id:
                 total_count = await shop_service.get_total_items_count()
-                offset, current_page = await shop_service.get_last_page_offset(
+                offset, current_page = await pagination_utils.get_last_page_offset(
                     total_count=total_count, limit=config.shop_items_per_page
                 )
             else:
@@ -674,7 +675,7 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
                 current_page += 1
             elif "last" in interaction_component_id:
                 total_count = await inventory_service.get_total_user_items_count(user.id)
-                offset, current_page = await inventory_service.get_last_page_offset(
+                offset, current_page = await pagination_utils.get_last_page_offset(
                     total_count=total_count, limit=config.inventory_items_per_page
                 )
             else:
@@ -697,7 +698,7 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
                 current_page += 1
             elif "last" in interaction_component_id:
                 total_count = await achievement_service.get_total_achievements_count()
-                offset, current_page = await achievement_service.get_last_page_offset(
+                offset, current_page = await pagination_utils.get_last_page_offset(
                     total_count=total_count, limit=config.achievements_per_page
                 )
             else:
@@ -723,7 +724,7 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
                 current_page += 1
             elif "last" in interaction_component_id:
                 total_count = await achievement_service.get_total_user_achievements_count(target_user.id)
-                offset, current_page = await achievement_service.get_last_page_offset(
+                offset, current_page = await pagination_utils.get_last_page_offset(
                     total_count=total_count, limit=config.achievements_per_page
                 )
             else:
@@ -746,7 +747,7 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
                     current_page += 1
                 elif "last" in interaction_component_id:
                     total_count = await leaderboard_service.get_total_users_count(criteria)
-                    offset, current_page = await leaderboard_service.get_last_page_offset(
+                    offset, current_page = await pagination_utils.get_last_page_offset(
                         total_count=total_count, limit=config.leaderboard_items_per_page
                     )
                 else:
