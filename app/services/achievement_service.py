@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple, Optional
 
-from disnake import Embed, Component, User
+from disnake import Embed, Component, User, Member
 from tortoise.functions import Count
 
 from app.config import config, logger
@@ -67,7 +67,7 @@ class AchievementService:
         user, _ = await UserModel.get_or_create(user_id=user_id)
         return await user.achievements.all().count()
 
-    async def init_achievements_message(self, user: User) -> Optional[Tuple[Embed, List[Component]]]:
+    async def init_achievements_message(self, user: Member | User) -> Optional[Tuple[Embed, List[Component]]]:
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
         items, _, has_next = await self._get_paginated_user_achievements(
             user_id=user.id, limit=config.achievements_per_page
