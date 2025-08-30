@@ -606,6 +606,19 @@ async def game_hole(
         )
 
 
+@bot.slash_command(name="гайд-міні-ігор", description="Інформація про доступні міні-ігри")
+@commands.guild_only()
+async def games_info(interaction: disnake.ApplicationCommandInteraction):
+    await response_utils.wait_for_response(interaction)
+    try:
+        embed = await ui_utils.format_games_info_embed()
+        await response_utils.send_response(interaction, embed=embed)
+
+    except Exception as exception:
+        await response_utils.send_error_response(interaction)
+        logger.error(exception)
+
+
 @bot.slash_command(name="досягнення-користувача", description="Показати отримані досягнення")
 @commands.guild_only()
 @target_is_user
