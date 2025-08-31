@@ -87,15 +87,18 @@ async def on_slash_command_error(interaction, error):
 @bot.event
 async def on_member_join(member):
     try:
-        templates = list(config.cards.values())
-        template = templates[-1]
+        profile_data = await keycard_service.get_user_profile_data(member)
 
-        card = await keycard_service.generate_image(member, template)
-        embed = await ui_utils.format_new_user_embed(member.mention, card, template.embed_color)
+        embed = await ui_utils.format_new_user_embed(
+            member.mention,
+            profile_data.card_image,
+            profile_data.card_template.embed_color
+        )
 
-        await member.guild.system_channel.send(embed=embed)
-
-        await UserModel.get_or_create(user_id=member.id)
+        if member.guild.system_channel:
+            await member.guild.system_channel.send(embed=embed)
+        else:
+            logger.warning(f"Не знайдено системний канал для вітання на сервері: {member.guild.name}")
 
     except asyncpg.exceptions.InternalServerError as error:
         logger.error(error)
