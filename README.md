@@ -13,15 +13,7 @@ Welcome to the repository for the SCP-079 Discord Bot, a comprehensive economy a
 *   **Shop & inventory system:** Use your earnings to purchase new keycards and other items from the server shop. Manage your collection in your inventory and choose which keycard to equip and display on your profile
 *   **Competitive leaderboards:** Track your progress against other server members on leaderboards for wealth, total reputation earned, achievements unlocked, and articles discovered
 
----
-
-### [Demonstration (Imgur screenshots collection)](https://imgur.com/a/lilarin-scp-079-discord-bot-kafjgyl)
-
----
-
-### Mini-Games Overview
-
-Test your luck and strategy against various anomalies in high-stakes mini-games:
+### Mini-Games
 
 *   **Crystallization (crash):** Place a bet and watch your multiplier grow. The longer you let it crystallize, the higher the potential payout, but the risk of losing everything increases with every step. Cash out before the crystal shatters!
 *   **Coguard (higher or lower):** A test of cognitive resilience. Guess whether the next randomly generated number will be higher or lower than the current one. Build up your win streak to increase your payout multiplier
@@ -29,6 +21,10 @@ Test your luck and strategy against various anomalies in high-stakes mini-games:
 *   **SCP-330 candy game (risk management):** Inspired by SCP-330 "Take Only Two." You start with an unknown number of pre-taken candies. Each candy you take increases your potential reward, but if the total number of candies taken exceeds the limit, you lose your entire bet
 *   **The hole (roulette):** A timed-lobby roulette game where players bet on which anomalous item "The Hole" will return. Place high-risk bets on specific items (36x payout) or safer bets on item categories (2x or 3x payout)
 *   **Coin flip:** The classic 50/50 chance to double your bet. Quick, simple, and risky
+
+### [Demonstration (Imgur screenshots collection)](https://imgur.com/a/lilarin-scp-079-discord-bot-kafjgyl)
+
+---
 
 ## Technical Overview & Setup Guide
 
