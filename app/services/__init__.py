@@ -15,3 +15,4 @@ from .leaderboard_service import leaderboard_service
 from .scp_objects_service import scp_objects_service
 from .shop_service import shop_service
 from .work_service import work_service
+from .interaction_service import interaction_service
