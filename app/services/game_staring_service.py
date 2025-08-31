@@ -135,6 +135,10 @@ class StaringGameService:
                 if random.random() < death_chance:
                     a_death_occurred = True
                     current_round_log.append(f"**{player.mention}** кліпнув та помер!")
+                    if round_number == 1:
+                        asyncio.create_task(achievement_handler_service.handle_scp173_achievements(
+                            player, is_host=False, is_survivor=False, is_first_death=True
+                        ))
                 else:
                     current_round_log.append(f"**{player.mention}** не кліпнув")
                     current_round_survivors.append(player)
@@ -155,6 +159,9 @@ class StaringGameService:
                     await economy_management_service.update_user_balance(
                         winner, pot, "Перемога у грі `піжмурки`"
                     )
+                    asyncio.create_task(achievement_handler_service.handle_scp173_achievements(
+                        winner, is_host=False, is_survivor=True, is_first_death=False, pot=pot
+                    ))
                     embed = await ui_utils.format_scp173_single_winner_embed(winner, pot)
                     await response_utils.send_new_message(channel, embed=embed)
                 else:
@@ -163,6 +170,9 @@ class StaringGameService:
                         await economy_management_service.update_user_balance(
                             winner, winnings_per_player, "Перемога у грі `піжмурки`"
                         )
+                        asyncio.create_task(achievement_handler_service.handle_scp173_achievements(
+                            winner, is_host=False, is_survivor=False, is_first_death=False, pot=winnings_per_player
+                        ))
                     embed = await ui_utils.format_scp173_multiple_winners_embed(survivors, winnings_per_player)
                     await response_utils.send_new_message(channel, embed=embed)
 
@@ -191,6 +201,9 @@ class StaringGameService:
             await economy_management_service.update_user_balance(
                 winner, pot, "Перемога у грі `піжмурки`"
             )
+            asyncio.create_task(achievement_handler_service.handle_scp173_achievements(
+                winner, is_host=False, is_survivor=True, is_first_death=False, pot=pot
+            ))
             embed = await ui_utils.format_scp173_single_winner_embed(winner, pot)
             await response_utils.send_new_message(channel, embed=embed)
         else:
