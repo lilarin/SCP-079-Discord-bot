@@ -1,7 +1,7 @@
 import asyncio
 from typing import List, Tuple, Optional
 
-from disnake import Embed, File, Role, ButtonStyle, User, Member
+from disnake import Embed, File, Role, ButtonStyle, User, Member, Guild
 from disnake.ext.commands import InteractionBot
 from disnake.ui import ActionRow, Button
 
@@ -14,7 +14,7 @@ from app.core.schemas import SCP173GameState, HoleGameState
 class UIUtils:
     @staticmethod
     async def format_leaderboard_embed(
-            bot: InteractionBot,
+            bot: InteractionBot, guild: Guild,
             top_users: List[Tuple[int, int]], top_criteria: str,
             hint: str, symbol: str, color: int, offset: int = 0
     ) -> Embed:
@@ -23,22 +23,38 @@ class UIUtils:
             color=color,
         )
 
-        if top_users:
-            user_fetch_tasks = [bot.get_or_fetch_user(user_id) for user_id, _ in top_users]
+        if not top_users:
+            embed.description = "Поки тут нікого немає, це твій шанс!"
+            embed.description += f"\n-# {hint}"
+            return embed
 
-            fetched_users = await asyncio.gather(*user_fetch_tasks)
+        user_ids = [user_id for user_id, _ in top_users]
 
-            description_lines = []
-            for i, (user_id, count) in enumerate(top_users, 1):
-                user = fetched_users[i - 1]
-                if user:
-                    description_lines.append(
-                        f"{i + offset}. {user.mention} (`{user.name}`) – **{count} {symbol}**"
-                    )
+        fetched_members: List[Member] = await guild.get_or_fetch_members(user_ids)
+        fetched_member_ids = {member.id for member in fetched_members}
 
+        missing_user_ids = [user_id for user_id in user_ids if user_id not in fetched_member_ids]
+
+        fallback_users: List[User] = []
+        if missing_user_ids:
+            user_fetch_tasks = [bot.get_or_fetch_user(user_id) for user_id in missing_user_ids]
+            fallback_users = await asyncio.gather(*user_fetch_tasks)
+
+        all_fetched_users = {user.id: user for user in fetched_members + fallback_users if user}
+
+        description_lines = []
+        for i, (user_id, count) in enumerate(top_users, 1):
+            user = all_fetched_users.get(user_id)
+            if user:
+                description_lines.append(
+                    f"{i + offset}. {user.mention} (`{user.name}`) – **{count} {symbol}**"
+                )
+
+        if description_lines:
             embed.description = "\n".join(description_lines)
         else:
-            embed.description = "Поки тут нікого немає, це твій шанс!"
+            embed.description = "Не вдалося отримати інформацію про користувачів"
+
         embed.description += f"\n-# {hint}"
         return embed
 

@@ -1,6 +1,6 @@
 from typing import List, Tuple, Optional
 
-from disnake import Embed, Component
+from disnake import Embed, Component, Guild
 from disnake.ext.commands import InteractionBot
 from tortoise.functions import Count
 
@@ -124,7 +124,7 @@ class LeaderboardService:
             return await self._get_total_achievements_users_count()
 
     async def init_leaderboard_message(
-            self, bot: InteractionBot, chosen_criteria: str
+            self, bot: InteractionBot, guild: Guild, chosen_criteria: str
     ) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, _, has_next = await self.get_articles_top_users(
@@ -132,6 +132,7 @@ class LeaderboardService:
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
+                guild,
                 top_users,
                 top_criteria="за переглянутими статтями",
                 hint="Кількість унікальних статей, що були переглянуті користувачем",
@@ -144,6 +145,7 @@ class LeaderboardService:
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
+                guild,
                 top_users,
                 top_criteria="за поточною репутацією у фонді",
                 hint="Поточний баланс користувача, що може зменшитись за різних дій",
@@ -156,6 +158,7 @@ class LeaderboardService:
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
+                guild,
                 top_users,
                 top_criteria="за загальною репутацією у фонді",
                 hint="Загальна репутація користувача, що була зароблена за весь час",
@@ -168,6 +171,7 @@ class LeaderboardService:
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
+                guild,
                 top_users,
                 top_criteria="за кількістю досягнень",
                 hint="Досягнень користувача та відсоткова частка від загальної кількості",
@@ -185,7 +189,7 @@ class LeaderboardService:
         return embed, components
 
     async def edit_leaderboard_message(
-            self, bot: InteractionBot, chosen_criteria: str, page: int, offset: int
+            self, bot: InteractionBot, guild: Guild, chosen_criteria: str, page: int, offset: int
     ) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, has_previous, has_next = await self.get_articles_top_users(
@@ -193,6 +197,7 @@ class LeaderboardService:
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
+                guild,
                 top_users,
                 top_criteria="за переглянутими статтями",
                 hint="Кількість унікальних статей, що були переглянуті користувачем",
@@ -206,6 +211,7 @@ class LeaderboardService:
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
+                guild,
                 top_users,
                 top_criteria="за поточною репутацією у фонді",
                 hint="Поточний баланс користувача, що може зменшитись за різних дій",
@@ -219,6 +225,7 @@ class LeaderboardService:
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
+                guild,
                 top_users,
                 top_criteria="за загальною репутацією у фонді",
                 hint="Загальна репутація користувача, що була зароблена за весь час",
@@ -232,6 +239,7 @@ class LeaderboardService:
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
+                guild,
                 top_users,
                 top_criteria="за кількістю досягнень",
                 hint="Досягнень користувача та відсоткова частка від загальної кількості",
