@@ -2,8 +2,7 @@ import asyncio
 import re
 from typing import Optional
 
-import disnake
-from disnake import User, Member
+from disnake import User, Member, TextChannel
 from disnake.ext.commands import InteractionBot
 
 from app.config import config, logger
@@ -14,7 +13,7 @@ from app.utils.ui_utils import ui_utils
 class EconomyLoggingService:
     def __init__(self):
         self._bot: Optional[InteractionBot] = None
-        self._channel: Optional[disnake.TextChannel] = None
+        self._channel: Optional[TextChannel] = None
         self._counter: int = 0
         self._lock = asyncio.Lock()
 
@@ -46,14 +45,14 @@ class EconomyLoggingService:
             self._counter += 1
             return self._counter
 
-    async def _get_channel(self) -> Optional[disnake.TextChannel]:
+    async def _get_channel(self) -> Optional[TextChannel]:
         if self._channel is None:
             if not self._bot:
                 logger.error("Couldn't get economy logging channel because bot is not initialized!")
                 return None
 
             channel = self._bot.get_channel(config.economy_logging_channel_id)
-            if isinstance(channel, disnake.TextChannel):
+            if isinstance(channel, TextChannel):
                 self._channel = channel
                 logger.info(f"Logging to {channel.name}")
             else:

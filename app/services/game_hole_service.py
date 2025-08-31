@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-import disnake
+from disnake import ApplicationCommandInteraction, TextChannel
 
 from app.config import config
 from app.core.schemas import HoleGameState, HolePlayerBet
@@ -15,7 +15,7 @@ class HoleGameService:
         self.games: dict[int, HoleGameState] = {}
 
     @staticmethod
-    async def item_autocomplete(interaction: disnake.ApplicationCommandInteraction, user_input: str) -> list[str]:
+    async def item_autocomplete(interaction: ApplicationCommandInteraction, user_input: str) -> list[str]:
         user_input = user_input.lower()
         return [
            name for name in config.hole_items.values()
@@ -25,7 +25,7 @@ class HoleGameService:
     def is_game_active(self, channel_id: int) -> bool:
         return channel_id in self.games
 
-    async def join_game(self, interaction: disnake.ApplicationCommandInteraction, bet: int, choice: str):
+    async def join_game(self, interaction: ApplicationCommandInteraction, bet: int, choice: str):
         channel_id = interaction.channel.id
         player = interaction.user
 
@@ -52,7 +52,7 @@ class HoleGameService:
 
         await response_utils.edit_message(game_state.message, embed=lobby_embed)
 
-    async def create_game(self, interaction: disnake.ApplicationCommandInteraction, bet: int, choice: str):
+    async def create_game(self, interaction: ApplicationCommandInteraction, bet: int, choice: str):
         channel_id = interaction.channel.id
         player = interaction.user
 
@@ -66,7 +66,7 @@ class HoleGameService:
 
         asyncio.create_task(self._run_game_finalization(interaction.channel))
 
-    async def _run_game_finalization(self, channel: disnake.TextChannel):
+    async def _run_game_finalization(self, channel: TextChannel):
         channel_id = channel.id
         await asyncio.sleep(config.hole_game_duration)
 

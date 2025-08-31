@@ -1,22 +1,22 @@
 import asyncio
 
-import disnake
+from disnake import ui, User, TextInputStyle, ModalInteraction
 
-from app.core.models import User
+from app.core.models import User as UserModel
 from app.services import achievement_handler_service
 from app.utils.response_utils import response_utils
 
 
-class DossierModal(disnake.ui.Modal):
-    def __init__(self, user: disnake.User, db_user: User) -> None:
+class DossierModal(ui.Modal):
+    def __init__(self, user: User, db_user: UserModel) -> None:
         self.dossier = self._format_dossier(db_user)
 
         components = [
-            disnake.ui.TextInput(
+            ui.TextInput(
                 label="Інформація",
                 placeholder=self.dossier,
                 custom_id="dossier",
-                style=disnake.TextInputStyle.paragraph,
+                style=TextInputStyle.paragraph,
                 min_length=20,
                 max_length=1024,
                 required=False,
@@ -32,10 +32,10 @@ class DossierModal(disnake.ui.Modal):
         self.db_user = db_user
 
     @staticmethod
-    def _format_dossier(db_user: User) -> str:
+    def _format_dossier(db_user: UserModel) -> str:
         return db_user.dossier[:97] + "..." if db_user.dossier else "..."
 
-    async def callback(self, interaction: disnake.ModalInteraction) -> None:
+    async def callback(self, interaction: ModalInteraction) -> None:
         new_dossier = interaction.text_values.get("dossier")
 
         self.db_user.dossier = new_dossier

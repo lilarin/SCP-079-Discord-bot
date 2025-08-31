@@ -2,7 +2,7 @@ import asyncio
 import random
 from typing import Dict
 
-import disnake
+from disnake import ApplicationCommandInteraction, MessageInteraction, TextChannel
 
 from app.config import config
 from app.core.models import User
@@ -17,7 +17,7 @@ class StaringGameService:
         self.games: Dict[int, SCP173GameState] = {}
 
     async def start_lobby(
-            self, interaction: disnake.ApplicationCommandInteraction, bet: int, mode: str
+            self, interaction: ApplicationCommandInteraction, bet: int, mode: str
     ) -> None:
         host = interaction.user
         game_state = SCP173GameState(
@@ -52,7 +52,7 @@ class StaringGameService:
             else:
                 await self.run_game(interaction.channel, message.id)
 
-    async def handle_join(self, interaction: disnake.MessageInteraction) -> None:
+    async def handle_join(self, interaction: MessageInteraction) -> None:
         message_id = interaction.message.id
         if message_id not in self.games or self.games[message_id].is_started:
             return await response_utils.send_ephemeral_response(interaction, "Ця гра вже закінчилася або почалася")
@@ -77,7 +77,7 @@ class StaringGameService:
         if len(game_state.players) == config.staring_max_players:
             await self.run_game(interaction.channel, message_id)
 
-    async def handle_start(self, interaction: disnake.MessageInteraction) -> None:
+    async def handle_start(self, interaction: MessageInteraction) -> None:
         message_id = interaction.message.id
         if message_id not in self.games or self.games[message_id].is_started:
             return await response_utils.send_ephemeral_response(
@@ -90,7 +90,7 @@ class StaringGameService:
             )
         await self.run_game(interaction.channel, message_id)
 
-    async def run_game(self, channel: disnake.TextChannel, message_id: int) -> None:
+    async def run_game(self, channel: TextChannel, message_id: int) -> None:
         if message_id not in self.games or self.games[message_id].is_started:
             return
 

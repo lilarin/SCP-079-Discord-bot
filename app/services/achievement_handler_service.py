@@ -1,6 +1,5 @@
 from typing import Set
 
-import disnake
 from disnake import User
 from tortoise.exceptions import DoesNotExist
 
@@ -13,7 +12,7 @@ from app.utils.response_utils import response_utils
 
 class AchievementHandlerService:
     @staticmethod
-    async def _grant_achievement(user: disnake.User, achievement_id: str) -> None:
+    async def _grant_achievement(user: User, achievement_id: str) -> None:
         try:
             db_user, _ = await UserModel.get_or_create(user_id=user.id)
             achievement = await Achievement.get(achievement_id=achievement_id)
@@ -33,7 +32,7 @@ class AchievementHandlerService:
         achievements = await db_user.achievements.all().values_list("achievement_id", flat=True)
         return set(achievements)
 
-    async def handle_cooldown_achievement(self, user: disnake.User):
+    async def handle_cooldown_achievement(self, user: User):
         achievements = await self._get_user_achievements_ids(user.id)
         if "workaholic" not in achievements:
             await self._grant_achievement(user, "workaholic")
@@ -47,12 +46,12 @@ class AchievementHandlerService:
         if user.id != target_user.id and "inspector" not in achievements:
             await self._grant_achievement(user, "inspector")
 
-    async def handle_dossier_achievements(self, user: disnake.User):
+    async def handle_dossier_achievements(self, user: User):
         achievements = await self._get_user_achievements_ids(user.id)
         if "personal_file" not in achievements:
             await self._grant_achievement(user, "personal_file")
 
-    async def handle_article_achievements(self, user: disnake.User, article: SCPObject):
+    async def handle_article_achievements(self, user: User, article: SCPObject):
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
         achievements = await self._get_user_achievements_ids(user.id)
 
@@ -71,7 +70,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "thaumiel_secret")
 
     async def handle_work_achievements(
-            self, user: disnake.User, is_risky: bool, is_success: bool
+            self, user: User, is_risky: bool, is_success: bool
     ):
         achievements = await self._get_user_achievements_ids(user.id)
 
@@ -83,7 +82,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "unlucky_adventurer")
 
     async def handle_economy_achievements(
-            self, user: disnake.User, amount_transferred: int = 0
+            self, user: User, amount_transferred: int = 0
     ):
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
         achievements = await self._get_user_achievements_ids(user.id)
@@ -99,7 +98,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "philanthropist")
 
     async def handle_crystallization_achievements(
-            self, user: disnake.User, state: CrystallizationState, is_loss: bool
+            self, user: User, state: CrystallizationState, is_loss: bool
     ):
         achievements = await self._get_user_achievements_ids(user.id)
         if is_loss and "game_crystal_loss" not in achievements:
@@ -110,7 +109,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "big_winner")
 
     async def handle_coin_flip_achievements(
-            self, user: disnake.User, winnings: int
+            self, user: User, winnings: int
     ):
         achievements = await self._get_user_achievements_ids(user.id)
         if winnings >= 10000 and "game_coin_win_10_000" not in achievements:
@@ -119,7 +118,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "big_winner")
 
     async def handle_candy_achievements(
-            self, user: disnake.User, player_taken: int, is_loss: bool
+            self, user: User, player_taken: int, is_loss: bool
     ):
         achievements = await self._get_user_achievements_ids(user.id)
         if is_loss and "game_candy_loss" not in achievements:
@@ -128,7 +127,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "game_candy_win_2")
 
     async def handle_coguard_achievements(
-            self, user: disnake.User, state: CoguardState, is_loss: bool
+            self, user: User, state: CoguardState, is_loss: bool
     ):
         achievements = await self._get_user_achievements_ids(user.id)
         if is_loss and state.win_streak == 0 and "game_coguard_loss_first" not in achievements:
@@ -139,7 +138,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "big_winner")
 
     async def handle_hole_achievements(
-            self, user: disnake.User, is_jackpot: bool, is_o5_win: bool, winnings: int
+            self, user: User, is_jackpot: bool, is_o5_win: bool, winnings: int
     ):
         achievements = await self._get_user_achievements_ids(user.id)
         if winnings > 0 and "game_hole_win" not in achievements:  # Проверяем, что есть выигрыш
@@ -152,7 +151,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "big_winner")
 
     async def handle_scp173_achievements(
-            self, user: disnake.User, is_host: bool, is_survivor: bool, is_first_death: bool, pot: int = 0
+            self, user: User, is_host: bool, is_survivor: bool, is_first_death: bool, pot: int = 0
     ):
         achievements = await self._get_user_achievements_ids(user.id)
         if is_host and "game_scp173_host" not in achievements:
@@ -164,7 +163,7 @@ class AchievementHandlerService:
         if pot >= 50000 and "big_winner" not in achievements:
             await self._grant_achievement(user, "big_winner")
 
-    async def handle_shop_achievements(self, user: disnake.User, bought_item_id: str):
+    async def handle_shop_achievements(self, user: User, bought_item_id: str):
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
         achievements = await self._get_user_achievements_ids(user.id)
 

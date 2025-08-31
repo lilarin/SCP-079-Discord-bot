@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-import disnake
+from disnake import ui, ApplicationCommandInteraction, MessageInteraction
 
 from app.config import config
 from app.core.schemas import CoguardState
@@ -12,7 +12,7 @@ from app.utils.ui_utils import ui_utils
 
 class CoguardService:
     @staticmethod
-    def _parse_state_from_components(components: list[disnake.ui.ActionRow]) -> CoguardState:
+    def _parse_state_from_components(components: list[ui.ActionRow]) -> CoguardState:
         state_buttons = components[0].children
 
         bet_label = state_buttons[0].label
@@ -35,7 +35,7 @@ class CoguardService:
         )
 
     @staticmethod
-    async def start_game(interaction: disnake.ApplicationCommandInteraction, bet: int):
+    async def start_game(interaction: ApplicationCommandInteraction, bet: int):
         initial_multiplier = round(random.uniform(*config.coguard_initial_multiplier_range), 2)
         initial_number = random.randint(1, 100)
 
@@ -49,7 +49,7 @@ class CoguardService:
         )
         await response_utils.send_response(interaction, embed=embed, components=components)
 
-    async def play_turn(self, interaction: disnake.MessageInteraction, choice: str):
+    async def play_turn(self, interaction: MessageInteraction, choice: str):
         state = self._parse_state_from_components(interaction.message.components)
 
         new_number = random.randint(1, 100)
@@ -82,7 +82,7 @@ class CoguardService:
         )
         await response_utils.edit_response(interaction, embed=embed, components=components)
 
-    async def cash_out(self, interaction: disnake.MessageInteraction):
+    async def cash_out(self, interaction: MessageInteraction):
         winnings_label = interaction.component.label
         winnings = int(winnings_label.split(' ')[1])
 

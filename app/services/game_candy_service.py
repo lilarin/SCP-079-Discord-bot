@@ -2,7 +2,7 @@ import asyncio
 import random
 from typing import Tuple
 
-import disnake
+from disnake import ui, ApplicationCommandInteraction, MessageInteraction
 
 from app.config import config
 from app.services import achievement_handler_service, economy_management_service
@@ -12,7 +12,7 @@ from app.utils.ui_utils import ui_utils
 
 class CandyGameService:
     @staticmethod
-    def _parse_state_from_components(components: list[disnake.ui.ActionRow]) -> Tuple[int, int, int]:
+    def _parse_state_from_components(components: list[ui.ActionRow]) -> Tuple[int, int, int]:
         state_buttons = components[0].children
 
         bet_label = state_buttons[0].label
@@ -26,7 +26,7 @@ class CandyGameService:
         return bet, pre_taken, player_taken
 
     @staticmethod
-    async def start_game(interaction: disnake.ApplicationCommandInteraction, bet: int):
+    async def start_game(interaction: ApplicationCommandInteraction, bet: int):
         pre_taken_candies = random.choices([0, 1, 2], weights=config.candy_pre_taken_weights, k=1)[0]
         player_taken_candies = 0
 
@@ -43,7 +43,7 @@ class CandyGameService:
         )
         await response_utils.send_response(interaction, embed=embed, components=components)
 
-    async def take_candy(self, interaction: disnake.MessageInteraction):
+    async def take_candy(self, interaction: MessageInteraction):
         bet, pre_taken, player_taken = self._parse_state_from_components(interaction.message.components)
 
         player_taken += 1
@@ -70,7 +70,7 @@ class CandyGameService:
         )
         await response_utils.edit_response(interaction, embed=embed, components=components)
 
-    async def leave_game(self, interaction: disnake.MessageInteraction):
+    async def leave_game(self, interaction: MessageInteraction):
         bet, pre_taken, player_taken = self._parse_state_from_components(interaction.message.components)
 
         multiplier = config.candy_win_multipliers.get(player_taken, 1.0)

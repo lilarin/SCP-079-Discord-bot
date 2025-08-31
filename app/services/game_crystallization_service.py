@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-import disnake
+from disnake import ApplicationCommandInteraction, ui, MessageInteraction
 
 from app.config import config
 from app.core.schemas import CrystallizationState
@@ -12,7 +12,7 @@ from app.utils.ui_utils import ui_utils
 
 class CrystallizationService:
     @staticmethod
-    def _parse_state_from_components(components: list[disnake.ui.ActionRow]) -> CrystallizationState:
+    def _parse_state_from_components(components: list[ui.ActionRow]) -> CrystallizationState:
         state_buttons = components[0].children
 
         bet_label = state_buttons[0].label
@@ -31,7 +31,7 @@ class CrystallizationService:
         )
 
     @staticmethod
-    async def start_game(interaction: disnake.ApplicationCommandInteraction, bet: int):
+    async def start_game(interaction: ApplicationCommandInteraction, bet: int):
         initial_multiplier = round(random.uniform(*config.crystallize_initial_multiplier_range), 2)
         initial_loss_chance = config.crystallize_initial_chance * 100
 
@@ -44,7 +44,7 @@ class CrystallizationService:
         )
         await response_utils.send_response(interaction, embed=embed, components=components)
 
-    async def continue_game(self, interaction: disnake.MessageInteraction):
+    async def continue_game(self, interaction: MessageInteraction):
         state = self._parse_state_from_components(interaction.message.components)
         current_loss_chance_percent = state.loss_chance
 
@@ -78,7 +78,7 @@ class CrystallizationService:
         )
         await response_utils.edit_response(interaction, embed=embed, components=components)
 
-    async def cash_out(self, interaction: disnake.MessageInteraction):
+    async def cash_out(self, interaction: MessageInteraction):
         winnings_label = interaction.component.label
         winnings = int(winnings_label.split(' ')[1])
 

@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-import disnake
+from disnake import ApplicationCommandInteraction
 
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
@@ -10,7 +10,7 @@ from app.utils.ui_utils import ui_utils
 
 class CoinFlipService:
     @staticmethod
-    async def play_game(interaction: disnake.ApplicationCommandInteraction, bet: int):
+    async def play_game(interaction: ApplicationCommandInteraction, bet: int):
         is_win = random.choice([True, False])
 
         if is_win:
