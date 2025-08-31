@@ -7,6 +7,7 @@ from disnake.ext import commands
 from app.config import config, logger
 from app.core.decorators import target_is_user, remove_bet_from_balance
 from app.core.models import User as UserModel
+from app.localization import t
 from app.modals.dossier_modal import DossierModal
 from app.services import (
     article_service,
@@ -47,12 +48,12 @@ async def on_ready():
             await achievement_service.sync_achievements()
     except asyncpg.exceptions.InternalServerError as exception:
         logger.error(exception)
-    logger.info(f"Виконано вхід як {bot.user}")
+    logger.info(t("logs.logged_in", bot_user=bot.user))
     await asyncio.sleep(1)
     await bot.change_presence(
         activity=disnake.Activity(
             type=disnake.ActivityType.watching,
-            name="на особові справи"
+            name=t("presence.watching")
         )
     )
 
@@ -61,23 +62,23 @@ async def on_ready():
 async def on_slash_command(interaction):
     user = interaction.user
     command = interaction.data.name
-    logger.info(f"Користувач {user} використав команду /{command}")
+    logger.info(t("logs.command_used", user=user, command=command))
 
 
 @bot.event
 async def on_slash_command_error(interaction, error):
     if isinstance(error, commands.MissingPermissions):
-        await response_utils.send_ephemeral_response(interaction, "Ця команда недоступна для вас")
+        await response_utils.send_ephemeral_response(interaction, t("errors.missing_permissions"))
         return
     elif isinstance(error, commands.NoPrivateMessage):
-        await response_utils.send_ephemeral_response(interaction, "Команди бота можна використовувати лише на сервері")
+        await response_utils.send_ephemeral_response(interaction, t("errors.no_private_message"))
         return
     elif isinstance(error, disnake.ext.commands.errors.CommandOnCooldown):
         timestamp = await time_utils.get_current()
         timestamp = round(timestamp.timestamp() + error.retry_after)
         await response_utils.send_ephemeral_response(
             interaction,
-            f"Ви поки не можете використати цю команду, спробуйте знову <t:{timestamp}:R>"
+            t("errors.cooldown", timestamp=timestamp)
         )
         asyncio.create_task(achievement_handler_service.handle_cooldown_achievement(interaction.user))
 
@@ -98,7 +99,7 @@ async def on_member_join(member):
         if member.guild.system_channel:
             await member.guild.system_channel.send(embed=embed)
         else:
-            logger.warning(f"Не знайдено системний канал для вітання на сервері: {member.guild.name}")
+            logger.warning(t("logs.system_channel_not_found", guild_name=member.guild.name))
 
     except asyncpg.exceptions.InternalServerError as error:
         logger.error(error)
@@ -106,12 +107,16 @@ async def on_member_join(member):
         logger.error(exception)
 
 
-@bot.slash_command(name="картка", description="Переглянути картку співробітника фонду")
+@bot.slash_command(name=t("commands.view_card.name"), description=t("commands.view_card.description"))
 @commands.guild_only()
 @target_is_user
 async def view_card(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
+        user: disnake.User = commands.Param(
+            description=t("commands.view_card.params.user.description"),
+            default=None,
+            name=t("commands.view_card.params.user.name")
+        ),
 ):
     await response_utils.wait_for_response(interaction)
     member = user or interaction.user
@@ -141,24 +146,25 @@ async def view_card(
 
 
 @commands.cooldown(rate=1, per=config.article_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name="випадкова-стаття", description="Отримати посилання на випадкову статтю за фільтрами")
+@bot.slash_command(name=t("commands.get_random_article.name"),
+                   description=t("commands.get_random_article.description"))
 @commands.guild_only()
 async def get_random_article(
         interaction: disnake.ApplicationCommandInteraction,
         object_class=commands.Param(
             choices=list(config.scp_classes.keys()),
-            description="Клас об'єкту (необов'язково)",
-            default=None, name="клас"
+            description=t("commands.get_random_article.params.object_class.description"),
+            default=None, name=t("commands.get_random_article.params.object_class.name")
         ),
         object_range=commands.Param(
             choices=list(config.scp_ranges.keys()),
-            description="Діапазон номеру об'єкту (необов'язково)",
-            default=None, name="діапазон"
+            description=t("commands.get_random_article.params.object_range.description"),
+            default=None, name=t("commands.get_random_article.params.object_range.name")
         ),
         skip_viewed: bool = commands.Param(
             choices=[True, False],
-            description="Виключити вже переглянуті? (необов'язково, увімкнено)",
-            default=True, name="пропустити-переглянуті"
+            description=t("commands.get_random_article.params.skip_viewed.description"),
+            default=True, name=t("commands.get_random_article.params.skip_viewed.name")
         )
 ):
     await response_utils.wait_for_response(interaction)
@@ -173,7 +179,7 @@ async def get_random_article(
 
         if found_all:
             await response_utils.send_response(
-                interaction, message="Ви переглянули всі статті за цими фільтрами", delete_after=10
+                interaction, message=t("responses.articles.all_viewed"), delete_after=10
             )
         elif random_article:
             image = await article_service.create_article_image(random_article)
@@ -182,7 +188,7 @@ async def get_random_article(
             await response_utils.send_response(interaction, embed=embed, components=components)
         else:
             await response_utils.send_response(
-                interaction, message="Статті за цими фільтрами не знайдено", delete_after=10
+                interaction, message=t("responses.articles.not_found"), delete_after=10
             )
 
     except asyncpg.exceptions.InternalServerError as exception:
@@ -190,9 +196,9 @@ async def get_random_article(
         logger.error(exception)
 
 
-@bot.slash_command(name="досьє", description="Заповнити своє досьє")
+@bot.slash_command(name=t("commands.dossier.name"), description=t("commands.dossier.description"))
 @commands.guild_only()
-async def view_card(interaction: disnake.ApplicationCommandInteraction):
+async def dossier(interaction: disnake.ApplicationCommandInteraction):
     try:
         db_user, _ = await UserModel.get_or_create(user_id=interaction.user.id)
 
@@ -204,14 +210,14 @@ async def view_card(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="топ", description="Показати топ користувачів за певним критерієм")
+@bot.slash_command(name=t("commands.top.name"), description=t("commands.top.description"))
 @commands.guild_only()
-async def top_articles(
+async def top(
         interaction: disnake.ApplicationCommandInteraction,
         criteria=commands.Param(
             choices=list(config.leaderboard_options.keys()),
-            description="Критерій для перегляду списку лідерів",
-            name="критерій"
+            description=t("commands.top.params.criteria.description"),
+            name=t("commands.top.params.criteria.name")
         ),
 ):
     await response_utils.wait_for_response(interaction)
@@ -226,12 +232,16 @@ async def top_articles(
         logger.error(exception)
 
 
-@bot.slash_command(name="баланс", description="Переглянути баланс користувача")
+@bot.slash_command(name=t("commands.balance.name"), description=t("commands.balance.description"))
 @commands.guild_only()
 @target_is_user
 async def view_balance(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
+        user: disnake.User = commands.Param(
+            description=t("commands.balance.params.user.description"),
+            default=None,
+            name=t("commands.balance.params.user.name")
+        ),
 ):
     await response_utils.wait_for_response(interaction)
     target_user = user or interaction.user
@@ -245,12 +255,19 @@ async def view_balance(
         logger.error(exception)
 
 
-@bot.slash_command(name="переказ", description="Надіслати власні 💠 іншому користувачу")
+@bot.slash_command(name=t("commands.transfer.name"), description=t("commands.transfer.description"))
 @commands.guild_only()
 async def transfer_balance(
         interaction: disnake.ApplicationCommandInteraction,
-        recipient: disnake.User = commands.Param(description="Оберіть отримувача", name="отримувач"),
-        amount: int = commands.Param(description="Сума для переводу", name="сума", ge=100),
+        recipient: disnake.User = commands.Param(
+            description=t("commands.transfer.params.recipient.description"),
+            name=t("commands.transfer.params.recipient.name")
+        ),
+        amount: int = commands.Param(
+            description=t("commands.transfer.params.amount.description"),
+            name=t("commands.transfer.params.amount.name"),
+            ge=100
+        ),
 ):
     await response_utils.wait_for_response(interaction)
 
@@ -273,7 +290,7 @@ async def transfer_balance(
         logger.error(exception)
 
 
-@bot.slash_command(name="магазин", description="Переглянути товари у магазині")
+@bot.slash_command(name=t("commands.shop.name"), description=t("commands.shop.description"))
 @commands.guild_only()
 async def shop(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
@@ -286,26 +303,29 @@ async def shop(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="оновити-кількість-товарів", description="Випадковим чином оновити асортимент карток у магазині")
+@bot.slash_command(name=t("commands.update_shop.name"), description=t("commands.update_shop.description"))
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
-async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
+async def update_shop_quantities(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
 
     try:
         await shop_service.update_card_item_quantities()
-        await response_utils.edit_ephemeral_response(interaction, "Асортимент карток було оновлено")
+        await response_utils.edit_ephemeral_response(interaction, t("responses.shop.updated"))
 
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
-@bot.slash_command(name="купити", description="Купити товар з магазину за його ID")
+@bot.slash_command(name=t("commands.buy.name"), description=t("commands.buy.description"))
 @commands.guild_only()
 async def buy_item(
         interaction: disnake.ApplicationCommandInteraction,
-        item_id: str = commands.Param(description="ID товару", name="предмет"),
+        item_id: str = commands.Param(
+            description=t("commands.buy.params.item_id.description"),
+            name=t("commands.buy.params.item_id.name")
+        ),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
 
@@ -325,7 +345,7 @@ async def buy_item(
         logger.error(exception)
 
 
-@bot.slash_command(name="інвентар", description="Переглянути свій інвентар")
+@bot.slash_command(name=t("commands.inventory.name"), description=t("commands.inventory.description"))
 @commands.guild_only()
 async def inventory(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
@@ -343,11 +363,14 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="екіпірувати", description="Екіпірувати картку доступу з інвентаря")
+@bot.slash_command(name=t("commands.equip.name"), description=t("commands.equip.description"))
 @commands.guild_only()
 async def equip_item(
         interaction: disnake.ApplicationCommandInteraction,
-        item_id: str = commands.Param(description="ID картки, яку ви хочете екіпірувати", name="картка"),
+        item_id: str = commands.Param(
+            description=t("commands.equip.params.item_id.description"),
+            name=t("commands.equip.params.item_id.name")
+        ),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
 
@@ -367,7 +390,7 @@ async def equip_item(
 
 
 @commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name="робота", description="Виконати безпечне завдання для фонду")
+@bot.slash_command(name=t("commands.legal_work.name"), description=t("commands.legal_work.description"))
 @commands.guild_only()
 async def legal_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
@@ -388,7 +411,7 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
 
 
 @commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name="ризикована-робота", description="Взятися за ризиковану справу")
+@bot.slash_command(name=t("commands.risky_work.name"), description=t("commands.risky_work.description"))
 @commands.guild_only()
 async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
@@ -409,7 +432,7 @@ async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="скинути-репутацію", description="Скинути загальну репутацію всіх співробітників")
+@bot.slash_command(name=t("commands.reset_reputation.name"), description=t("commands.reset_reputation.description"))
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
 async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
@@ -418,7 +441,7 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
     try:
         await economy_management_service.reset_users_reputation()
         await response_utils.send_response(
-            interaction, "Загальна репутація всіх гравців було скинуто, баланс залишається незмінним"
+            interaction, t("responses.reputation.reset")
         )
 
     except Exception as exception:
@@ -426,29 +449,32 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="змінити-баланс-користувача",
-                   description="Збільшити, або зменшити баланс на певну кількість репутації")
+@bot.slash_command(name=t("commands.edit_balance.name"),
+                   description=t("commands.edit_balance.description"))
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
 @target_is_user
 async def edit_player_balance(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", name="користувач"),
-        amount: int = commands.Param(description="Кількість на яку збільшити, або зменшити", name="кількість"),
+        user: disnake.User = commands.Param(
+            description=t("commands.edit_balance.params.user.description"),
+            name=t("commands.edit_balance.params.user.name")
+        ),
+        amount: int = commands.Param(
+            description=t("commands.edit_balance.params.amount.description"),
+            name=t("commands.edit_balance.params.amount.name")
+        ),
 ):
     await response_utils.wait_for_response(interaction)
 
     try:
+        reason = t("responses.balance.admin_change_reason", user=interaction.user.mention)
         await economy_management_service.update_user_balance(
-            user, amount, (
-                f"Зміна балансу користувачу\n"
-                f"-# Викликано користувачем {interaction.user.mention}"
-            ),
-            balance_only=True
+            user, amount, reason, balance_only=True
         )
 
         await response_utils.send_response(
-            interaction, f"Баланс гравця {user.mention} було змінено"
+            interaction, t("responses.balance.changed", user=user.mention)
         )
 
     except Exception as exception:
@@ -457,90 +483,114 @@ async def edit_player_balance(
 
 
 @commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name="кристалізація", description="Почати процес кристалізації")
+@bot.slash_command(name=t("commands.game_crystallize.name"), description=t("commands.game_crystallize.description"))
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_crystallize(
         interaction: disnake.ApplicationCommandInteraction,
-        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        bet: int = commands.Param(
+            description=t("commands.game_crystallize.params.bet.description"),
+            ge=100, le=10000,
+            name=t("commands.game_crystallize.params.bet.name")
+        ),
 ):
     try:
         await crystallization_service.start_game(interaction, bet)
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
+        reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, reason
         )
 
 
 @commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name="монетка", description="Підкинути монетку та випробувати вдачу")
+@bot.slash_command(name=t("commands.game_coin.name"), description=t("commands.game_coin.description"))
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_coin_flip(
         interaction: disnake.ApplicationCommandInteraction,
-        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        bet: int = commands.Param(
+            description=t("commands.game_coin.params.bet.description"),
+            ge=100, le=10000,
+            name=t("commands.game_coin.params.bet.name")
+        ),
 ):
     try:
         await coin_flip_service.play_game(interaction, bet)
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
+        reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, reason
         )
 
 
 @commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name="цукерки", description="Випробуйте свою вдачу з SCP-330")
+@bot.slash_command(name=t("commands.game_candy.name"), description=t("commands.game_candy.description"))
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_candy(
         interaction: disnake.ApplicationCommandInteraction,
-        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        bet: int = commands.Param(
+            description=t("commands.game_candy.params.bet.description"),
+            ge=100, le=10000,
+            name=t("commands.game_candy.params.bet.name")
+        ),
 ):
     try:
         await candy_game_service.start_game(interaction, bet)
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
+        reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, reason
         )
 
 
 @commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name="когнітивна-стійкість", description="Пройти тест на когнітивну стійкість")
+@bot.slash_command(name=t("commands.game_coguard.name"), description=t("commands.game_coguard.description"))
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_coguard(
         interaction: disnake.ApplicationCommandInteraction,
-        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        bet: int = commands.Param(
+            description=t("commands.game_coguard.params.bet.description"),
+            ge=100, le=10000,
+            name=t("commands.game_coguard.params.bet.name")
+        ),
 ):
     try:
         await coguard_service.start_game(interaction, bet)
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
+        reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, reason
         )
 
 
-@bot.slash_command(name="піжмурки", description="Зіграти в піжмурки проти інших гравців з SCP-173")
+@bot.slash_command(name=t("commands.game_scp173.name"), description=t("commands.game_scp173.description"))
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_scp173(
         interaction: disnake.ApplicationCommandInteraction,
-        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        bet: int = commands.Param(
+            description=t("commands.game_scp173.params.bet.description"),
+            ge=100, le=10000,
+            name=t("commands.game_scp173.params.bet.name")
+        ),
         mode: str = commands.Param(
-            description="Режим гри для лоббі",
+            description=t("commands.game_scp173.params.mode.description"),
             choices={
-                "Звичайний": "normal",
-                "До останнього": "last_man_standing"
+                t("commands.game_scp173.params.mode.choices.normal"): "normal",
+                t("commands.game_scp173.params.mode.choices.lms"): "last_man_standing"
             },
-            name="режим-гри"
+            name=t("commands.game_scp173.params.mode.name")
         )
 ):
     try:
@@ -548,46 +598,53 @@ async def game_scp173(
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
+        reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, reason
         )
 
 
 @commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name="діра", description="Зробіть ставку в аномальній рулетці")
+@bot.slash_command(name=t("commands.game_hole.name"), description=t("commands.game_hole.description"))
 @commands.guild_only()
 @remove_bet_from_balance
 async def game_hole(
         interaction: disnake.ApplicationCommandInteraction,
-        bet: int = commands.Param(description="Сума вашої ставки", ge=100, le=10000, name="ставка"),
+        bet: int = commands.Param(
+            description=t("commands.game_hole.params.bet.description"),
+            ge=100, le=10000,
+            name=t("commands.game_hole.params.bet.name")
+        ),
         group_bet: str = commands.Param(
-            description="Виберіть групову ставку (не можна використовувати разом зі ставкою на предмет)",
+            description=t("commands.game_hole.params.group_bet.description"),
             choices=list(config.hole_group_bet_options.keys()),
             default=None,
-            name="група"
+            name=t("commands.game_hole.params.group_bet.name")
         ),
         item_bet: str = commands.Param(
-            description="Виберіть конкретний предмет (не можна використовувати з груповою ставкою)",
+            description=t("commands.game_hole.params.item_bet.description"),
             autocomplete=hole_game_service.item_autocomplete,
             default=None,
-            name="предмет"
+            name=t("commands.game_hole.params.item_bet.name")
         )
 ):
     if (group_bet and item_bet) or (not group_bet and not item_bet):
+        reason = t("responses.games.invalid_bet_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, f"Неправильна ставка під час гри {interaction.data.name}"
+            interaction.user, bet, reason
         )
         await response_utils.send_response(
-            interaction, "Необхідно обрати **один** тип ставки", delete_after=10
+            interaction, t("responses.games.hole.choose_one_bet_type"), delete_after=10
         )
         return
 
     if item_bet and item_bet not in config.hole_items.values():
+        reason = t("responses.games.invalid_bet_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, f"Неправильна ставка під час гри {interaction.data.name}"
+            interaction.user, bet, reason
         )
         await response_utils.send_response(
-            interaction, f"Опцію '{item_bet}' не знайдено, оберіть зі списку", delete_after=10
+            interaction, t("responses.games.hole.option_not_found", option=item_bet), delete_after=10
         )
         return
 
@@ -602,12 +659,13 @@ async def game_hole(
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
+        reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, f"Помилка під час гри `{interaction.data.name}`"
+            interaction.user, bet, reason
         )
 
 
-@bot.slash_command(name="гайд-міні-ігор", description="Інформація про доступні міні-ігри")
+@bot.slash_command(name=t("commands.games_info.name"), description=t("commands.games_info.description"))
 @commands.guild_only()
 async def games_info(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
@@ -620,12 +678,16 @@ async def games_info(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name="досягнення-користувача", description="Показати отримані досягнення")
+@bot.slash_command(name=t("commands.achievements.name"), description=t("commands.achievements.description"))
 @commands.guild_only()
 @target_is_user
 async def achievements(
         interaction: disnake.ApplicationCommandInteraction,
-        user: disnake.User = commands.Param(description="Оберіть користувача", default=None, name="користувач"),
+        user: disnake.User = commands.Param(
+            description=t("commands.achievements.params.user.description"),
+            default=None,
+            name=t("commands.achievements.params.user.name")
+        ),
 ):
     await response_utils.wait_for_response(interaction)
     user = user or interaction.user
@@ -641,10 +703,10 @@ async def achievements(
 
     except Exception as e:
         logger.error(f"Помилка при отриманні досягнень: {e}")
-        await response_utils.send_response(interaction, "Не вдалося завантажити досягнення", delete_after=10)
+        await response_utils.send_response(interaction, t("responses.achievements.load_error"), delete_after=10)
 
 
-@bot.slash_command(name="список-досягнень", description="Показати список та статистику отримання досягнень на сервері")
+@bot.slash_command(name=t("commands.achievement_stats.name"), description=t("commands.achievement_stats.description"))
 @commands.guild_only()
 async def achievement_stats(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
@@ -654,7 +716,7 @@ async def achievement_stats(interaction: disnake.ApplicationCommandInteraction):
         await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
     except Exception as e:
         logger.error(f"Помилка при отриманні статистики досягнень: {e}")
-        await response_utils.edit_ephemeral_response(interaction, "Не вдалося завантажити список досягнень ")
+        await response_utils.edit_ephemeral_response(interaction, t("responses.achievements.stats_load_error"))
 
 
 @bot.event
