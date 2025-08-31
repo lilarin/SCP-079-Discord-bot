@@ -2,20 +2,20 @@ import json
 import logging
 from functools import reduce
 
-from app.config import config
-
 
 class Localization:
-    def __init__(self, locales_path: str):
+    def __init__(self):
         self._translations = {}
+
+    def load(self, locale_path: str):
         try:
-            with open(locales_path, "r", encoding="utf-8") as f:
+            with open(locale_path, "r", encoding="utf-8") as f:
                 self._translations = json.load(f)
         except FileNotFoundError:
-            logging.error(f"Localization file not found at path: {locales_path}")
+            logging.error(f"Localization file not found at path: {locale_path}")
             exit(1)
         except json.JSONDecodeError:
-            logging.error(f"Failed to read JSON from localisation file: {locales_path}")
+            logging.error(f"Failed to read JSON from localisation file: {locale_path}")
             exit(1)
         except Exception as exception:
             logging.error(f"Unidentified error when downloading localization file: {exception}")
@@ -31,4 +31,4 @@ class Localization:
             return key
 
 
-t = Localization(locales_path=config.locales_path)
+t = Localization()

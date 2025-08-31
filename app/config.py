@@ -40,6 +40,9 @@ class Config:
         self.primary_font_path: str = os.path.join(self.assets_dir_path, "fonts", "BauhausDemi.ttf")
         self.secondary_font_path: str = os.path.join(self.assets_dir_path, "fonts", "Inter_18pt-Bold.ttf")
 
+        # Load translations
+        t.load(self.locales_path)
+
         # Image, card and work prompts configuration
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
         self.cards: Dict[str, CardConfig] = configs_load_utils.load_cards_from_json(self.shop_cards_path, self.cards_dir_path)
