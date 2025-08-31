@@ -76,7 +76,7 @@ class AchievementService:
         embed = await ui_utils.format_achievements_embed(user, items)
 
         components = await ui_utils.init_control_buttons(
-            criteria="achievements",
+            criteria="user_achievements",
             disable_first_page_button=True,
             disable_previous_page_button=True,
             disable_next_page_button=not has_next,
@@ -95,7 +95,7 @@ class AchievementService:
         embed = await ui_utils.format_achievements_embed(user, items, offset=offset)
 
         components = await ui_utils.init_control_buttons(
-            criteria="achievements",
+            criteria="user_achievements",
             current_page_text=page,
             disable_first_page_button=not has_previous,
             disable_previous_page_button=not has_previous,
