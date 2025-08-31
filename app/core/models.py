@@ -15,14 +15,6 @@ class User(Model):
         "models.Item", related_name="equipped_by", null=True, on_delete=fields.SET_NULL
     )
 
-    inventory: fields.ManyToManyRelation["Item"] = fields.ManyToManyField(
-        "models.Item", related_name="owners", through="users_items"
-    )
-
-    achievements: fields.ManyToManyRelation["Achievement"] = fields.ManyToManyField(
-        "models.Achievement", related_name="users", through="users_achievements"
-    )
-
     class Meta:
         table = "users"
         indexes = ("balance", "reputation")
@@ -65,6 +57,9 @@ class Item(Model):
     item_type = fields.CharEnumField(ItemType)
     quantity = fields.IntField(default=0)
 
+    # Зворотній зв'язок для доступу до користувачів
+    owners: fields.ReverseRelation["UserItem"]
+
     class Meta:
         table = "items"
         indexes = ("price",)
@@ -82,6 +77,9 @@ class Achievement(Model):
     name = fields.CharField(max_length=100)
     description = fields.TextField()
     icon = fields.CharField(max_length=10, default="🏆")
+
+    # Зворотній зв'язок для доступу до користувачів
+    users: fields.ReverseRelation["UserAchievement"]
 
     class Meta:
         table = "achievements"
@@ -119,3 +117,23 @@ class ViewedScpObject(Model):
 
     def __str__(self):
         return f"User {self.user} viewed SCP {self.scp_object} at {self.viewed_at}"
+
+
+class UserItem(Model):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField("models.User", related_name="inventory")
+    item = fields.ForeignKeyField("models.Item", related_name="owners")
+
+    class Meta:
+        table = "users_items"
+        unique_together = ("user", "item")
+
+
+class UserAchievement(Model):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField("models.User", related_name="achievements")
+    achievement = fields.ForeignKeyField("models.Achievement", related_name="users")
+
+    class Meta:
+        table = "users_achievements"
+        unique_together = ("user", "achievement")

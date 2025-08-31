@@ -7,7 +7,7 @@ from cachetools import TTLCache
 from disnake import File, User, Member
 
 from app.config import config
-from app.core.models import User as UserModel
+from app.core.models import User as UserModel, UserAchievement
 from app.core.schemas import CardConfig, UserProfileData
 from app.utils.keycard_utils import keycard_utils
 
@@ -21,7 +21,7 @@ class KeyCardService:
 
     async def get_user_profile_data(self, user: User | Member) -> UserProfileData:
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
-        await db_user.fetch_related("equipped_card", "achievements")
+        await db_user.fetch_related("equipped_card")
 
         template = None
         if db_user.equipped_card:
@@ -40,7 +40,7 @@ class KeyCardService:
         except AttributeError:
             top_role = None
 
-        user_achievements_count = len(db_user.achievements)
+        user_achievements_count = await UserAchievement.filter(user=db_user).count()
 
         return UserProfileData(
             card_image=card_image,

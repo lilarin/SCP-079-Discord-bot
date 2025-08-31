@@ -7,7 +7,7 @@ from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
 from app.config import config, logger
-from app.core.models import Item, ItemType, User as UserModel
+from app.core.models import Item, ItemType, User as UserModel, UserItem, UserAchievement
 from app.services import achievement_handler_service
 from app.utils.ui_utils import ui_utils
 
@@ -176,15 +176,14 @@ class ShopService:
                     f"-# Поточний баланс – {db_user.balance} 💠"
                 )
 
-            if await db_user.inventory.filter(id=item.id).exists():
+            if await UserItem.filter(user=db_user, item=item).exists():
                 return "Ви вже маєте цей предмет у своєму інвентарі"
 
             card_config = config.cards.get(item_id)
             if card_config and card_config.required_achievements:
                 required_ids = set(card_config.required_achievements)
-                user_ach_ids = set(
-                    await db_user.achievements.all().values_list("achievement_id", flat=True)
-                )
+                user_achievements = await UserAchievement.filter(user=db_user).prefetch_related("achievement")
+                user_ach_ids = {ua.achievement.achievement_id for ua in user_achievements}
 
                 missing_ids = required_ids - user_ach_ids
                 if missing_ids:
@@ -203,7 +202,7 @@ class ShopService:
 
             await db_user.save(using_db=conn, update_fields=['balance'])
             await item.save(using_db=conn, update_fields=['quantity'])
-            await db_user.inventory.add(item, using_db=conn)
+            await UserItem.create(user=db_user, item=item, using_db=conn)
 
         asyncio.create_task(achievement_handler_service.handle_shop_achievements(user, item_id))
         return f"Ви успішно придбали товар **{item.name}**!"

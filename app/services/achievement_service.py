@@ -4,7 +4,7 @@ from disnake import Embed, Component, User, Member
 from tortoise.functions import Count
 
 from app.config import config, logger
-from app.core.models import Achievement, User as UserModel
+from app.core.models import Achievement, User as UserModel, UserAchievement
 from app.core.schemas import AchievementConfig
 from app.utils.ui_utils import ui_utils
 
@@ -53,8 +53,10 @@ class AchievementService:
             user_id: int, limit: int, offset: int = 0
     ) -> Tuple[List[Achievement], bool, bool]:
         db_user, _ = await UserModel.get_or_create(user_id=user_id)
-        achievements_query = db_user.achievements.all().order_by("id").offset(offset).limit(limit + 1)
-        achievements_raw = await achievements_query
+        user_achievements_query = UserAchievement.filter(user=db_user).select_related("achievement").order_by(
+            "achievement__id").offset(offset).limit(limit + 1)
+        user_achievements_raw = await user_achievements_query
+        achievements_raw = [ua.achievement for ua in user_achievements_raw]
 
         has_next = len(achievements_raw) > limit
         current_page_items = achievements_raw[:limit]
@@ -65,7 +67,7 @@ class AchievementService:
     @staticmethod
     async def get_total_user_achievements_count(user_id: int) -> int:
         user, _ = await UserModel.get_or_create(user_id=user_id)
-        return await user.achievements.all().count()
+        return await UserAchievement.filter(user=user).count()
 
     async def init_achievements_message(self, user: Member | User) -> Optional[Tuple[Embed, List[Component]]]:
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
@@ -129,7 +131,7 @@ class AchievementService:
 
     @staticmethod
     async def get_total_players_with_achievements_count() -> int:
-        return await UserModel.annotate(ach_count=Count("achievements")).filter(ach_count__gt=0).count()
+        return await UserModel.filter(achievements__id__isnull=False).distinct().count()
 
     @staticmethod
     async def get_total_achievements_count() -> int:

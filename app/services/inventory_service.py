@@ -1,11 +1,11 @@
 from typing import List, Tuple, Optional
 
-from disnake import Embed, Component, User
+from disnake import Embed, Component, User, Member
 from tortoise.exceptions import DoesNotExist
 
 from app.config import config, logger
 from app.core.enums import ItemType
-from app.core.models import Item, User
+from app.core.models import Item, User as UserModel, UserItem
 from app.utils.ui_utils import ui_utils
 
 
@@ -13,9 +13,11 @@ class InventoryService:
 
     @staticmethod
     async def get_user_items(user_id: int, limit: int, offset: int = 0) -> Tuple[List[Item], bool, bool]:
-        user = await User.get(user_id=user_id).prefetch_related("inventory")
-        items_query = user.inventory.all().order_by("id").offset(offset).limit(limit + 1)
-        items_raw = await items_query
+        user = await UserModel.get(user_id=user_id)
+        user_items_query = UserItem.filter(user=user).select_related("item").order_by("item__id").offset(offset).limit(limit + 1)
+        user_items_raw = await user_items_query
+
+        items_raw = [ui.item for ui in user_items_raw]
 
         has_next = len(items_raw) > limit
         current_page_items = items_raw[:limit]
@@ -25,25 +27,25 @@ class InventoryService:
 
     @staticmethod
     async def get_total_user_items_count(user_id: int) -> int:
-        user = await User.get(user_id=user_id)
-        return await user.inventory.all().count()
+        user = await UserModel.get(user_id=user_id)
+        return await UserItem.filter(user=user).count()
 
     @staticmethod
-    async def check_for_default_card(user: User) -> None:
+    async def check_for_default_card(user: UserModel) -> None:
         if not config.cards:
             return
 
         default_card_id = list(config.cards.keys())[-1]
-        has_default_card = await user.inventory.filter(item_id=default_card_id).exists()
+        has_default_card = await UserItem.filter(user=user, item__item_id=default_card_id).exists()
 
         if not has_default_card:
             try:
                 default_item = await Item.get(item_id=default_card_id)
-                await user.inventory.add(default_item)
+                await UserItem.create(user=user, item=default_item)
             except DoesNotExist:
                 logger.error(f"Error: Default item '{default_card_id}' not found in the database.")
 
-    async def init_inventory_message(self, user: User) -> Optional[Tuple[Embed, List[Component]]]:
+    async def init_inventory_message(self, user: User | Member) -> Optional[Tuple[Embed, List[Component]]]:
         items, _, has_next = await self.get_user_items(user.id, limit=config.inventory_items_per_page)
 
         embed = await ui_utils.format_inventory_embed(user, items)
@@ -57,7 +59,7 @@ class InventoryService:
         )
         return embed, components
 
-    async def edit_inventory_message(self, user: User, page: int, offset: int) -> Optional[
+    async def edit_inventory_message(self, user: User | Member, page: int, offset: int) -> Optional[
         Tuple[Embed, List[Component]]]:
         items, has_previous, has_next = await self.get_user_items(
             user.id, limit=config.inventory_items_per_page, offset=offset
@@ -77,10 +79,11 @@ class InventoryService:
 
     @staticmethod
     async def equip_item(user_id: int, item_id: str) -> str:
-        user = await User.get(user_id=user_id)
+        user = await UserModel.get(user_id=user_id)
 
         try:
-            item_to_equip = await user.inventory.filter(item_id=item_id).get()
+            user_item = await UserItem.get(user=user, item__item_id=item_id).select_related("item")
+            item_to_equip = user_item.item
         except DoesNotExist:
             return "У вас немає такого предмета в інвентарі"
 

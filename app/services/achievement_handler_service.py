@@ -5,7 +5,7 @@ from tortoise.exceptions import DoesNotExist
 
 from app.config import logger
 from app.core.enums import ItemType
-from app.core.models import User as UserModel, SCPObject, Achievement, Item
+from app.core.models import User as UserModel, SCPObject, Achievement, Item, UserAchievement, UserItem
 from app.core.schemas import CrystallizationState, CoguardState
 from app.utils.response_utils import response_utils
 
@@ -17,9 +17,10 @@ class AchievementHandlerService:
             db_user, _ = await UserModel.get_or_create(user_id=user.id)
             achievement = await Achievement.get(achievement_id=achievement_id)
 
-            await db_user.achievements.add(achievement)
-            logger.info(f"Granted achievement '{achievement.name}' to user {user.id}")
-            await response_utils.send_dm_message(user, achievement)
+            _, created = await UserAchievement.get_or_create(user=db_user, achievement=achievement)
+            if created:
+                logger.info(f"Granted achievement '{achievement.name}' to user {user.id}")
+                await response_utils.send_dm_message(user, achievement)
 
         except DoesNotExist:
             logger.warning(f"Attempted to grant a non-existent achievement with id: '{achievement_id}'")
@@ -29,8 +30,9 @@ class AchievementHandlerService:
     @staticmethod
     async def _get_user_achievements_ids(user_id: int) -> Set[str]:
         db_user, _ = await UserModel.get_or_create(user_id=user_id)
-        achievements = await db_user.achievements.all().values_list("achievement_id", flat=True)
-        return set(achievements)
+        # Змінено: отримуємо досягнення через UserAchievement
+        achievements = await UserAchievement.filter(user=db_user).prefetch_related("achievement")
+        return {ua.achievement.achievement_id for ua in achievements}
 
     async def handle_cooldown_achievement(self, user: User):
         achievements = await self._get_user_achievements_ids(user.id)
@@ -170,7 +172,7 @@ class AchievementHandlerService:
         if "first_purchase" not in achievements:
             await self._grant_achievement(user, "first_purchase")
 
-        card_count = await db_user.inventory.filter(item_type=ItemType.CARD).count()
+        card_count = await UserItem.filter(user=db_user, item__item_type=ItemType.CARD).count()
         if card_count >= 5 and "card_collector" not in achievements:
             await self._grant_achievement(user, "card_collector")
 
@@ -179,11 +181,8 @@ class AchievementHandlerService:
                 item_type=ItemType.CARD, price__gt=0
             ).values_list("item_id", flat=True)
         )
-        user_card_ids = set(
-            await db_user.inventory.filter(
-                item_type=ItemType.CARD
-            ).values_list("item_id", flat=True)
-        )
+        user_cards = await UserItem.filter(user=db_user, item__item_type=ItemType.CARD).prefetch_related("item")
+        user_card_ids = {uc.item.item_id for uc in user_cards}
 
         if purchasable_card_ids.issubset(user_card_ids) and "access_master" not in achievements:
             await self._grant_achievement(user, "access_master")
