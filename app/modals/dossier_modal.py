@@ -3,6 +3,7 @@ import asyncio
 from disnake import ui, User, TextInputStyle, ModalInteraction
 
 from app.core.models import User as UserModel
+from app.localization import t
 from app.services import achievement_handler_service
 from app.utils.response_utils import response_utils
 
@@ -13,7 +14,7 @@ class DossierModal(ui.Modal):
 
         components = [
             ui.TextInput(
-                label="Інформація",
+                label=t("modals.dossier.info_label"),
                 placeholder=self.dossier,
                 custom_id="dossier",
                 style=TextInputStyle.paragraph,
@@ -24,7 +25,7 @@ class DossierModal(ui.Modal):
         ]
 
         super().__init__(
-            title=f"Досьє співробітника {user.display_name}",
+            title=t("modals.dossier.title", user_name=user.display_name),
             custom_id="dossierModal",
             components=components,
         )
@@ -41,6 +42,6 @@ class DossierModal(ui.Modal):
         self.db_user.dossier = new_dossier
         await self.db_user.save()
 
-        await response_utils.send_ephemeral_response(interaction, "Досьє оновлено!")
+        await response_utils.send_ephemeral_response(interaction, t("responses.dossier_updated"))
 
         asyncio.create_task(achievement_handler_service.handle_dossier_achievements(interaction.user))

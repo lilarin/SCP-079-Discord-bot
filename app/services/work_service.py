@@ -4,6 +4,7 @@ from typing import Tuple
 
 from app.config import config
 from app.core.models import User
+from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 
 
@@ -25,11 +26,11 @@ class WorkService:
 
         reward = random.randint(*config.legal_work_reward_range)
 
-        await economy_management_service.update_user_balance(user, reward, "Виконнаня легальної роботи")
+        await economy_management_service.update_user_balance(user, reward, t("economy.reasons.legal_work"))
 
-        asyncio.create_task(achievement_handler_service.handle_work_achievements(
-            user, is_risky=False, is_success=True
-        ))
+        asyncio.create_task(
+            achievement_handler_service.handle_work_achievements(user, is_risky=False, is_success=True)
+        )
 
         return prompt, reward
 
@@ -43,17 +44,21 @@ class WorkService:
         if is_success:
             prompt = random.choice(non_legal_prompts.success)
             amount = random.randint(*config.non_legal_work_reward_range)
-            await economy_management_service.update_user_balance(user, amount, "Вдале виконання ризикованої роботи")
-            asyncio.create_task(achievement_handler_service.handle_work_achievements(
-                user, is_risky=True, is_success=True
-            ))
+            await economy_management_service.update_user_balance(
+                user, amount, t("economy.reasons.risky_work_success")
+            )
+            asyncio.create_task(
+                achievement_handler_service.handle_work_achievements(user, is_risky=True, is_success=True)
+            )
         else:
             prompt = random.choice(non_legal_prompts.failure)
             amount = random.randint(*config.non_legal_work_penalty_range)
-            await economy_management_service.update_user_balance(user, -amount, "Невдале виконання ризикованої роботи")
-            asyncio.create_task(achievement_handler_service.handle_work_achievements(
-                user, is_risky=True, is_success=False
-            ))
+            await economy_management_service.update_user_balance(
+                user, -amount, t("economy.reasons.risky_work_failure")
+            )
+            asyncio.create_task(
+                achievement_handler_service.handle_work_achievements(user, is_risky=True, is_success=False)
+            )
 
         return prompt, amount, is_success
 

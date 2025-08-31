@@ -5,6 +5,7 @@ from disnake import ui, ApplicationCommandInteraction, MessageInteraction
 
 from app.config import config
 from app.core.schemas import CoguardState
+from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -16,23 +17,18 @@ class CoguardService:
         state_buttons = components[0].children
 
         bet_label = state_buttons[0].label
-        bet = int(bet_label.split(':')[1].strip().split(' ')[0])
+        bet = int(bet_label.split(":")[1].strip().split(" ")[0])
 
         multiplier_label = state_buttons[1].label
-        multiplier = float(multiplier_label.split('x')[1])
+        multiplier = float(multiplier_label.split("x")[1])
 
         number_label = state_buttons[2].label
-        current_number = int(number_label.split(':')[1].strip())
+        current_number = int(number_label.split(":")[1].strip())
 
         streak_label = state_buttons[3].label
-        win_streak = int(streak_label.split(':')[1].strip())
+        win_streak = int(streak_label.split(":")[1].strip())
 
-        return CoguardState(
-            bet=bet,
-            multiplier=multiplier,
-            current_number=current_number,
-            win_streak=win_streak
-        )
+        return CoguardState(bet=bet, multiplier=multiplier, current_number=current_number, win_streak=win_streak)
 
     @staticmethod
     async def start_game(interaction: ApplicationCommandInteraction, bet: int):
@@ -63,9 +59,9 @@ class CoguardService:
         if not is_correct:
             loss_embed = await ui_utils.format_coguard_loss_embed(state.bet, state.win_streak)
             await response_utils.edit_response(interaction, embed=loss_embed)
-            asyncio.create_task(achievement_handler_service.handle_coguard_achievements(
-                interaction.user, state, is_loss=True
-            ))
+            asyncio.create_task(
+                achievement_handler_service.handle_coguard_achievements(interaction.user, state, is_loss=True)
+            )
             return
 
         new_win_streak = state.win_streak + 1
@@ -84,10 +80,10 @@ class CoguardService:
 
     async def cash_out(self, interaction: MessageInteraction):
         winnings_label = interaction.component.label
-        winnings = int(winnings_label.split(' ')[1])
+        winnings = int(winnings_label.split(" ")[1])
 
         await economy_management_service.update_user_balance(
-            interaction.user, winnings, f"Перемога у грі `когнітивна-стійкість`"
+            interaction.user, winnings, t("economy.reasons.game_win_coguard")
         )
 
         state = self._parse_state_from_components(interaction.message.components)
@@ -95,13 +91,13 @@ class CoguardService:
             bet=state.bet,
             winnings=winnings,
             multiplier=state.multiplier,
-            win_streak=state.win_streak
+            win_streak=state.win_streak,
         )
         await response_utils.edit_response(interaction, embed=win_embed)
 
-        asyncio.create_task(achievement_handler_service.handle_coguard_achievements(
-            interaction.user, state, is_loss=False
-        ))
+        asyncio.create_task(
+            achievement_handler_service.handle_coguard_achievements(interaction.user, state, is_loss=False)
+        )
 
 
 coguard_service = CoguardService()

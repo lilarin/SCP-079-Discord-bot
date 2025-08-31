@@ -2,6 +2,7 @@ from tortoise import fields
 from tortoise.models import Model
 
 from app.core.enums import ItemType
+from app.localization import t
 
 
 class User(Model):
@@ -28,13 +29,13 @@ class User(Model):
 
     async def set_balance(self, amount: int):
         if amount < 0:
-            raise ValueError("Баланс не може бути від'ємним")
+            raise ValueError(t("errors.negative_balance"))
         self.balance = amount
         await self.save()
 
     async def set_reputation(self, amount: int):
         if amount < 0:
-            raise ValueError("Репутація не може бути від'ємною")
+            raise ValueError(t("errors.negative_reputation"))
         self.reputation = amount
         await self.save()
 
@@ -57,7 +58,6 @@ class Item(Model):
     item_type = fields.CharEnumField(ItemType)
     quantity = fields.IntField(default=0)
 
-    # Зворотній зв'язок для доступу до користувачів
     owners: fields.ReverseRelation["UserItem"]
 
     class Meta:
@@ -78,7 +78,6 @@ class Achievement(Model):
     description = fields.TextField()
     icon = fields.CharField(max_length=10, default="🏆")
 
-    # Зворотній зв'язок для доступу до користувачів
     users: fields.ReverseRelation["UserAchievement"]
 
     class Meta:

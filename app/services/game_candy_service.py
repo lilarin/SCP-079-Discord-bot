@@ -5,6 +5,7 @@ from typing import Tuple
 from disnake import ui, ApplicationCommandInteraction, MessageInteraction
 
 from app.config import config
+from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -16,10 +17,10 @@ class CandyGameService:
         state_buttons = components[0].children
 
         bet_label = state_buttons[0].label
-        bet = int(bet_label.split(':')[1].strip().split(' ')[0])
+        bet = int(bet_label.split(":")[1].strip().split(" ")[0])
 
         state_id = state_buttons[2].custom_id
-        parts = state_id.split('_')
+        parts = state_id.split("_")
         player_taken = int(parts[2])
         pre_taken = int(parts[3])
 
@@ -39,7 +40,7 @@ class CandyGameService:
             player_taken_candies=player_taken_candies,
             is_first_turn=True,
             potential_win=potential_win,
-            current_multiplier=current_multiplier
+            current_multiplier=current_multiplier,
         )
         await response_utils.send_response(interaction, embed=embed, components=components)
 
@@ -52,9 +53,11 @@ class CandyGameService:
         if total_candies_for_loss >= 3:
             loss_embed = await ui_utils.format_candy_loss_embed(bet=bet)
             await response_utils.edit_response(interaction, embed=loss_embed, components=[])
-            asyncio.create_task(achievement_handler_service.handle_candy_achievements(
-                interaction.user, player_taken, is_loss=True
-            ))
+            asyncio.create_task(
+                achievement_handler_service.handle_candy_achievements(
+                    interaction.user, player_taken, is_loss=True
+                )
+            )
             return
 
         current_multiplier = config.candy_win_multipliers.get(player_taken, 1.0)
@@ -66,7 +69,7 @@ class CandyGameService:
             player_taken_candies=player_taken,
             potential_win=potential_win,
             current_multiplier=current_multiplier,
-            swap_colors=bool(player_taken == 2)
+            swap_colors=bool(player_taken == 2),
         )
         await response_utils.edit_response(interaction, embed=embed, components=components)
 
@@ -77,15 +80,15 @@ class CandyGameService:
         winnings = int(bet * multiplier)
 
         await economy_management_service.update_user_balance(
-            interaction.user, winnings, f"Перемога у грі `цукерки`"
+            interaction.user, winnings, t("economy.reasons.game_win_candy")
         )
 
         win_embed = await ui_utils.format_candy_win_embed(winnings=winnings)
         await response_utils.edit_response(interaction, embed=win_embed)
 
-        asyncio.create_task(achievement_handler_service.handle_candy_achievements(
-            interaction.user, player_taken, is_loss=False
-        ))
+        asyncio.create_task(
+            achievement_handler_service.handle_candy_achievements(interaction.user, player_taken, is_loss=False)
+        )
 
 
 candy_game_service = CandyGameService()

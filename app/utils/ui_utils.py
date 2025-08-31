@@ -9,22 +9,28 @@ from app.config import config
 from app.core.enums import Color
 from app.core.models import SCPObject, Item, Achievement
 from app.core.schemas import SCP173GameState, HoleGameState
+from app.localization import t
 
 
 class UIUtils:
     @staticmethod
     async def format_leaderboard_embed(
-            bot: InteractionBot, guild: Guild,
-            top_users: List[Tuple[int, int]], top_criteria: str,
-            hint: str, symbol: str, color: int, offset: int = 0
+            bot: InteractionBot,
+            guild: Guild,
+            top_users: List[Tuple[int, int]],
+            top_criteria: str,
+            hint: str,
+            symbol: str,
+            color: int,
+            offset: int = 0
     ) -> Embed:
         embed = Embed(
-            title=f"Топ користувачів {top_criteria}",
+            title=t("ui.leaderboard.title", top_criteria=top_criteria),
             color=color,
         )
 
         if not top_users:
-            embed.description = "Поки тут нікого немає, це твій шанс!"
+            embed.description = t("ui.leaderboard.no_users")
             embed.description += f"\n-# {hint}"
             return embed
 
@@ -53,7 +59,7 @@ class UIUtils:
         if description_lines:
             embed.description = "\n".join(description_lines)
         else:
-            embed.description = "Не вдалося отримати інформацію про користувачів"
+            embed.description = t("ui.leaderboard.fetch_error")
 
         embed.description += f"\n-# {hint}"
         return embed
@@ -98,7 +104,7 @@ class UIUtils:
                 label="🡺",
                 custom_id=f"last_page_{criteria}_button",
                 disabled=disable_last_page_button,
-            )
+            ),
         ]
 
         return ActionRow(*buttons) if not all(button.disabled for button in buttons) else None
@@ -106,7 +112,7 @@ class UIUtils:
     @staticmethod
     async def format_new_user_embed(user_mention: str, card: File, color: int) -> Embed:
         embed = Embed(
-            description=f"Вітаємо {user_mention} у складі співробітників фонду!",
+            description=t("ui.new_user_welcome", user_mention=user_mention),
             color=color
         )
         embed.set_image(file=card)
@@ -122,37 +128,33 @@ class UIUtils:
             role: Optional[Role] = None,
     ) -> Embed:
         embed = Embed(
-            title="Інформація про співробітника фонду",
+            title=t("ui.user_card.title"),
             color=color
         )
         embed.set_image(file=card)
 
         if role:
-            embed.add_field(name="Посада:", value=role.mention, inline=False)
+            embed.add_field(name=t("ui.user_card.role_field"), value=role.mention, inline=False)
 
         if achievements_count > 0:
             embed.add_field(
-                name="Досягнення:",
+                name=t("ui.user_card.achievements_field"),
                 value=f"{achievements_count} / {len(config.achievements)}",
-                inline=False
+                inline=False,
             )
 
         if dossier:
-            embed.add_field(name="Досьє:", value=dossier, inline=False)
+            embed.add_field(name=t("ui.user_card.dossier_field"), value=dossier, inline=False)
 
         return embed
 
     @staticmethod
-    async def format_article_embed(
-            article: SCPObject, image_file: File
-    ) -> Tuple[Embed, ActionRow]:
-        embed = Embed(
-            color=int(config.scp_class_config[article.object_class][0].lstrip('#'), 16)
-        )
+    async def format_article_embed(article: SCPObject, image_file: File) -> Tuple[Embed, ActionRow]:
+        embed = Embed(color=int(config.scp_class_config[article.object_class][0].lstrip("#"), 16))
         name_confirm = Button(
             style=ButtonStyle.link,
             url=article.link,
-            label="Переглянути статтю",
+            label=t("ui.article.view_button"),
             emoji=config.scp_class_config[article.object_class][1],
         )
 
@@ -162,16 +164,16 @@ class UIUtils:
     @staticmethod
     async def format_balance_embed(user_avatar_url: User, balance: int, reputation: int, position: int) -> Embed:
         embed = Embed(
-            title="Баланс репутації користувача",
+            title=t("ui.balance.title"),
             description="",
             color=Color.WHITE.value
         )
 
-        embed.description += f"Поточний баланс – {balance} 💠 "
-        embed.description += f"\n\n-# Загальна кількість заробленої репутації – {reputation} 🔰"
+        embed.description += t("ui.balance.current_balance", balance=balance)
+        embed.description += t("ui.balance.total_reputation", reputation=reputation)
 
         if position:
-            embed.description += f"\n-# **#{position} у рейтингу серед співробітників**"
+            embed.description += t("ui.balance.rank_position", position=position)
 
         embed.set_thumbnail(url=user_avatar_url)
 
@@ -180,27 +182,26 @@ class UIUtils:
     @staticmethod
     async def format_shop_embed(items: List[Item], offset: int = 0) -> Embed:
         embed = Embed(
-            title="Магазин",
+            title=t("ui.shop.title"),
             color=Color.WHITE.value
         )
 
         if not items:
-            embed.description = "У магазині наразі немає товарів"
+            embed.description = t("ui.shop.no_items")
             return embed
 
         description_lines = []
         for i, item in enumerate(items, 1):
             item_details = [
                 f"{i + offset}. **{item.name}**",
-                f"Ціна: **{item.price}** 💠",
-                f"Кількість: **{item.quantity}**",
+                t("ui.shop.item_price", price=item.price),
+                t("ui.shop.item_quantity", quantity=item.quantity),
                 f"-# **{item.description}**",
             ]
 
             card_config = config.cards.get(item.item_id)
 
             if card_config and card_config.required_achievements:
-
                 required_ach = []
                 for ach_id in card_config.required_achievements:
                     ach_config = config.achievements.get(ach_id)
@@ -209,11 +210,9 @@ class UIUtils:
 
                 if required_ach:
                     requirements_str = "\n-# * ".join(required_ach)
-                    item_details.append(f"-# Необхідні досягнення: \n-# * {requirements_str}")
+                    item_details.append(f'{t("ui.shop.required_achievements")} \n-# * {requirements_str}')
 
-            item_details.extend([
-                f"-# ID: `{item.item_id}`"
-            ])
+            item_details.extend([t("ui.shop.item_id", item_id=item.item_id)])
             description_lines.append("\n".join(item_details))
 
         embed.description = "\n\n".join(description_lines)
@@ -223,19 +222,19 @@ class UIUtils:
     @staticmethod
     async def format_inventory_embed(user: User, items: List[Item], offset: int = 0) -> Embed:
         embed = Embed(
-            title="Інвентар",
+            title=t("ui.inventory.title"),
             color=Color.WHITE.value
         )
         embed.set_thumbnail(url=user.display_avatar.url)
 
         if not items:
-            embed.description = "Ваш інвентар порожній"
+            embed.description = t("ui.inventory.empty")
             return embed
 
         description = [
             f"{offset + i + 1}. **{item.name}**\n"
             f"-# **{item.description}**\n"
-            f"-# ID: `{item.item_id}`"
+            f'{t("ui.inventory.item_id", item_id=item.item_id)}'
             for i, item in enumerate(items)
         ]
 
@@ -245,20 +244,20 @@ class UIUtils:
     @staticmethod
     async def format_legal_work_embed(prompt: str, reward: int) -> Embed:
         return Embed(
-            title="Результат роботи",
-            description=f"{prompt}\n\n-# **Зароблено:** {reward} 💠",
+            title=t("ui.work.legal_title"),
+            description=f'{prompt}\n\n-# {t("ui.work.earned", amount=reward)}',
             color=Color.GREEN.value
         )
 
     @staticmethod
     async def format_non_legal_work_embed(prompt: str, amount: int, is_success: bool) -> Embed:
         if is_success:
-            title = "Результат ризикованої роботи"
-            description = f"{prompt}\n\n-# **Зароблено:** {amount} 💠"
+            title = t("ui.work.risky_title")
+            description = f'{prompt}\n\n-# {t("ui.work.earned", amount=amount)}'
             color = Color.GREEN.value
         else:
-            title = "Результат ризикованої роботи"
-            description = f"{prompt}\n\n-# **Втрачено:** {amount} 💠"
+            title = t("ui.work.risky_title")
+            description = f'{prompt}\n\n-# {t("ui.work.lost", amount=amount)}'
             color = Color.RED.value
 
         embed = Embed(
@@ -273,11 +272,8 @@ class UIUtils:
             bet: int, multiplier: float, potential_win: int, loss_chance: float, is_first_turn: bool
     ) -> Tuple[Embed, List[ActionRow]]:
         embed = Embed(
-            title="Процес Кристалізації",
-            description=(
-                "Ваша ставка кристалізується\n"
-                "Збільшуйте множник, але пам'ятайте про ризик!"
-            ),
+            title=t("ui.crystallize.title"),
+            description=t("ui.crystallize.description"),
             color=Color.LIGHT_PINK.value
         )
         embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
@@ -285,31 +281,33 @@ class UIUtils:
         buttons = [
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Ставка: {bet} 💠",
+                label=t("ui.crystallize.bet_button", bet=bet),
                 custom_id="display_bet",
                 disabled=True
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Множник: x{multiplier:.2f}",
+                label=t("ui.crystallize.multiplier_button", multiplier=f"{multiplier:.2f}"),
                 custom_id="display_multiplier",
-                disabled=True),
+                disabled=True
+            ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Шанс провалу: {loss_chance:.1f}%",
+                label=t("ui.crystallize.loss_chance_button", loss_chance=f"{loss_chance:.1f}"),
                 custom_id="display_loss",
-                disabled=True)
+                disabled=True
+            )
         ]
         state_row = ActionRow(*buttons)
 
         continue_button = Button(
             style=ButtonStyle.primary,
-            label="Кристалізувати далі",
+            label=t("ui.crystallize.continue_button"),
             custom_id="game_crystallize_continue"
         )
         stop_button = Button(
             style=ButtonStyle.green,
-            label=f"Забрати {potential_win} 💠",
+            label=t("ui.crystallize.cash_out_button", potential_win=potential_win),
             custom_id="game_crystallize_stop",
             disabled=is_first_turn
         )
@@ -320,12 +318,9 @@ class UIUtils:
     @staticmethod
     async def format_crystallize_win_embed(bet: int, winnings: int, multiplier: float) -> Embed:
         embed = Embed(
-            title="Процес зупинено!",
-            description=(
-                f"Ви вчасно зупинили кристалізацію та зафіксували свій прибуток!\n\n"
-                f"-# **Ваша ставка:** {bet} 💠\n"
-                f"-# **Підсумковий множник:** x{multiplier:.2f}\n"
-                f"-# **Виграш:** {winnings} 💠"
+            title=t("ui.crystallize.win_title"),
+            description=t(
+                "ui.crystallize.win_description", bet=bet, multiplier=f"{multiplier:.2f}", winnings=winnings
             ),
             color=Color.GREEN.value
         )
@@ -335,11 +330,8 @@ class UIUtils:
     @staticmethod
     async def format_crystallize_loss_embed(bet: int) -> Embed:
         embed = Embed(
-            title="Повна кристалізація!",
-            description=(
-                f"Жадібність взяла гору\nКристал повністю поглинув вашу ставку\n\n"
-                f"-# **Втрачено:** {bet} 💠"
-            ),
+            title=t("ui.crystallize.loss_title"),
+            description=t("ui.crystallize.loss_description", bet=bet),
             color=Color.RED.value
         )
         embed.set_thumbnail(url="https://imgur.com/DOAsTfy.png")
@@ -348,11 +340,8 @@ class UIUtils:
     @staticmethod
     async def format_coin_flip_win_embed(bet: int) -> Embed:
         embed = Embed(
-            title="Перемога!",
-            description=(
-                f"Вам пощастило, продовжимо?\n\n"
-                f"-# **Виграш:** {bet} 💠"
-            ),
+            title=t("ui.coin_flip.win_title"),
+            description=t("ui.coin_flip.win_description", bet=bet),
             color=Color.GREEN.value
         )
         embed.set_thumbnail(url="https://imgur.com/n4znTOU.png")
@@ -361,11 +350,8 @@ class UIUtils:
     @staticmethod
     async def format_coin_flip_loss_embed(bet: int) -> Embed:
         embed = Embed(
-            title="Програш!",
-            description=(
-                f"Не пощастило, спробуйте ще\n\n"
-                f"-# **Втрачено:** {bet} 💠"
-            ),
+            title=t("ui.coin_flip.loss_title"),
+            description=t("ui.coin_flip.loss_description", bet=bet),
             color=Color.RED.value
         )
         embed.set_thumbnail(url="https://imgur.com/n4znTOU.png")
@@ -373,13 +359,17 @@ class UIUtils:
 
     @staticmethod
     async def format_candy_game_embed(
-            bet: int, pre_taken_candies: int, player_taken_candies: int,
-            potential_win: int, current_multiplier: float,
-            swap_colors: bool = False, is_first_turn: bool = False
+            bet: int,
+            pre_taken_candies: int,
+            player_taken_candies: int,
+            potential_win: int,
+            current_multiplier: float,
+            swap_colors: bool = False,
+            is_first_turn: bool = False
     ) -> Tuple[Embed, List[ActionRow]]:
         embed = Embed(
-            title='SCP-330 – "Візьми тільки дві"',
-            description="Ви не можете згадати, чи брали цукерки до цього...",
+            title=t("ui.candy_game.title"),
+            description=t("ui.candy_game.description"),
             color=Color.ORANGE.value
         )
         embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
@@ -387,22 +377,22 @@ class UIUtils:
         state_buttons = [
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Ставка: {bet} 💠",
+                label=t("ui.candy_game.bet_button", bet=bet),
                 custom_id="candy_display_bet",
                 disabled=True
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Множник: x{current_multiplier:.1f}",
+                label=t("ui.candy_game.multiplier_button", multiplier=f"{current_multiplier:.1f}"),
                 custom_id="candy_display_multiplier",
                 disabled=True
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Ви взяли: {player_taken_candies}",
+                label=t("ui.candy_game.taken_button", count=player_taken_candies),
                 custom_id=f"candy_state_{player_taken_candies}_{pre_taken_candies}",
                 disabled=True
-            ),
+            )
         ]
         state_row = ActionRow(*state_buttons)
 
@@ -414,12 +404,12 @@ class UIUtils:
 
         take_button = Button(
             style=take_button_color,
-            label="Взяти цукерку",
+            label=t("ui.candy_game.take_button"),
             custom_id="game_candy_take"
         )
         leave_button = Button(
             style=leave_button_color,
-            label=f"Забрати {potential_win} 💠",
+            label=t("ui.candy_game.leave_button", potential_win=potential_win),
             custom_id="game_candy_leave",
             disabled=is_first_turn
         )
@@ -430,11 +420,8 @@ class UIUtils:
     @staticmethod
     async def format_candy_win_embed(winnings: int) -> Embed:
         embed = Embed(
-            title="Ви вчасно зупинились!",
-            description=(
-                f"Ви вирішили не випробовувати долю і пішли\n\n"
-                f"-# **Виграш:** {winnings} 💠"
-            ),
+            title=t("ui.candy_game.win_title"),
+            description=t("ui.candy_game.win_description", winnings=winnings),
             color=Color.GREEN.value
         )
         embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
@@ -443,11 +430,8 @@ class UIUtils:
     @staticmethod
     async def format_candy_loss_embed(bet: int) -> Embed:
         embed = Embed(
-            title="Жадібність вас погубила!",
-            description=(
-                f"Ви взяли забагато цукерок і поплатились за це\n\n"
-                f"-# **Втрачено:** {bet} 💠"
-            ),
+            title=t("ui.candy_game.loss_title"),
+            description=t("ui.candy_game.loss_description", bet=bet),
             color=Color.RED.value
         )
         embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
@@ -455,56 +439,62 @@ class UIUtils:
 
     @staticmethod
     async def format_coguard_embed(
-            bet: int, multiplier: float, potential_win: int, current_number: int,
-            win_streak: int, is_first_turn: bool = False
+            bet: int,
+            multiplier: float,
+            potential_win: int,
+            current_number: int,
+            win_streak: int,
+            is_first_turn: bool = False
     ) -> Tuple[Embed, List[ActionRow]]:
         embed = Embed(
-            title="Протокол когнітивного тесту D-72",
-            description=f"**Поточне значення:** `{current_number}`\nЧи буде наступне значення більше чи менше?",
+            title=t("ui.coguard_game.title"),
+            description=t("ui.coguard_game.description", current_number=current_number),
             color=Color.BLUE.value
         )
         embed.set_thumbnail(url="https://imgur.com/pAW9s4O.png")
         state_buttons = [
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Ставка: {bet} 💠",
+                label=t("ui.coguard_game.bet_button", bet=bet),
                 custom_id="coguard_display_bet",
                 disabled=True
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Множник: x{multiplier:.2f}",
+                label=t("ui.coguard_game.multiplier_button", multiplier=f"{multiplier:.2f}"),
                 custom_id="coguard_display_multiplier",
-                disabled=True),
+                disabled=True
+            ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Число: {current_number}",
+                label=t("ui.coguard_game.number_button", number=current_number),
                 custom_id="coguard_display_number",
                 disabled=True
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Правильних відповідей: {win_streak}",
+                label=t("ui.coguard_game.streak_button", streak=win_streak),
                 custom_id="coguard_display_streak",
-                disabled=True)
+                disabled=True
+            )
         ]
         state_row = ActionRow(*state_buttons)
 
         higher_button = Button(
             style=ButtonStyle.primary,
-            label="Більше",
+            label=t("ui.coguard_game.higher_button"),
             emoji="⬆️",
             custom_id="game_coguard_higher"
         )
         lower_button = Button(
             style=ButtonStyle.primary,
-            label="Менше",
+            label=t("ui.coguard_game.lower_button"),
             emoji="⬇️",
             custom_id="game_coguard_lower"
         )
         cashout_button = Button(
             style=ButtonStyle.green,
-            label=f"Забрати {potential_win} 💠",
+            label=t("ui.coguard_game.cash_out_button", potential_win=potential_win),
             custom_id="game_coguard_cashout",
             disabled=is_first_turn
         )
@@ -515,13 +505,13 @@ class UIUtils:
     @staticmethod
     async def format_coguard_win_embed(bet: int, winnings: int, multiplier: float, win_streak: int) -> Embed:
         embed = Embed(
-            title="Тест успішно пройдено!",
-            description=(
-                f"Ви вчасно зупинились та підтвердили свою когнітивну стабільність\n\n"
-                f"-# **Ваша ставка:** {bet} 💠\n"
-                f"-# **Серія правильних відповідей:** {win_streak}\n"
-                f"-# **Підсумковий множник:** x{multiplier:.2f}\n"
-                f"-# **Виграш:** {winnings} 💠"
+            title=t("ui.coguard_game.win_title"),
+            description=t(
+                "ui.coguard_game.win_description",
+                bet=bet,
+                win_streak=win_streak,
+                multiplier=f"{multiplier:.2f}",
+                winnings=winnings
             ),
             color=Color.GREEN.value
         )
@@ -531,12 +521,8 @@ class UIUtils:
     @staticmethod
     async def format_coguard_loss_embed(bet: int, win_streak: int) -> Embed:
         embed = Embed(
-            title="Когнітивний збій!",
-            description=(
-                f"Ваша інтуїція вас підвела, тест провалено\n\n"
-                f"-# **Серія    правильних відповідей:** {win_streak}\n"
-                f"-# **Втрачено:** {bet} 💠"
-            ),
+            title=t("ui.coguard_game.loss_title"),
+            description=t("ui.coguard_game.loss_description", win_streak=win_streak, bet=bet),
             color=Color.RED.value
         )
         embed.set_thumbnail(url="https://imgur.com/pAW9s4O.png")
@@ -545,28 +531,21 @@ class UIUtils:
     @staticmethod
     async def format_scp173_lobby_embed(game_state: SCP173GameState) -> Embed:
         embed = Embed(
-            title="Гра в піжмурки з SCP-173",
-            description="**Очікування гравців...**\n\nХто кліпне очима - помре",
+            title=t("ui.staring_game.title"),
+            description=t("ui.staring_game.lobby_description"),
             color=Color.WHITE.value
         )
         embed.set_thumbnail(url="https://imgur.com/PJPoIes.png")
 
         player_list = "\n".join(
-            [
-                f"{i + 1}. {player.mention}"
-                for i, player in enumerate(list(game_state.players))
-            ]
+            [f"{i + 1}. {player.mention}" for i, player in enumerate(list(game_state.players))]
         )
         embed.add_field(
-            name="Учасники:",
-            value=player_list if player_list else "Поки нікого немає...", inline=False
+            name=t("ui.staring_game.players_field"),
+            value=player_list if player_list else t("ui.staring_game.no_players"),
+            inline=False
         )
-        embed.set_footer(
-            text=(
-                f"Гра розпочнеться автоматично через "
-                f"{config.staring_lobby_duration} секунд, або коли лобі заповниться"
-            )
-        )
+        embed.set_footer(text=t("ui.staring_game.lobby_footer", duration=config.staring_lobby_duration))
         return embed
 
     async def init_scp173_lobby_components(self, game_state: SCP173GameState) -> List[ActionRow]:
@@ -576,13 +555,13 @@ class UIUtils:
         action_row = ActionRow(
             Button(
                 style=ButtonStyle.green,
-                label="Приєднатися",
+                label=t("ui.staring_game.join_button"),
                 custom_id="game_scp173_join",
                 disabled=is_full
             ),
             Button(
                 style=ButtonStyle.primary,
-                label="Розпочати гру",
+                label=t("ui.staring_game.start_button"),
                 custom_id="game_scp173_start"
             )
         )
@@ -590,37 +569,42 @@ class UIUtils:
         return [state_row[0], action_row]
 
     @staticmethod
-    async def format_scp173_start_game_embed(game_state: SCP173GameState,
-                                             round_logs: Optional[List[dict]] = None) -> Embed:
+    async def format_scp173_start_game_embed(
+            game_state: SCP173GameState, round_logs: Optional[List[dict]] = None
+    ) -> Embed:
         player_list = "\n".join(
-            [
-                f"{i + 1}. {player.mention}"
-                for i, player in enumerate(list(game_state.players))
-            ]
+            [f"{i + 1}. {player.mention}" for i, player in enumerate(list(game_state.players))]
         )
         embed = Embed(
-            title="Гра почалася, не кліпайте очима!",
-            description="Світло тьмяніє...",
+            title=t("ui.staring_game.game_start_title"),
+            description=t("ui.staring_game.game_start_description"),
             color=Color.BLACK.value
         )
         embed.set_thumbnail(url="https://imgur.com/fBmiMNB.png")
-        embed.add_field(name="Учасники:", value=player_list, inline=False)
+        embed.add_field(name=t("ui.staring_game.players_field"), value=player_list, inline=False)
 
         if round_logs:
             for round_field in round_logs:
                 field_value = round_field.get("value") or "..."
-                embed.add_field(name=round_field.get("name"), value=field_value,
-                                inline=round_field.get("inline", False))
+                embed.add_field(
+                    name=round_field.get("name"),
+                    value=field_value,
+                    inline=round_field.get("inline", False),
+                )
 
         return embed
 
     @staticmethod
     async def init_scp173_game_components(game_state: SCP173GameState) -> List[ActionRow]:
-        mode_text = "До останнього" if game_state.mode == "last_man_standing" else "Звичайний"
+        mode_text = (
+            t("ui.staring_game.mode_lms")
+            if game_state.mode == "last_man_standing"
+            else t("ui.staring_game.mode_normal")
+        )
         state_row = ActionRow(
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Ставка: {game_state.bet} 💠",
+                label=t("ui.staring_game.bet_button", bet=game_state.bet),
                 custom_id="game_scp173_bet_display",
                 disabled=True
             ),
@@ -632,7 +616,7 @@ class UIUtils:
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"Режим: {mode_text}",
+                label=t("ui.staring_game.mode_button", mode=mode_text),
                 custom_id="game_scp173_mode_display",
                 disabled=True
             )
@@ -642,11 +626,8 @@ class UIUtils:
     @staticmethod
     async def format_scp173_single_winner_embed(winner: User, pot: int) -> Embed:
         embed = Embed(
-            title="Єдиний виживший!",
-            description=(
-                f"{winner.mention} виходить з камери утримання неушкодженим\n\n"
-                f"-# **Виграш:** {pot} 💠"
-            ),
+            title=t("ui.staring_game.single_winner_title"),
+            description=t("ui.staring_game.single_winner_description", winner_mention=winner.mention, pot=pot),
             color=Color.GREEN.value
         )
         embed.set_thumbnail(url="https://imgur.com/PJPoIes.png")
@@ -656,11 +637,11 @@ class UIUtils:
     async def format_scp173_multiple_winners_embed(winners: List[User], winnings_per_player: int) -> Embed:
         winner_mentions = ", ".join([w.mention for w in winners])
         embed = Embed(
-            title="Переможці!",
-            description=(
-                f"Смерть вашого колеги дала вам шанс вижити\n\n"
-                f"**Вижили:** {winner_mentions}\n\n"
-                f"-# **Виграш кожного:** {winnings_per_player} 💠"
+            title=t("ui.staring_game.multi_winner_title"),
+            description=t(
+                "ui.staring_game.multi_winner_description",
+                winner_mentions=winner_mentions,
+                winnings=winnings_per_player
             ),
             color=Color.GREEN.value
         )
@@ -671,8 +652,8 @@ class UIUtils:
     @staticmethod
     async def format_scp173_no_survivors_embed() -> Embed:
         embed = Embed(
-            title="Ніхто не вижив",
-            description="Скульптура перемогла",
+            title=t("ui.staring_game.no_survivors_title"),
+            description=t("ui.staring_game.no_survivors_description"),
             color=Color.RED.value
         )
         embed.set_thumbnail(url="https://imgur.com/fBmiMNB.png")
@@ -681,18 +662,16 @@ class UIUtils:
     @staticmethod
     async def format_hole_lobby_embed(game_state: HoleGameState) -> Embed:
         embed = Embed(
-            title="Аномальна рулетка",
+            title=t("ui.hole_game.title"),
             color=Color.WHITE.value
         )
         embed.set_thumbnail(url="https://imgur.com/vHlPfOR.png")
 
-        embed.description = "Поточні ставки:\n"
+        embed.description = t("ui.hole_game.current_bets")
         for i, bet in enumerate(game_state.bets):
-            embed.description += (
-                f"{i + 1}. {bet.player.mention} **{bet.amount}** 💠 на `{bet.choice}`\n"
-            )
+            embed.description += f"{i + 1}. {bet.player.mention} **{bet.amount}** 💠 на `{bet.choice}`\n"
 
-        embed.set_footer(text=f"Гра розпочнеться автоматично через {config.hole_game_duration} секунд")
+        embed.set_footer(text=t("ui.hole_game.lobby_footer", duration=config.hole_game_duration))
         return embed
 
     @staticmethod
@@ -700,7 +679,7 @@ class UIUtils:
             winning_item: str, winners: List[Tuple[User, int, str]]
     ) -> Embed:
         embed = Embed(
-            title="Діра повернула предмет",
+            title=t("ui.hole_game.result_title"),
             description=f"``{winning_item}``\n",
             color=Color.GREEN.value if winners else Color.RED.value
         )
@@ -709,12 +688,10 @@ class UIUtils:
         if winners:
             winner_lines = []
             for i, (player, payout) in enumerate(winners):
-                winner_lines.append(
-                    f"{i + 1}. {player.mention} виграв **{payout}** 💠"
-                )
-            embed.add_field(name="Переможці:", value="\n".join(winner_lines), inline=False)
+                winner_lines.append(f"{i + 1}. {player.mention} виграв **{payout}** 💠")
+            embed.add_field(name=t("ui.hole_game.winners_field"), value="\n".join(winner_lines), inline=False)
         else:
-            embed.description += "\nДіра поглинула всі ставки"
+            embed.description += t("ui.hole_game.no_winners")
 
         return embed
 
@@ -723,13 +700,13 @@ class UIUtils:
             target_user: User | Member, achievements: List[Achievement], offset: int = 0
     ) -> Embed:
         embed = Embed(
-            title=f"Досягнення користувача {target_user.display_name}",
+            title=t("ui.achievements.user_title", user_name=target_user.display_name),
             color=Color.YELLOW.value
         )
         embed.set_thumbnail(url=target_user.display_avatar.url)
 
         if not achievements:
-            embed.description = "У цього користувача поки немає досягнень"
+            embed.description = t("ui.achievements.no_achievements")
         else:
             description_lines = [
                 f"{offset + i + 1}. **{ach.name}** {ach.icon} \n-# {ach.description}"
@@ -741,18 +718,16 @@ class UIUtils:
 
     @staticmethod
     async def format_achievement_stats_embed(
-            stats: List[Tuple[Achievement, int]],
-            total_players: int,
-            offset: int = 0
+            stats: List[Tuple[Achievement, int]], total_players: int, offset: int = 0
     ) -> Embed:
         embed = Embed(
-            title="Статистика досягнень на сервері",
+            title=t("ui.achievements.stats_title"),
             color=Color.ORANGE.value
         )
 
         description_lines = []
         for i, (ach, count) in enumerate(stats):
-            percentage = (count / total_players) * 100
+            percentage = (count / total_players) * 100 if total_players > 0 else 0
             description_lines.append(
                 f"{offset + i + 1}. **{ach.name}** {ach.icon} ({percentage:.1f}%)\n"
                 f"-# {ach.description}"
@@ -782,9 +757,9 @@ class UIUtils:
         if avatar_url:
             embed.set_thumbnail(url=avatar_url)
 
-        embed.add_field(name="Причина:", value=reason, inline=False)
-        embed.add_field(name="Сума", value=f"**{amount_str}** 💠", inline=True)
-        embed.add_field(name="Новий баланс", value=f"**{new_balance}** 💠", inline=True)
+        embed.add_field(name=t("ui.balance_log.reason_field"), value=reason, inline=False)
+        embed.add_field(name=t("ui.balance_log.amount_field"), value=f"**{amount_str}** 💠", inline=True)
+        embed.add_field(name=t("ui.balance_log.new_balance_field"), value=f"**{new_balance}** 💠", inline=True)
         embed.set_footer(text=f"#{log_id}")
 
         return embed
@@ -792,50 +767,40 @@ class UIUtils:
     @staticmethod
     async def format_games_info_embed() -> Embed:
         embed = Embed(
-            title="Інформація про міні-ігри",
-            description="Випробуйте свою вдачу та навички в аномальних іграх!",
+            title=t("ui.games_info.title"),
+            description=t("ui.games_info.description"),
             color=Color.WHITE.value
         )
         embed.set_image(url="https://imgur.com/dzOcnnY.png")
 
         embed.add_field(
-            name="Кристалізація",
-            value="Збільшуйте множник вашої ставки, але будьте обережні: з кожним кроком шанс провалу зростає. "
-                  "Заберіть виграш до того, як кристал поглине вашу ставку",
+            name=t("ui.games_info.crystallization_name"),
+            value=t("ui.games_info.crystallization_desc"),
             inline=False
         )
         embed.add_field(
-            name="Монетка",
-            value="Класична гра 50/50. Вгадайте сторону монети, щоб подвоїти вашу ставку",
+            name=t("ui.games_info.coin_name"),
+            value=t("ui.games_info.coin_desc"),
             inline=False
         )
         embed.add_field(
-            name="Цукерки",
-            value="Натхненно SCP-330. Ви не знаєте, чи брали ви вже цукерки до цього. "
-                  "Беріть ще, щоб збільшити виграш, але якщо загальна кількість перевищить дві, ви програєте",
+            name=t("ui.games_info.candy_name"),
+            value=t("ui.games_info.candy_desc"),
             inline=False
         )
         embed.add_field(
-            name="Когнітивна-стійкість",
-            value="Перевірте свою інтуїцію. Вгадайте, чи буде наступне випадкове число більше чи менше поточного. "
-                  "Чим довша серія правильних відповідей, тим більший ваш множник",
+            name=t("ui.games_info.coguard_name"),
+            value=t("ui.games_info.coguard_desc"),
             inline=False
         )
         embed.add_field(
-            name="Піжмурки",
-            value="Грайте проти інших з SCP-173. Не кліпайте, щоб вижити і забрати банк. "
-                  "З кожним раундом збільшується вірогідність смерті, а в останньому помирають всі \n"
-                  "Режими: \n"
-                  "* Звичайний – гра закінчується після першої смерті, вижилі ділять банк \n"
-                  "* До останнього – гра триває, доки не залишиться один переможець",
+            name=t("ui.games_info.staring_name"),
+            value=t("ui.games_info.staring_desc"),
             inline=False
         )
         embed.add_field(
-            name="Діра",
-            value="Аномальна рулетка. Зробіть ставку на предмет, який, на вашу думку, поверне діра\n"
-                  "Опції: \n"
-                  "* Ставка на предмет (x36) – ставка на конкретний предмет\n"
-                  "* Групові ставки (x2, x3) – ставка на певну групу предметів, як показано на зображенні",
+            name=t("ui.games_info.hole_name"),
+            value=t("ui.games_info.hole_desc"),
             inline=False
         )
 

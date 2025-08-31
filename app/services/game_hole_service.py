@@ -5,6 +5,7 @@ from disnake import ApplicationCommandInteraction, TextChannel
 
 from app.config import config
 from app.core.schemas import HoleGameState, HolePlayerBet
+from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -17,10 +18,7 @@ class HoleGameService:
     @staticmethod
     async def item_autocomplete(interaction: ApplicationCommandInteraction, user_input: str) -> list[str]:
         user_input = user_input.lower()
-        return [
-           name for name in config.hole_items.values()
-           if user_input in name.lower()
-       ][:25]
+        return [name for name in config.hole_items.values() if user_input in name.lower()][:25]
 
     def is_game_active(self, channel_id: int) -> bool:
         return channel_id in self.games
@@ -33,20 +31,20 @@ class HoleGameService:
 
         if any(p_bet.player.id == player.id for p_bet in game_state.bets):
             await economy_management_service.update_user_balance(
-                player, bet, "Повернення повторної ставки у активній грі `діра`"
+                player, bet, t("economy.reasons.hole_game_bet_refund")
             )
             await response_utils.send_response(
-                interaction, "Ви вже зробили ставку в активній гру", delete_after=5
+                interaction, t("responses.games.hole.already_bet"), delete_after=10
             )
             return
 
         await response_utils.send_response(
-            interaction, message=f"{player.mention} приєднався до гри", delete_after=5
+            interaction,
+            message=t("responses.games.hole.player_joined", player_mention=player.mention),
+            delete_after=10,
         )
 
-        game_state.bets.append(
-            HolePlayerBet(player=player, amount=bet, choice=choice)
-        )
+        game_state.bets.append(HolePlayerBet(player=player, amount=bet, choice=choice))
 
         lobby_embed = await ui_utils.format_hole_lobby_embed(game_state)
 
@@ -83,16 +81,16 @@ class HoleGameService:
             if winning_number in bet_option["numbers"]:
                 payout = p_bet.amount * bet_option["multiplier"]
                 await economy_management_service.update_user_balance(
-                    p_bet.player, payout, "Перемога у грі `діра`"
+                    p_bet.player, payout, t("economy.reasons.game_win_hole")
                 )
                 winners.append((p_bet.player, payout))
 
                 is_jackpot = bet_option["multiplier"] == 36
                 is_o5_win = winning_number == 0
 
-                asyncio.create_task(achievement_handler_service.handle_hole_achievements(
-                    p_bet.player, is_jackpot, is_o5_win, payout
-                ))
+                asyncio.create_task(
+                    achievement_handler_service.handle_hole_achievements(p_bet.player, is_jackpot, is_o5_win, payout)
+                )
 
         result_embed = await ui_utils.format_hole_results_embed(
             winning_item=winning_item_name, winners=winners

@@ -5,6 +5,7 @@ from disnake import ApplicationCommandInteraction, ui, MessageInteraction
 
 from app.config import config
 from app.core.schemas import CrystallizationState
+from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
@@ -16,19 +17,15 @@ class CrystallizationService:
         state_buttons = components[0].children
 
         bet_label = state_buttons[0].label
-        bet = int(bet_label.split(':')[1].strip().split(' ')[0])
+        bet = int(bet_label.split(":")[1].strip().split(" ")[0])
 
         multiplier_label = state_buttons[1].label
-        multiplier = float(multiplier_label.split('x')[1])
+        multiplier = float(multiplier_label.split("x")[1])
 
         loss_chance_label = state_buttons[2].label
-        loss_chance = float(loss_chance_label.split(':')[1].strip().replace('%', ''))
+        loss_chance = float(loss_chance_label.split(":")[1].strip().replace("%", ""))
 
-        return CrystallizationState(
-            bet=bet,
-            multiplier=multiplier,
-            loss_chance=loss_chance
-        )
+        return CrystallizationState(bet=bet, multiplier=multiplier, loss_chance=loss_chance)
 
     @staticmethod
     async def start_game(interaction: ApplicationCommandInteraction, bet: int):
@@ -51,9 +48,11 @@ class CrystallizationService:
         if random.random() < (current_loss_chance_percent / 100.0):
             loss_embed = await ui_utils.format_crystallize_loss_embed(state.bet)
             await response_utils.edit_response(interaction, embed=loss_embed)
-            asyncio.create_task(achievement_handler_service.handle_crystallization_achievements(
-                interaction.user, state, is_loss=True
-            ))
+            asyncio.create_task(
+                achievement_handler_service.handle_crystallization_achievements(
+                    interaction.user, state, is_loss=True
+                )
+            )
             return
 
         chance_min, chance_max = config.crystallize_chance_increment_range
@@ -80,22 +79,22 @@ class CrystallizationService:
 
     async def cash_out(self, interaction: MessageInteraction):
         winnings_label = interaction.component.label
-        winnings = int(winnings_label.split(' ')[1])
+        winnings = int(winnings_label.split(" ")[1])
 
         await economy_management_service.update_user_balance(
-            interaction.user, winnings, "Перемога у грі `кристалізація`"
+            interaction.user, winnings, t("economy.reasons.game_win_crystallization")
         )
 
         state = self._parse_state_from_components(interaction.message.components)
         win_embed = await ui_utils.format_crystallize_win_embed(
-            bet=state.bet,
-            winnings=winnings,
-            multiplier=state.multiplier
+            bet=state.bet, winnings=winnings, multiplier=state.multiplier
         )
         await response_utils.edit_response(interaction, embed=win_embed)
-        asyncio.create_task(achievement_handler_service.handle_crystallization_achievements(
-            interaction.user, state, is_loss=False
-        ))
+        asyncio.create_task(
+            achievement_handler_service.handle_crystallization_achievements(
+                interaction.user, state, is_loss=False
+            )
+        )
 
 
 crystallization_service = CrystallizationService()
