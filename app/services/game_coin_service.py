@@ -11,7 +11,6 @@ from app.utils.ui_utils import ui_utils
 class CoinFlipService:
     @staticmethod
     async def play_game(interaction: disnake.ApplicationCommandInteraction, bet: int):
-        print("log1.1")
         is_win = random.choice([True, False])
 
         if is_win:
