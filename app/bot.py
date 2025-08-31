@@ -28,7 +28,6 @@ from app.services import (
     achievement_handler_service,
     interaction_service
 )
-from app.utils.pagination_utils import pagination_utils
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
 from app.utils.ui_utils import ui_utils
@@ -451,8 +450,7 @@ async def edit_player_balance(
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="кристалізація", description="Почати процес кристалізації")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -470,8 +468,7 @@ async def game_crystallize(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="монетка", description="Підкинути монетку та випробувати вдачу")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -489,8 +486,7 @@ async def game_coin_flip(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="цукерки", description="Випробуйте свою вдачу з SCP-330")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -508,8 +504,7 @@ async def game_candy(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="когнітивна-стійкість", description="Пройти тест на когнітивну стійкість")
 @commands.guild_only()
 @remove_bet_from_balance
@@ -552,8 +547,7 @@ async def game_scp173(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60,
-                   type=config.cooldown_type)
+@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name="діра", description="Зробіть ставку в аномальній рулетці")
 @commands.guild_only()
 @remove_bet_from_balance
