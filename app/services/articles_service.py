@@ -1,13 +1,9 @@
 import asyncio
 import io
-import re
 import textwrap
-from typing import List, Dict, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
-from bs4 import BeautifulSoup, NavigableString
 from disnake import File
-from tortoise.exceptions import IntegrityError
 
 from app.config import config
 from app.core.models import SCPObject
@@ -19,66 +15,6 @@ class ArticleService:
         self.template_path = config.article_template_path
         self.number_font_path = config.primary_font_path
         self.title_font_path = config.secondary_font_path
-
-    def _parse_scp_data(self, html: str) -> List[Dict]:
-        soup = BeautifulSoup(html, "html.parser")
-        content_div = soup.find("div", id="page-content")
-        if not content_div:
-            return []
-
-        found_items = []
-        for a_tag in content_div.find_all("a", href=re.compile(r"^/scp-\d+$")):
-            try:
-                href = a_tag["href"]
-                img_tag = a_tag.find_previous_sibling("img")
-                if not img_tag:
-                    continue
-
-                next_node = a_tag.next_sibling
-                if not isinstance(next_node, NavigableString) or not str(next_node).strip():
-                    continue
-
-                title = str(next_node).lstrip(" -").strip()
-                number_match = re.search(r"\d+", href)
-                if not number_match:
-                    continue
-
-                scp_number = int(number_match.group(0))
-                object_class = img_tag["src"].split("/")[-1].split(".")[0]
-
-                item = {
-                    "number": a_tag.get_text(),
-                    "title": title,
-                    "range": (scp_number // 1000) + 1,
-                    "object_class": object_class if object_class != "na" else None,
-                    "link": f"{self.wiki_url}{href}"
-                }
-                found_items.append(item)
-            except (AttributeError, TypeError, KeyError, IndexError):
-                continue
-        return found_items
-
-    async def update_articles_from_web(self, html: str) -> None:
-        parsed_data = self._parse_scp_data(html)
-        for item_data in parsed_data:
-            try:
-                await SCPObject.update_or_create(
-                    link=item_data["link"],
-                    defaults={
-                        "number": item_data["number"],
-                        "title": item_data["title"],
-                        "range": item_data["range"],
-                        "object_class": item_data["object_class"],
-                    }
-                )
-            except IntegrityError:
-                continue
-
-    @staticmethod
-    def _get_text_dimensions(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont) -> Tuple[
-        int, int]:
-        bbox = draw.textbbox((0, 0), text, font=font)
-        return bbox[2] - bbox[0], bbox[3] - bbox[1]
 
     @staticmethod
     def _draw_text_with_shadow(draw, pos, text, font, main_color):
