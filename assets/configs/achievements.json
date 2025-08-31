@@ -1,217 +1,217 @@
 {
   "welcome": {
-    "name": "Ласкаво просимо до Фонду",
-    "description": "Вперше переглянути картку співробітника",
+    "name": "Welcome to the Foundation",
+    "description": "View an employee's card for the first time",
     "icon": "👋"
   },
   "personal_file": {
-    "name": "Особова справа",
-    "description": "Заповнити або оновити своє досьє",
+    "name": "Personal File",
+    "description": "Fill out or update your dossier",
     "icon": "📝"
   },
   "inspector": {
-    "name": "Інспектор",
-    "description": "Переглянути картку іншого співробітника",
+    "name": "Inspector",
+    "description": "View another employee's card",
     "icon": "🕵️"
   },
   "first_look": {
-    "name": "Перший погляд",
-    "description": "Переглянути першу статтю про SCP-об'єкт",
+    "name": "First Look",
+    "description": "View the first article about an SCP object",
     "icon": "🧐"
   },
   "researcher": {
-    "name": "Дослідник",
-    "description": "Переглянути 10 різних SCP-статей",
+    "name": "Researcher",
+    "description": "View 10 different SCP articles",
     "icon": "🧑‍🔬"
   },
   "archivist": {
-    "name": "Архіваріус",
-    "description": "Переглянути 100 різних SCP-статей",
+    "name": "Archivist",
+    "description": "View 100 different SCP articles",
     "icon": "📚"
   },
   "danger_face": {
-    "name": "Лицем до лиця з небезпекою",
-    "description": "Прочитати статтю про об'єкт класу Кетер",
+    "name": "Face to Face with Danger",
+    "description": "Read an article about a Keter class object",
     "icon": "🔥"
   },
   "thaumiel_secret": {
-    "name": "Таємниці фонду",
-    "description": "Прочитати статтю про об'єкт класу Тауміель",
+    "name": "Secrets of the Foundation",
+    "description": "Read an article about a Thaumiel class object",
     "icon": "📦"
   },
   "first_paycheck": {
-    "name": "Перша зарплата",
-    "description": "Заробити репутацію, виконавши безпечну роботу",
+    "name": "First Paycheck",
+    "description": "Earn reputation by completing a safe job",
     "icon": "💵"
   },
   "workaholic": {
-    "name": "Трудоголік",
-    "description": "Наткнутись на кулдаун",
+    "name": "Workaholic",
+    "description": "Encounter a cooldown",
     "icon": "👷"
   },
   "risky_business": {
-    "name": "Ризикована справа",
-    "description": "Успішно виконати першу ризиковану роботу",
+    "name": "Risky Business",
+    "description": "Successfully complete the first risky job",
     "icon": "🔪"
   },
   "unlucky_adventurer": {
-    "name": "Невдачливий авантюрист",
-    "description": "Провалити ризиковану роботу",
+    "name": "Unlucky Adventurer",
+    "description": "Fail a risky job",
     "icon": "🤕"
   },
   "balance_1m": {
-    "name": "Мільйонер Фонду",
-    "description": "Накопичити на балансі 1 000 000 💠",
+    "name": "Foundation Millionaire",
+    "description": "Accumulate 1,000,000 💠 in your balance",
     "icon": "🤑"
   },
   "philanthropist": {
-    "name": "Філантроп",
-    "description": "Переказати іншому співробітнику більше 10 000 💠",
+    "name": "Philanthropist",
+    "description": "Transfer more than 10,000 💠 to another employee",
     "icon": "🤝"
   },
   "first_purchase": {
-    "name": "Перше придбання",
-    "description": "Купити предмет у магазині",
+    "name": "First Purchase",
+    "description": "Buy an item from the shop",
     "icon": "🛒"
   },
   "card_collector": {
-    "name": "Колекціонер карток",
-    "description": "Мати в інвентарі 5 різних карток доступу",
+    "name": "Card Collector",
+    "description": "Have 5 different access cards in your inventory",
     "icon": "🃏"
   },
   "access_master": {
-    "name": "Задрот (або чітер)",
-    "description": "Зібрати всі можливі картки доступу з магазину",
+    "name": "Grinder (or cheater)",
+    "description": "Collect all possible access cards from the shop",
     "icon": "👑"
   },
   "zone_authority": {
-    "name": "Влада Зони",
-    "description": "Придбати картку Директора Зони",
+    "name": "Zone Authority",
+    "description": "Purchase the Zone Director card",
     "icon": "🕴️"
   },
   "o5_council": {
-    "name": "Рада O5",
-    "description": "Придбати картку Ради О5",
+    "name": "O5 Council",
+    "description": "Purchase the O5 Council card",
     "icon": "👁️"
   },
   "administrator_presence": {
-    "name": "Присутність Адміністратора",
-    "description": "Придбати Карту Адміністратора",
+    "name": "Administrator's Presence",
+    "description": "Purchase the Administrator Card",
     "icon": "❓"
   },
   "game_crystal_loss": {
-    "name": "Жадібність тебе поглинула",
-    "description": "Дозволити кристалу поглинути вашу ставку",
+    "name": "Greed Consumed You",
+    "description": "Let the crystal absorb your bet",
     "icon": "💥"
   },
   "game_crystal_win_x2.5": {
-    "name": "Майстер кристалів",
-    "description": "Досягти множника x2.5 або більше та забрати виграш",
+    "name": "Crystal Master",
+    "description": "Reach a multiplier of x2.5 or more and cash out",
     "icon": "💎"
   },
   "game_coin_win_10_000": {
-    "name": "Щасливчик",
-    "description": "Виграти в 'Монетку' 10 000 💠",
+    "name": "Lucky One",
+    "description": "Win 10,000 💠 in 'Coin Flip'",
     "icon": "🍀"
   },
   "game_candy_loss": {
-    "name": "Солодка смерть",
-    "description": "Програти в 'Цукерки', взявши третю цукерку",
+    "name": "Sweet Death",
+    "description": "Lose in 'Candies' by taking the third candy",
     "icon": "🍬"
   },
   "game_candy_win_2": {
-    "name": "Знає міру",
-    "description": "Виграти в 'Цукерки', забравши гроші після двох взятих цукерок",
+    "name": "Knows When to Stop",
+    "description": "Win in 'Candies' by cashing out after taking two candies",
     "icon": "🧠"
   },
   "game_coguard_streak_10": {
-    "name": "Таролог",
-    "description": "Досягти серії з 10 правильних відповідей в тесті на когнітивну стійкість",
+    "name": "Tarot Reader",
+    "description": "Achieve a streak of 10 correct answers in the cognitive resistance test",
     "icon": "🔮"
   },
   "game_coguard_loss_first": {
-    "name": "Когнітивний збій",
-    "description": "Програти в тесті на когнітивну стійкість на першому ж кроці",
+    "name": "Cognitive Failure",
+    "description": "Lose in the cognitive resistance test on the very first step",
     "icon": "📉"
   },
   "game_hole_win": {
-    "name": "Шепіт з Безодні",
-    "description": "Виграти будь-яку ставку в 'Дірі'",
+    "name": "Whisper from the Abyss",
+    "description": "Win any bet in the 'Hole'",
     "icon": "🌀"
   },
   "game_hole_jackpot": {
-    "name": "Безодня тобі посміхається",
-    "description": "Виграти в 'Дірі', поставивши на конкретний предмет (x36)",
+    "name": "The Abyss Smiles Upon You",
+    "description": "Win in the 'Hole' by betting on a specific item (x36)",
     "icon": "✨"
   },
   "game_hole_o5_win": {
-    "name": "Секретний протокол",
-    "description": "Виграти в 'Дірі', поставивши на ключ-карту ради О5",
+    "name": "Secret Protocol",
+    "description": "Win in the 'Hole' by betting on the O5 Council keycard",
     "icon": "🗝️"
   },
   "game_scp173_survivor": {
-    "name": "Некліпаючий",
-    "description": "Стати єдиним, хто вижив у грі в піжмурки з SCP-173",
+    "name": "The Unblinking",
+    "description": "Become the sole survivor in a game of hide-and-seek with SCP-173",
     "icon": "🏆"
   },
   "game_scp173_first_death": {
-    "name": "Ти кліпнув",
-    "description": "Загинути в першому раунді гри в піжмурки",
+    "name": "You Blinked",
+    "description": "Die in the first round of the hide-and-seek game",
     "icon": "😵"
   },
   "game_scp173_host": {
-    "name": "Організатор",
-    "description": "Створити та провести гру в піжмурки",
+    "name": "Organizer",
+    "description": "Create and host a game of hide-and-seek",
     "icon": "📢"
   },
   "big_winner": {
-    "name": "Великий куш",
-    "description": "Виграти понад 50 000 💠 за одну гру",
+    "name": "Big Win",
+    "description": "Win over 50,000 💠 in a single game",
     "icon": "🎰"
   },
   "reputation_100k": {
-    "name": "Заслужена повага",
-    "description": "Досягти 100 000 🔰 загальної репутації",
+    "name": "Well-Deserved Respect",
+    "description": "Reach 100,000 🔰 total reputation",
     "icon": "🔰"
   },
   "reputation_1m": {
-    "name": "Легенда Фонду",
-    "description": "Досягти 1 000 000 🔰 загальної репутації",
+    "name": "Legend of the Foundation",
+    "description": "Reach 1,000,000 🔰 total reputation",
     "icon": "🌟"
   },
   "scientist_promotion": {
-    "name": "Допуск науковця",
-    "description": "Продемонструвати базові знання та навички для роботи в науковому відділі",
+    "name": "Scientist Clearance",
+    "description": "Demonstrate basic knowledge and skills for work in the scientific department",
     "icon": "🔬"
   },
   "major_scientist_promotion": {
-    "name": "Допуск старшого науковця",
-    "description": "Довести свою компетентність у дослідженнях та інженерних системах",
+    "name": "Senior Scientist Clearance",
+    "description": "Prove your competence in research and engineering systems",
     "icon": "🧬"
   },
   "engineer_promotion": {
-    "name": "Допуск інженера",
-    "description": "Досягти високої репутації та показати майстерність в іграх на удачу",
+    "name": "Engineer Clearance",
+    "description": "Achieve high reputation and show mastery in games of chance",
     "icon": "🛠️"
   },
   "security_promotion": {
-    "name": "Допуск служби безпеки",
-    "description": "Вивчити основи роботи Фонду та продемонструвати відповідальність",
+    "name": "Security Clearance",
+    "description": "Learn the basics of Foundation operations and demonstrate responsibility",
     "icon": "🛡️"
   },
   "sergeant_promotion": {
-    "name": "Звання сержанта",
-    "description": "Проявити знання аномалій та відданість принципам Фонду",
+    "name": "Sergeant Rank",
+    "description": "Show knowledge of anomalies and dedication to Foundation principles",
     "icon": "🎖️"
   },
   "lieutenant_promotion": {
-    "name": "Звання лейтенанта",
-    "description": "Показати щедрість та вміння зберігати холоднокровність у ризикованих ситуаціях",
+    "name": "Lieutenant Rank",
+    "description": "Show generosity and the ability to remain calm in risky situations",
     "icon": "🏅"
   },
   "upcoming_promotion": {
-    "name": "Майбутнє підвищення",
-    "description": "Стати досвідченим колекціонером та експертом Фонду",
+    "name": "Future Promotion",
+    "description": "Become an experienced collector and Foundation expert",
     "icon": "⭐"
   }
 }

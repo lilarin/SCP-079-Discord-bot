@@ -1,265 +1,482 @@
 {
   "presence": {
-    "watching": "на особові справи"
+    "watching": "personal files"
   },
   "logs": {
-    "logged_in": "Виконано вхід як {bot_user}",
-    "command_used": "Користувач {user} використав команду /{command}",
-    "system_channel_not_found": "Не знайдено системний канал для вітання на сервері: {guild_name}"
+    "logged_in": "Logged in as {bot_user}",
+    "command_used": "User {user} used command /{command}",
+    "system_channel_not_found": "System channel for greetings not found on server: {guild_name}"
   },
   "errors": {
-    "generic": "Хтось зламав код, але не переймайтесь, скоро це виправлять!",
-    "missing_permissions": "Ця команда недоступна для вас",
-    "no_private_message": "Команди бота можна використовувати лише на сервері",
-    "cooldown": "Ви поки не можете використати цю команду, спробуйте знову <t:{timestamp}:R>"
+    "generic": "Someone broke the code, but don't worry, it will be fixed soon!",
+    "missing_permissions": "This command is not available to you",
+    "no_private_message": "Bot commands can only be used on a server",
+    "cooldown": "You can't use this command yet, try again <t:{timestamp}:R>",
+    "bots_not_allowed": "The command cannot be used on bots",
+    "bet_must_be_positive": "The bet must be greater than zero",
+    "insufficient_funds_for_bet": "You do not have enough funds for this bet\n-# Current balance – {balance} 💠",
+    "insufficient_funds_for_bet_simple": "You do not have enough funds for this bet",
+    "insufficient_funds_for_transfer": "You do not have enough funds for the transfer\n-# Current balance – {balance} 💠",
+    "insufficient_funds_for_purchase": "You do not have enough funds\n-# Current balance – {balance} 💠",
+    "negative_balance": "Balance cannot be negative",
+    "negative_reputation": "Reputation cannot be negative",
+    "user_not_found": "User with ID {user_id} not found",
+    "transfer_to_self": "You cannot transfer funds to yourself",
+    "transfer_amount_must_be_positive": "The transfer amount must be greater than zero",
+    "not_command_author": "You cannot control this message\n-# Only the user who invoked the command can interact with it",
+    "item_not_in_inventory": "You do not have this item in your inventory",
+    "item_not_equippable": "This item cannot be equipped",
+    "item_not_found": "Item with this ID not found"
   },
   "responses": {
-    "wait": "Очікуйте...",
+    "wait": "Please wait...",
+    "dossier_updated": "Dossier updated!",
+    "transfer_success": "You have successfully transferred {amount} 💠 to user <@{user_id}>",
     "articles": {
-      "all_viewed": "Ви переглянули всі статті за цими фільтрами",
-      "not_found": "Статті за цими фільтрами не знайдено"
+      "all_viewed": "You have viewed all articles with these filters",
+      "not_found": "No articles found with these filters"
     },
     "shop": {
-      "updated": "Асортимент карток було оновлено"
+      "updated": "The card assortment has been updated",
+      "item_out_of_stock": "This item is out of stock",
+      "item_already_owned": "You already have this item in your inventory",
+      "missing_achievements_start": "To purchase this item, you are missing the following achievements:",
+      "buy_success": "You have successfully purchased the item **{item_name}**!"
     },
     "reputation": {
-      "reset": "Загальну репутацію всіх гравців було скинуто, баланс залишається незмінним"
+      "reset": "The total reputation of all players has been reset, the balance remains unchanged"
     },
     "balance": {
-      "admin_change_reason": "Зміна балансу користувачу\n-# Викликано користувачем {user}",
-      "changed": "Баланс гравця {user} було змінено"
+      "admin_change_reason": "User balance change\n-# Invoked by user {user}",
+      "changed": "Player {user}'s balance has been changed"
+    },
+    "inventory": {
+      "already_equipped": "You have already equipped this item",
+      "equip_success": "You have successfully equipped the card!"
     },
     "games": {
-      "error_refund": "Помилка під час гри `{command}`",
-      "invalid_bet_refund": "Неправильна ставка під час гри {command}",
+      "error_refund": "Error during the game `{command}`",
+      "invalid_bet_refund": "Invalid bet during the game {command}",
       "hole": {
-        "choose_one_bet_type": "Необхідно обрати **один** тип ставки",
-        "option_not_found": "Опцію '{option}' не знайдено, оберіть зі списку"
+        "choose_one_bet_type": "You must choose **one** type of bet",
+        "option_not_found": "Option '{option}' not found, please choose from the list",
+        "already_bet": "You have already placed a bet in the active game",
+        "player_joined": "{player_mention} has joined the game"
+      },
+      "staring": {
+        "game_cancelled_not_enough_players": "Game canceled: not enough players",
+        "game_ended_or_started": "This game has already ended or started",
+        "already_in_game": "You are already in the game",
+        "lobby_full": "The lobby is full",
+        "need_2_players_to_start": "At least 2 players are needed to start",
+        "round_log_death": "**{player_mention}** blinked and died!",
+        "round_log_survived": "**{player_mention}** did not blink",
+        "round_summary_no_death": "-# Strange... no one blinked",
+        "round_summary_death": "-# The sculpture does not forgive mistakes"
       }
     },
     "achievements": {
-      "load_error": "Не вдалося завантажити досягнення",
-      "stats_load_error": "Не вдалося завантажити список досягнень"
+      "load_error": "Failed to load achievements",
+      "stats_load_error": "Failed to load the list of achievements",
+      "dm_notification": "## You have earned a new achievement!\n### `{name}` {icon}\n-# {description}"
+    }
+  },
+  "economy": {
+    "reasons": {
+      "game_bet": "Bet in game `{game_name}`",
+      "legal_work": "Performing legal work",
+      "risky_work_success": "Successful completion of risky work",
+      "risky_work_failure": "Failed completion of risky work",
+      "transfer_sent": "Transfer of funds to user <@{user_id}>",
+      "transfer_received": "Receipt of funds from <@{user_id}>",
+      "game_win_candy": "Victory in the game `candies`",
+      "game_win_coin": "Victory in the game `coin`",
+      "game_win_coguard": "Victory in the game `cognitive-resistance`",
+      "game_win_crystallization": "Victory in the game `crystallization`",
+      "game_win_hole": "Victory in the game `hole`",
+      "game_win_staring": "Victory in the game `staring`",
+      "hole_game_bet_refund": "Refund of a repeated bet in the active game `hole`",
+      "staring_game_not_enough_players_refund": "Refund due to not enough players for the game `staring`",
+      "staring_game_bet": "Bet in the game `staring`"
+    }
+  },
+  "modals": {
+    "dossier": {
+      "info_label": "Information",
+      "title": "Employee Dossier of {user_name}"
+    }
+  },
+  "ui": {
+    "leaderboard": {
+      "title": "Top users by {top_criteria}",
+      "no_users": "No one is here yet, this is your chance!",
+      "fetch_error": "Failed to retrieve user information",
+      "criteria_articles": "viewed articles",
+      "hint_articles": "The number of unique articles viewed by the user",
+      "criteria_balance": "current reputation in the foundation",
+      "hint_balance": "The user's current balance, which can decrease through various actions",
+      "criteria_reputation": "total reputation in the foundation",
+      "hint_reputation": "The user's total reputation earned over all time",
+      "criteria_achievements": "number of achievements",
+      "hint_achievements": "User's achievements and percentage of the total number"
+    },
+    "new_user_welcome": "Welcome {user_mention} to the foundation staff!",
+    "user_card": {
+      "title": "Information about the foundation employee",
+      "role_field": "Position:",
+      "achievements_field": "Achievements:",
+      "dossier_field": "Dossier:"
+    },
+    "article": {
+      "view_button": "View article"
+    },
+    "balance": {
+      "title": "User's reputation balance",
+      "current_balance": "Current balance – {balance} 💠 ",
+      "total_reputation": "\n\n-# Total reputation earned – {reputation} 🔰",
+      "rank_position": "\n-# **#{position} in the employee ranking**"
+    },
+    "shop": {
+      "title": "Shop",
+      "no_items": "There are currently no items in the shop",
+      "item_price": "Price: **{price}** 💠",
+      "item_quantity": "Quantity: **{quantity}**",
+      "required_achievements": "-# Required achievements:",
+      "item_id": "-# ID: `{item_id}`"
+    },
+    "inventory": {
+      "title": "Inventory",
+      "empty": "Your inventory is empty",
+      "item_id": "-# ID: `{item_id}`"
+    },
+    "work": {
+      "legal_title": "Work Result",
+      "risky_title": "Risky Work Result",
+      "earned": "**Earned:** {amount} 💠",
+      "lost": "**Lost:** {amount} 💠"
+    },
+    "crystallize": {
+      "title": "Crystallization Process",
+      "description": "Your bet is crystallizing\nIncrease the multiplier, but remember the risk!",
+      "bet_button": "Bet: {bet} 💠",
+      "multiplier_button": "Multiplier: x{multiplier}",
+      "loss_chance_button": "Chance of failure: {loss_chance}%",
+      "continue_button": "Crystallize further",
+      "cash_out_button": "Cash out {potential_win} 💠",
+      "win_title": "Process stopped!",
+      "win_description": "You stopped the crystallization in time and secured your profit!\n\n-# **Your bet:** {bet} 💠\n-# **Final multiplier:** x{multiplier}\n-# **Winnings:** {winnings} 💠",
+      "loss_title": "Full crystallization!",
+      "loss_description": "Greed took over\nThe crystal completely absorbed your bet\n\n-# **Lost:** {bet} 💠"
+    },
+    "coin_flip": {
+      "win_title": "Victory!",
+      "win_description": "You got lucky, shall we continue?\n\n-# **Winnings:** {bet} 💠",
+      "loss_title": "Defeat!",
+      "loss_description": "Unlucky, try again\n\n-# **Lost:** {bet} 💠"
+    },
+    "candy_game": {
+      "title": "SCP-330 – \"Take only two\"",
+      "description": "You can't remember if you've taken candies before...",
+      "bet_button": "Bet: {bet} 💠",
+      "multiplier_button": "Multiplier: x{multiplier}",
+      "taken_button": "You took: {count}",
+      "take_button": "Take a candy",
+      "leave_button": "Cash out {potential_win} 💠",
+      "win_title": "You stopped in time!",
+      "win_description": "You decided not to test fate and left\n\n-# **Winnings:** {winnings} 💠",
+      "loss_title": "Greed was your downfall!",
+      "loss_description": "You took too many candies and paid the price\n\n-# **Lost:** {bet} 💠"
+    },
+    "coguard_game": {
+      "title": "Cognitive Test Protocol D-72",
+      "description": "**Current value:** `{current_number}`\nWill the next value be higher or lower?",
+      "bet_button": "Bet: {bet} 💠",
+      "multiplier_button": "Multiplier: x{multiplier}",
+      "number_button": "Number: {number}",
+      "streak_button": "Correct answers: {streak}",
+      "higher_button": "Higher",
+      "lower_button": "Lower",
+      "cash_out_button": "Cash out {potential_win} 💠",
+      "win_title": "Test successfully passed!",
+      "win_description": "You stopped in time and confirmed your cognitive stability\n\n-# **Your bet:** {bet} 💠\n-# **Streak of correct answers:** {win_streak}\n-# **Final multiplier:** x{multiplier}\n-# **Winnings:** {winnings} 💠",
+      "loss_title": "Cognitive failure!",
+      "loss_description": "Your intuition failed you, test failed\n\n-# **Streak of correct answers:** {win_streak}\n-# **Lost:** {bet} 💠"
+    },
+    "staring_game": {
+      "title": "Hide-and-Seek with SCP-173",
+      "lobby_description": "**Waiting for players...**\n\nWhoever blinks, dies",
+      "players_field": "Participants:",
+      "no_players": "No one here yet...",
+      "lobby_footer": "The game will start automatically in {duration} seconds, or when the lobby is full",
+      "join_button": "Join",
+      "start_button": "Start game",
+      "game_start_title": "The game has begun, don't blink!",
+      "game_start_description": "The light dims...",
+      "round_title": "Round {round_number}",
+      "mode_lms": "Last Man Standing",
+      "mode_normal": "Normal",
+      "bet_button": "Bet: {bet} 💠",
+      "mode_button": "Mode: {mode}",
+      "single_winner_title": "Sole survivor!",
+      "single_winner_description": "{winner_mention} leaves the containment chamber unharmed\n\n-# **Winnings:** {pot} 💠",
+      "multi_winner_title": "Winners!",
+      "multi_winner_description": "Your colleague's death gave you a chance to survive\n\n**Survivors:** {winner_mentions}\n\n-# **Winnings each:** {winnings} 💠",
+      "no_survivors_title": "No one survived",
+      "no_survivors_description": "The sculpture won"
+    },
+    "hole_game": {
+      "title": "Anomalous Roulette",
+      "current_bets": "Current bets:\n",
+      "lobby_footer": "The game will start automatically in {duration} seconds",
+      "result_title": "The hole returned an item",
+      "no_winners": "\nThe hole absorbed all bets",
+      "winners_field": "Winners:"
+    },
+    "achievements": {
+      "user_title": "Achievements of user {user_name}",
+      "no_achievements": "This user has no achievements yet",
+      "stats_title": "Achievement statistics on the server"
+    },
+    "balance_log": {
+      "reason_field": "Reason:",
+      "amount_field": "Amount",
+      "new_balance_field": "New balance"
+    },
+    "games_info": {
+      "title": "Information about mini-games",
+      "description": "Test your luck and skills in anomalous games!",
+      "crystallization_name": "Crystallization",
+      "crystallization_desc": "Increase your bet multiplier, but be careful: with each step, the chance of failure increases. Cash out before the crystal absorbs your bet.",
+      "coin_name": "Coin Flip",
+      "coin_desc": "A classic 50/50 game. Guess the side of the coin to double your bet.",
+      "candy_name": "Candies",
+      "candy_desc": "Inspired by SCP-330. You don't know if you've taken candies before. Take more to increase your winnings, but if the total exceeds two, you lose.",
+      "coguard_name": "Cognitive-Resistance",
+      "coguard_desc": "Test your intuition. Guess if the next random number will be higher or lower than the current one. The longer the streak of correct answers, the higher your multiplier.",
+      "staring_name": "Staring Contest",
+      "staring_desc": "Play against others with SCP-173. Don't blink to survive and take the pot. With each round, the probability of death increases, and in the last round, everyone dies.\nModes:\n* Normal – the game ends after the first death, survivors split the pot.\n* Last Man Standing – the game continues until one winner remains.",
+      "hole_name": "The Hole",
+      "hole_desc": "Anomalous roulette. Place a bet on the item you think the hole will return.\nOptions:\n* Item bet (x36) – bet on a specific item.\n* Group bets (x2, x3) – bet on a specific group of items, as shown in the image."
     }
   },
   "commands": {
     "view_card": {
-      "name": "картка",
-      "description": "Переглянути картку співробітника фонду",
+      "name": "card",
+      "description": "View a foundation employee's card",
       "params": {
         "user": {
-          "name": "користувач",
-          "description": "Оберіть користувача"
+          "name": "user",
+          "description": "Select a user"
         }
       }
     },
     "get_random_article": {
-      "name": "випадкова-стаття",
-      "description": "Отримати посилання на випадкову статтю за фільтрами",
+      "name": "random-article",
+      "description": "Get a link to a random article by filters",
       "params": {
         "object_class": {
-          "name": "клас",
-          "description": "Клас об'єкту (необов'язково)"
+          "name": "class",
+          "description": "Object class (optional)"
         },
         "object_range": {
-          "name": "діапазон",
-          "description": "Діапазон номеру об'єкту (необов'язково)"
+          "name": "range",
+          "description": "Object number range (optional)"
         },
         "skip_viewed": {
-          "name": "пропустити-переглянуті",
-          "description": "Виключити вже переглянуті? (необов'язково, увімкнено)"
+          "name": "skip-viewed",
+          "description": "Exclude already viewed? (optional, enabled by default)"
         }
       }
     },
     "dossier": {
-      "name": "досьє",
-      "description": "Заповнити своє досьє"
+      "name": "dossier",
+      "description": "Fill out your dossier"
     },
     "top": {
-      "name": "топ",
-      "description": "Показати топ користувачів за певним критерієм",
+      "name": "top",
+      "description": "Show the top users by a certain criterion",
       "params": {
         "criteria": {
-          "name": "критерій",
-          "description": "Критерій для перегляду списку лідерів"
+          "name": "criterion",
+          "description": "Criterion for viewing the leaderboard"
         }
       }
     },
     "balance": {
-      "name": "баланс",
-      "description": "Переглянути баланс користувача",
+      "name": "balance",
+      "description": "View a user's balance",
       "params": {
         "user": {
-          "name": "користувач",
-          "description": "Оберіть користувача"
+          "name": "user",
+          "description": "Select a user"
         }
       }
     },
     "transfer": {
-      "name": "переказ",
-      "description": "Надіслати власні 💠 іншому користувачу",
+      "name": "transfer",
+      "description": "Send your 💠 to another user",
       "params": {
         "recipient": {
-          "name": "отримувач",
-          "description": "Оберіть отримувача"
+          "name": "recipient",
+          "description": "Select the recipient"
         },
         "amount": {
-          "name": "сума",
-          "description": "Сума для переводу"
+          "name": "amount",
+          "description": "Amount to transfer"
         }
       }
     },
     "shop": {
-      "name": "магазин",
-      "description": "Переглянути товари у магазині"
+      "name": "shop",
+      "description": "View items in the shop"
     },
     "update_shop": {
-      "name": "оновити-кількість-товарів",
-      "description": "Випадковим чином оновити асортимент карток у магазині"
+      "name": "update-shop-quantity",
+      "description": "Randomly update the card assortment in the shop"
     },
     "buy": {
-      "name": "купити",
-      "description": "Купити товар з магазину за його ID",
+      "name": "buy",
+      "description": "Buy an item from the shop by its ID",
       "params": {
         "item_id": {
-          "name": "предмет",
-          "description": "ID товару"
+          "name": "item",
+          "description": "Item ID"
         }
       }
     },
     "inventory": {
-      "name": "інвентар",
-      "description": "Переглянути свій інвентар"
+      "name": "inventory",
+      "description": "View your inventory"
     },
     "equip": {
-      "name": "екіпірувати",
-      "description": "Екіпірувати картку доступу з інвентаря",
+      "name": "equip",
+      "description": "Equip an access card from your inventory",
       "params": {
         "item_id": {
-          "name": "картка",
-          "description": "ID картки, яку ви хочете екіпірувати"
+          "name": "card",
+          "description": "The ID of the card you want to equip"
         }
       }
     },
     "legal_work": {
-      "name": "робота",
-      "description": "Виконати безпечне завдання для фонду"
+      "name": "work",
+      "description": "Perform a safe task for the foundation"
     },
     "risky_work": {
-      "name": "ризикована-робота",
-      "description": "Взятися за ризиковану справу"
+      "name": "risky-work",
+      "description": "Take on a risky job"
     },
     "reset_reputation": {
-      "name": "скинути-репутацію",
-      "description": "Скинути загальну репутацію всіх співробітників"
+      "name": "reset-reputation",
+      "description": "Reset the total reputation of all employees"
     },
     "edit_balance": {
-      "name": "змінити-баланс-користувача",
-      "description": "Збільшити, або зменшити баланс на певну кількість репутації",
+      "name": "edit-user-balance",
+      "description": "Increase or decrease the balance by a certain amount of reputation",
       "params": {
         "user": {
-          "name": "користувач",
-          "description": "Оберіть користувача"
+          "name": "user",
+          "description": "Select a user"
         },
         "amount": {
-          "name": "кількість",
-          "description": "Кількість на яку збільшити, або зменшити"
+          "name": "amount",
+          "description": "The amount to increase or decrease by"
         }
       }
     },
     "game_crystallize": {
-      "name": "кристалізація",
-      "description": "Почати процес кристалізації",
+      "name": "crystallization",
+      "description": "Start the crystallization process",
       "params": {
         "bet": {
-          "name": "ставка",
-          "description": "Сума вашої ставки"
+          "name": "bet",
+          "description": "The amount of your bet"
         }
       }
     },
     "game_coin": {
-      "name": "монетка",
-      "description": "Підкинути монетку та випробувати вдачу",
+      "name": "coin",
+      "description": "Flip a coin and test your luck",
       "params": {
         "bet": {
-          "name": "ставка",
-          "description": "Сума вашої ставки"
+          "name": "bet",
+          "description": "The amount of your bet"
         }
       }
     },
     "game_candy": {
-      "name": "цукерки",
-      "description": "Випробуйте свою вдачу з SCP-330",
+      "name": "candies",
+      "description": "Test your luck with SCP-330",
       "params": {
         "bet": {
-          "name": "ставка",
-          "description": "Сума вашої ставки"
+          "name": "bet",
+          "description": "The amount of your bet"
         }
       }
     },
     "game_coguard": {
-      "name": "когнітивна-стійкість",
-      "description": "Пройти тест на когнітивну стійкість",
+      "name": "cognitive-resistance",
+      "description": "Take the cognitive resistance test",
       "params": {
         "bet": {
-          "name": "ставка",
-          "description": "Сума вашої ставки"
+          "name": "bet",
+          "description": "The amount of your bet"
         }
       }
     },
     "game_scp173": {
-      "name": "піжмурки",
-      "description": "Зіграти в піжмурки проти інших гравців з SCP-173",
+      "name": "staring-contest",
+      "description": "Play hide-and-seek against other players with SCP-173",
       "params": {
         "bet": {
-          "name": "ставка",
-          "description": "Сума вашої ставки"
+          "name": "bet",
+          "description": "The amount of your bet"
         },
         "mode": {
-          "name": "режим-гри",
-          "description": "Режим гри для лоббі",
+          "name": "game-mode",
+          "description": "Game mode for the lobby",
           "choices": {
-            "normal": "Звичайний",
-            "lms": "До останнього"
+            "normal": "Normal",
+            "lms": "Last Man Standing"
           }
         }
       }
     },
     "game_hole": {
-      "name": "діра",
-      "description": "Зробіть ставку в аномальній рулетці",
+      "name": "hole",
+      "description": "Place a bet in the anomalous roulette",
       "params": {
         "bet": {
-          "name": "ставка",
-          "description": "Сума вашої ставки"
+          "name": "bet",
+          "description": "The amount of your bet"
         },
         "group_bet": {
-          "name": "група",
-          "description": "Виберіть групову ставку (не можна використовувати разом зі ставкою на предмет)"
+          "name": "group",
+          "description": "Choose a group bet (cannot be used with an item bet)"
         },
         "item_bet": {
-          "name": "предмет",
-          "description": "Виберіть конкретний предмет (не можна використовувати з груповою ставкою)"
+          "name": "item",
+          "description": "Choose a specific item (cannot be used with a group bet)"
         }
       }
     },
     "games_info": {
-      "name": "гайд-міні-ігор",
-      "description": "Інформація про доступні міні-ігри"
+      "name": "minigame-guide",
+      "description": "Information about available mini-games"
     },
     "achievements": {
-      "name": "досягнення-користувача",
-      "description": "Показати отримані досягнення",
+      "name": "user-achievements",
+      "description": "Show earned achievements",
       "params": {
         "user": {
-          "name": "користувач",
-          "description": "Оберіть користувача"
+          "name": "user",
+          "description": "Select a user"
         }
       }
     },
     "achievement_stats": {
-      "name": "список-досягнень",
-      "description": "Показати список та статистику отримання досягнень на сервері"
+      "name": "achievement-list",
+      "description": "Show the list and statistics of achievement earnings on the server"
     }
   }
 }

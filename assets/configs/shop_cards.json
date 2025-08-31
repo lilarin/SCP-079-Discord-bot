@@ -1,22 +1,7 @@
 {
-  "keycard_o5": {
-    "name": "Карта Ради О5",
-    "description": "Надає повний та необмежений доступ до всіх систем комплексу. Володіння цією картою без належних повноважень є актом зради та карається негайною ліквідацією.",
-    "price": 150000,
-    "quantity_range": [0, 1],
-    "image_file": "keycard-1.png",
-    "colors": {
-      "primary": "#FBFBFB",
-      "secondary": "#A6A6A6",
-      "embed": "#0D0D0D"
-    },
-    "required_achievements": [
-      "zone_authority"
-    ]
-  },
   "keycard_redacted": {
-    "name": "Карта Адміністратора",
-    "description": "Карта-привид, що неймовірно рідко значиться в базі даних Фонду. Кажуть, що вона належить Адміністратору, її походження та повний функціонал невідомі, але вважається, що вона надає непомітний контроль над усіма системами, обходячи будь-які протоколи безпеки.",
+    "name": "Administrator Card",
+    "description": "A ghost card that is incredibly rare in the Foundation's database. It is said to belong to the Administrator; its origin and full functionality are unknown, but it is believed to provide stealth control over all systems, bypassing any security protocols.",
     "price": 300000,
     "quantity_range": [0, 1],
     "image_file": "keycard-2.png",
@@ -29,9 +14,24 @@
       "o5_council"
     ]
   },
+  "keycard_o5": {
+    "name": "O5 Council Card",
+    "description": "Provides full and unrestricted access to all facility systems. Possession of this card without proper authorization is an act of treason and is punishable by immediate termination.",
+    "price": 150000,
+    "quantity_range": [0, 1],
+    "image_file": "keycard-1.png",
+    "colors": {
+      "primary": "#FBFBFB",
+      "secondary": "#A6A6A6",
+      "embed": "#0D0D0D"
+    },
+    "required_achievements": [
+      "zone_authority"
+    ]
+  },
   "keycard_zone_director": {
-    "name": "Карта Директора Зони",
-    "description": "Видається виключно керівнику комплексу. Надає доступ до адміністративних секторів, центрів управління та камер стримування об'єктів, також дозволяє ініціювати протоколи блокування зони.",
+    "name": "Zone Director Card",
+    "description": "Issued exclusively to the head of the facility. Provides access to administrative sectors, control centers, and object containment chambers, and also allows for the initiation of zone lockdown protocols.",
     "price": 100000,
     "quantity_range": [0, 2],
     "image_file": "keycard-3.png",
@@ -46,8 +46,8 @@
     ]
   },
   "keycard_captain_mog": {
-    "name": "Карта Капітана МОГ",
-    "description": "Карта командира підрозділу Мобільної Оперативної Групи. Надає повний доступ до збройових кімнат, арсеналу та дозволяє координувати дії загону через захищені канали зв'язку.",
+    "name": "MTF Captain Card",
+    "description": "Card of the Mobile Task Force unit commander. Provides full access to armories and allows coordination of squad actions through secure communication channels.",
     "price": 30000,
     "quantity_range": [1, 3],
     "image_file": "keycard-4.png",
@@ -63,8 +63,8 @@
     ]
   },
   "keycard_lieutenant_mog": {
-    "name": "Карта Лейтенанта МОГ",
-    "description": "Видається заступникам командирів та командирам ланок МОГ. Забезпечує тактичний доступ до більшості зон комплексу.",
+    "name": "MTF Lieutenant Card",
+    "description": "Issued to deputy commanders and MTF squad leaders. Provides tactical access to most areas of the facility.",
     "price": 10000,
     "quantity_range": [2, 5],
     "image_file": "keycard-5.png",
@@ -80,8 +80,8 @@
     ]
   },
   "keycard_sergeant_mog": {
-    "name": "Карта Сержанта МОГ",
-    "description": "Стандартна карта для сержантів та досвідчених оперативників МОГ. Надає доступ до основних вузлів комплексу для виконання бойових завдань.",
+    "name": "MTF Sergeant Card",
+    "description": "Standard card for sergeants and experienced MTF operatives. Provides access to the main nodes of the facility for combat missions.",
     "price": 3000,
     "quantity_range": [3, 8],
     "image_file": "keycard-6.png",
@@ -98,8 +98,8 @@
     ]
   },
   "keycard_security": {
-    "name": "Карта Служби Безпеки",
-    "description": "Базова карта для співробітників служби безпеки комплексу. Дозволяє патрулювати зони комплексу.",
+    "name": "Security Service Card",
+    "description": "Basic card for facility security personnel. Allows patrolling of facility zones.",
     "price": 1000,
     "quantity_range": [5, 12],
     "image_file": "keycard-7.png",
@@ -115,8 +115,8 @@
     ]
   },
   "keycard_zone_manager": {
-    "name": "Карта Менеджера Зони",
-    "description": "Карта для керівників середньої ланки та менеджерів окремих зон. Надає розширений доступ до офісів, лабораторій та контрольних пунктів у межах своєї зони відповідальності.",
+    "name": "Zone Manager Card",
+    "description": "Card for mid-level managers and managers of individual zones. Provides extended access to offices, laboratories, and control points within their area of responsibility.",
     "price": 30000,
     "quantity_range": [1, 4],
     "image_file": "keycard-8.png",
@@ -132,8 +132,8 @@
     ]
   },
   "keycard_engineering": {
-    "name": "Карта Інженера Стримування",
-    "description": "Видається інженерно-технічному персоналу. Надає доступ до систем життєзабезпечення камер стримування, панелей управління Тесла-воріт та сервісних тунелів.",
+    "name": "Containment Engineer Card",
+    "description": "Issued to engineering and technical personnel. Provides access to the life support systems of containment chambers, Tesla gate control panels, and service tunnels.",
     "price": 10000,
     "quantity_range": [2, 6],
     "image_file": "keycard-9.png",
@@ -150,8 +150,8 @@
     ]
   },
   "keycard_major_scientist": {
-    "name": "Карта Старшого Науковця",
-    "description": "Видається керівникам дослідницьких проєктів та провідним науковцям. Надає доступ до камер стримування більшості об'єктів та лабораторій з обмеженим доступом.",
+    "name": "Senior Scientist Card",
+    "description": "Issued to research project leaders and leading scientists. Provides access to most object containment chambers and restricted access laboratories.",
     "price": 3000,
     "quantity_range": [2, 5],
     "image_file": "keycard-10.png",
@@ -166,8 +166,8 @@
     ]
   },
   "keycard_scientist": {
-    "name": "Карта Науковця",
-    "description": "Стандартна карта для наукового персоналу. Забезпечує доступ до лабораторій, робочих кабінетів та камер деяких об'єктів.",
+    "name": "Scientist Card",
+    "description": "Standard card for scientific personnel. Provides access to laboratories, offices, and some object containment chambers.",
     "price": 1000,
     "quantity_range": [4, 10],
     "image_file": "keycard-11.png",
@@ -183,8 +183,8 @@
     ]
   },
   "keycard_janitor": {
-    "name": "Карта Обслуговуючого Персоналу",
-    "description": "Карта з мінімальним рівнем допуску. Видається обслуговуючому персоналу для доступу до господарських приміщень та, за наказом, до камер класу D для... 'санітарних робіт'.",
+    "name": "Janitorial Staff Card",
+    "description": "Card with minimal clearance level. Issued to janitorial staff for access to utility rooms and, upon order, to D-class chambers for... 'sanitary work'.",
     "price": 0,
     "quantity_range": [0, 0],
     "image_file": "keycard-12.png",
