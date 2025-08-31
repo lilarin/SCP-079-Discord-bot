@@ -25,11 +25,13 @@ class Config:
         self.update_scp_objects: bool = "True" == self._get_env_variable("UPDATE_SCP_OBJECTS")
         self.sync_shop_cards: bool = "True" == self._get_env_variable("SYNC_SHOP_CARDS")
         self.sync_achievements: bool = "True" == self._get_env_variable("SYNC_ACHIEVEMENTS")
+        self.locale: str = self._get_env_variable("LOCALE")
         self.project_root: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.timezone: str = "Europe/Kiev"
 
         # File System Paths configuration
         self.assets_dir_path: str = os.path.join(self.project_root, "assets")
+        self.locales_path: str = os.path.join(self.assets_dir_path, "locales", f"{self.locale}.json")
         self.cards_dir_path: str = os.path.join(self.assets_dir_path, "cards")
         self.shop_cards_path: str = os.path.join(self.assets_dir_path, "configs", "shop_cards.json")
         self.work_prompts_path: str = os.path.join(self.assets_dir_path, "configs", "work_prompts.json")
@@ -258,12 +260,14 @@ class Config:
             log_queue, console_handler, respect_handler_level=True
         )
 
-        return logger, listener
+        listener.start()
+
+        return logger
 
 
 # Initialize Config and Logging
 config = Config()
-logger, log_listener = config.setup_logging()
+logger = config.setup_logging()
 
 # Tortoise ORM configuration
 # Used directly by the ORM initialization.
