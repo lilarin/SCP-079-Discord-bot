@@ -39,9 +39,12 @@ bot = commands.InteractionBot(intents=disnake.Intents.all())
 async def on_ready():
     try:
         await economy_logging_service.init_logging(bot)
-        await scp_objects_service.update_scp_objects()
-        await shop_service.sync_shop_cards()
-        await achievement_service.sync_achievements()
+        if config.update_scp_objects:
+            await scp_objects_service.update_scp_objects()
+        if config.sync_shop_cards:
+            await shop_service.sync_shop_cards()
+        if config.sync_achievements:
+            await achievement_service.sync_achievements()
     except asyncpg.exceptions.InternalServerError as exception:
         logger.error(exception)
     logger.info(f"Виконано вхід як {bot.user}")

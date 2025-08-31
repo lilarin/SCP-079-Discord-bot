@@ -22,6 +22,9 @@ class Config:
         self.discord_bot_token: str = self._get_env_variable("DISCORD_BOT_TOKEN")
         self.economy_logging_channel_id: int = int(self._get_env_variable("ECONOMY_LOGGING_CHANNEL_ID"))
         self.database_url: str = self._get_env_variable("SUPABASE_DIRECT_URL")
+        self.update_scp_objects: bool = "True" == self._get_env_variable("UPDATE_SCP_OBJECTS")
+        self.sync_shop_cards: bool = "True" == self._get_env_variable("SYNC_SHOP_CARDS")
+        self.sync_achievements: bool = "True" == self._get_env_variable("SYNC_ACHIEVEMENTS")
         self.project_root: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.timezone: str = "Europe/Kiev"
 
