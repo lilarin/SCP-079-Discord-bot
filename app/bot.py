@@ -215,7 +215,7 @@ async def top_articles(
 
     try:
         chosen_criteria = config.leaderboard_options[criteria]
-        embed, components = await leaderboard_service.init_leaderboard_message(chosen_criteria)
+        embed, components = await leaderboard_service.init_leaderboard_message(bot, chosen_criteria)
         await response_utils.send_response(interaction, embed=embed, components=components)
 
     except Exception as exception:

@@ -1,6 +1,7 @@
 from typing import List, Tuple, Optional
 
 from disnake import Embed, Component
+from disnake.ext.commands import InteractionBot
 from tortoise.functions import Count
 
 from app.config import config
@@ -122,12 +123,15 @@ class LeaderboardService:
         elif chosen_criteria == "achievements":
             return await self._get_total_achievements_users_count()
 
-    async def init_leaderboard_message(self, chosen_criteria: str) -> Optional[Tuple[Embed, List[Component]]]:
+    async def init_leaderboard_message(
+            self, bot: InteractionBot, chosen_criteria: str
+    ) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, _, has_next = await self.get_articles_top_users(
                 limit=config.leaderboard_items_per_page
             )
             embed = await ui_utils.format_leaderboard_embed(
+                bot,
                 top_users,
                 top_criteria="за переглянутими статтями",
                 hint="Кількість унікальних статей, що були переглянуті користувачем",
@@ -139,6 +143,7 @@ class LeaderboardService:
                 limit=config.leaderboard_items_per_page
             )
             embed = await ui_utils.format_leaderboard_embed(
+                bot,
                 top_users,
                 top_criteria="за поточною репутацією у фонді",
                 hint="Поточний баланс користувача, що може зменшитись за різних дій",
@@ -150,6 +155,7 @@ class LeaderboardService:
                 limit=config.leaderboard_items_per_page
             )
             embed = await ui_utils.format_leaderboard_embed(
+                bot,
                 top_users,
                 top_criteria="за загальною репутацією у фонді",
                 hint="Загальна репутація користувача, що була зароблена за весь час",
@@ -161,6 +167,7 @@ class LeaderboardService:
                 limit=config.leaderboard_items_per_page
             )
             embed = await ui_utils.format_leaderboard_embed(
+                bot,
                 top_users,
                 top_criteria="за кількістю досягнень",
                 hint="Досягнень користувача та відсоткова частка від загальної кількості",
@@ -178,13 +185,14 @@ class LeaderboardService:
         return embed, components
 
     async def edit_leaderboard_message(
-            self, chosen_criteria: str, page: int, offset: int
+            self, bot: InteractionBot, chosen_criteria: str, page: int, offset: int
     ) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, has_previous, has_next = await self.get_articles_top_users(
                 limit=config.leaderboard_items_per_page, offset=offset
             )
             embed = await ui_utils.format_leaderboard_embed(
+                bot,
                 top_users,
                 top_criteria="за переглянутими статтями",
                 hint="Кількість унікальних статей, що були переглянуті користувачем",
@@ -197,6 +205,7 @@ class LeaderboardService:
                 limit=config.leaderboard_items_per_page, offset=offset
             )
             embed = await ui_utils.format_leaderboard_embed(
+                bot,
                 top_users,
                 top_criteria="за поточною репутацією у фонді",
                 hint="Поточний баланс користувача, що може зменшитись за різних дій",
@@ -209,6 +218,7 @@ class LeaderboardService:
                 limit=config.leaderboard_items_per_page, offset=offset
             )
             embed = await ui_utils.format_leaderboard_embed(
+                bot,
                 top_users,
                 top_criteria="за загальною репутацією у фонді",
                 hint="Загальна репутація користувача, що була зароблена за весь час",
@@ -221,6 +231,7 @@ class LeaderboardService:
                 limit=config.leaderboard_items_per_page, offset=offset
             )
             embed = await ui_utils.format_leaderboard_embed(
+                bot,
                 top_users,
                 top_criteria="за кількістю досягнень",
                 hint="Досягнень користувача та відсоткова частка від загальної кількості",

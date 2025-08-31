@@ -97,12 +97,14 @@ class InteractionService:
         embed, components = await achievement_service.edit_achievements_message(target_user, new_page, offset)
         await interaction.edit_original_message(embed=embed, components=components)
 
-    async def _handle_leaderboard_pagination(self, interaction: disnake.MessageInteraction, criteria: str):
+    async def _handle_leaderboard_pagination(
+            self, bot: InteractionBot, interaction: disnake.MessageInteraction, criteria: str
+    ):
         total_count = await leaderboard_service.get_total_users_count(criteria)
         new_page, offset = await self._get_pagination_params(
             interaction, config.leaderboard_items_per_page, total_count
         )
-        embed, components = await leaderboard_service.edit_leaderboard_message(criteria, new_page, offset)
+        embed, components = await leaderboard_service.edit_leaderboard_message(bot, criteria, new_page, offset)
         await response_utils.edit_response(interaction, embed=embed, components=components)
 
     async def handle_button_click(self, bot: InteractionBot, interaction: disnake.MessageInteraction):
@@ -139,7 +141,7 @@ class InteractionService:
             else:
                 for criteria in config.leaderboard_options.values():
                     if criteria in custom_id:
-                        await self._handle_leaderboard_pagination(interaction, criteria)
+                        await self._handle_leaderboard_pagination(bot, interaction, criteria)
                         break
         except Exception as e:
             logger.error(f"Error handling button click '{custom_id}': {e}")

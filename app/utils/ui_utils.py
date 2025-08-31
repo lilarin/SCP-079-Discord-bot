@@ -2,6 +2,7 @@ import asyncio
 from typing import List, Tuple, Optional
 
 from disnake import Embed, File, Role, ButtonStyle, User, Member
+from disnake.ext.commands import InteractionBot
 from disnake.ui import ActionRow, Button
 
 from app.config import config
@@ -13,6 +14,7 @@ from app.core.schemas import SCP173GameState, HoleGameState
 class UIUtils:
     @staticmethod
     async def format_leaderboard_embed(
+            bot: InteractionBot,
             top_users: List[Tuple[int, int]], top_criteria: str,
             hint: str, symbol: str, color: int, offset: int = 0
     ) -> Embed:
@@ -22,8 +24,6 @@ class UIUtils:
         )
 
         if top_users:
-            from app.bot import bot
-
             user_fetch_tasks = [bot.get_or_fetch_user(user_id) for user_id, _ in top_users]
 
             fetched_users = await asyncio.gather(*user_fetch_tasks)
