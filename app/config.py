@@ -11,6 +11,7 @@ from disnake.ext.commands import BucketType
 from dotenv import load_dotenv
 
 from app.core.schemas import CardConfig, WorkPrompts, AchievementConfig
+from app.localization import t
 from app.utils.configs_load_utils import configs_load_utils
 
 
@@ -31,7 +32,7 @@ class Config:
         # File System Paths configuration
         self.assets_dir_path: str = os.path.join(self.project_root, "assets")
         self.cards_dir_path: str = os.path.join(self.assets_dir_path, "cards")
-        self.locales_path: str = os.path.join(self.assets_dir_path, "configs", f"locales.json")
+        self.locales_path: str = os.path.join(self.assets_dir_path, "configs", "locales.json")
         self.shop_cards_path: str = os.path.join(self.assets_dir_path, "configs", "shop_cards.json")
         self.work_prompts_path: str = os.path.join(self.assets_dir_path, "configs", "work_prompts.json")
         self.achievements_config_path: str = os.path.join(self.assets_dir_path, "configs", "achievements.json")
@@ -47,14 +48,7 @@ class Config:
 
         # SCP Article Scraper configuration
         self.wiki_url: str = "http://scp-ukrainian.wikidot.com"
-        self.scp_classes: Dict[str, str] = {
-            "Безпечний": "safe",
-            "Евклід": "euclid",
-            "Кетер": "keter",
-            "Тауміель": "thaumiel",
-            "Особливий": "exotic",
-            "Метаклас": "meta",
-        }
+        self.scp_classes: Dict[str, str] = {t(f"scp_classes.{k}"): v for k, v in t("scp_classes").items()}
         self.scp_class_config: Dict[Optional[str], Tuple[str, str]] = {
             None: ("#AAAAAA", "📁"),
             "safe": ("#6AAB64", "📗"),
@@ -85,15 +79,12 @@ class Config:
             f"{self.wiki_url}/scp-series-6",
             f"{self.wiki_url}/scp-series-7",
             f"{self.wiki_url}/scp-series-8",
-            f"{self.wiki_url}/scp-series-9"
+            f"{self.wiki_url}/scp-series-9",
         ]
 
         # UI & Pagination configuration
         self.leaderboard_options: Dict[str, str] = {
-            "Переглянуті статті": "articles",
-            "Баланс": "balance",
-            "Репутація": "reputation",
-            "Досягнення": "achievements"
+            t(f"leaderboard_options.{k}"): v for k, v in t("leaderboard_options").items()
         }
         self.leaderboard_items_per_page: int = 10
         self.shop_items_per_page: int = 3
@@ -123,93 +114,14 @@ class Config:
 
         self.hole_game_duration: int = 30
         self.hole_items: Dict[int, str] = {
-            0: "Ключ-карта ради О5 (0)",
-            1: "MTF-E11-SR (1)",
-            3: "Ключ-карта капітана МОГ (3)",
-            5: "Бойова броня (5)",
-            7: "Micro H.I.D. (7)",
-            9: "Ключ-карта лейтенанта МОГ (9)",
-            12: "FSP-9 (12)",
-            14: "Світлошумова граната (14)",
-            16: "Crossvec (16)",
-            18: "Ключ-карта сержанта МОГ (9)",
-            2: "Logicer (2)",
-            4: "Пристрій доступу Повстанців Хаосу (4)",
-            6: "AK (6)",
-            8: ".44 Magnum (8)",
-            10: "Адреналін (10)",
-            11: "COM-18 (11)",
-            13: "Осколково-фугасна граната (13)",
-            15: "FR-MG-0 (15)",
-            17: "Важка броня (17)",
-            19: "Ключ-карта науковця (19)",
-            21: "Аптечка (21)",
-            23: "Ключ-карта наукового керівника (23)",
-            25: "Ключ-карта інженера зі стримування (25)",
-            27: "COM-15 (27)",
-            30: "SCP-500 (30)",
-            32: "Планшет (32)",
-            34: "3-X Руйнівник частинок (34)",
-            36: "Ключ-карта менеджера зони (36)",
-            20: "Ключ-карта прибиральника (20)",
-            22: "Шоколадний батончик (22)",
-            24: "Порожня пляшка (24)",
-            26: "Ліхтарик (26)",
-            28: "Пошарпана книга (28)",
-            29: "Стара фотографія (29)",
-            31: "Пляшка води (31)",
-            33: "Невідомий ключ (33)",
-            35: "Черствий хліб (35)",
+            int(k): t(f"hole_items.{k}") for k, v in t("hole_items").items()
         }
         self.hole_group_bet_options: Dict[str, Dict] = {
-            "Військові (1-18)": {
-                "multiplier": 2,
-                "numbers": set(range(1, 19))
-            },
-            "Цивільні (19-36)": {
-                "multiplier": 2,
-                "numbers": set(range(19, 37))
-            },
-            "Фонд SCP (MTF + Науковці)": {
-                "multiplier": 2,
-                "numbers": {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
-            },
-            "Повстанці Хаосу (Хаос + D-Клас)": {
-                "multiplier": 2,
-                "numbers": {2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35}
-            },
-            "Парні": {
-                "multiplier": 2,
-                "numbers": set(range(2, 37, 2))
-            },
-            "Непарні": {
-                "multiplier": 2,
-                "numbers": set(range(1, 37, 2))
-            },
-            "1-а дюжина (1-12)": {
-                "multiplier": 3,
-                "numbers": set(range(1, 13))
-            },
-            "2-а дюжина (13-24)": {
-                "multiplier": 3,
-                "numbers": set(range(13, 25))
-            },
-            "3-я дюжина (25-36)": {
-                "multiplier": 3,
-                "numbers": set(range(25, 37))
-            },
-            "1-й ряд": {
-                "multiplier": 3,
-                "numbers": {1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34}
-            },
-            "2-й ряд": {
-                "multiplier": 3,
-                "numbers": {2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35}
-            },
-            "3-й ряд": {
-                "multiplier": 3,
-                "numbers": {3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36}
-            },
+            t(f"hole_group_bet_options.{key}.name"): {
+                "multiplier": value["multiplier"],
+                "numbers": set(value["numbers"]),
+            }
+            for key, value in t("hole_group_bet_options").items()
         }
 
         self.hole_bet_options: Dict[str, Dict] = {
