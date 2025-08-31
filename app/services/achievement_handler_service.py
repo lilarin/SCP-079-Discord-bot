@@ -189,16 +189,7 @@ class AchievementHandlerService:
         if purchasable_card_ids.issubset(user_card_ids) and "access_master" not in achievements:
             await self._grant_achievement(user, "access_master")
 
-        elite_card_achievements = {
-            "keycard_zone_director": "zone_authority",
-            "keycard_o5": "o5_council",
-            "keycard_redacted": "administrator_presence",
-        }
-        if bought_item_id in elite_card_achievements and elite_card_achievements[
-            bought_item_id] not in achievements:
-            await self._grant_achievement(user, elite_card_achievements[bought_item_id])
-
-        promotion_map = {
+        achievements_map = {
             "keycard_scientist": "scientist_promotion",
             "keycard_major_scientist": "major_scientist_promotion",
             "keycard_engineering": "engineer_promotion",
@@ -206,10 +197,13 @@ class AchievementHandlerService:
             "keycard_security": "security_promotion",
             "keycard_sergeant_mog": "sergeant_promotion",
             "keycard_lieutenant_mog": "lieutenant_promotion",
-            "keycard_captain_mog": "upcoming_promotion"
+            "keycard_captain_mog": "upcoming_promotion",
+            "keycard_zone_director": "zone_authority",
+            "keycard_o5": "o5_council",
+            "keycard_redacted": "administrator_presence"
         }
-        if bought_item_id in promotion_map and promotion_map[bought_item_id] not in achievements:
-            await self._grant_achievement(user, promotion_map[bought_item_id])
+        if bought_item_id in achievements_map and achievements_map[bought_item_id] not in achievements:
+            await self._grant_achievement(user, achievements_map[bought_item_id])
 
 
 achievement_handler_service = AchievementHandlerService()
