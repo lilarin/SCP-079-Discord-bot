@@ -754,8 +754,8 @@ class UIUtils:
         for i, (ach, count) in enumerate(stats):
             percentage = (count / total_players) * 100
             description_lines.append(
-                f"{offset + i + 1}. **{ach.name}** {ach.icon} \n"
-                f"-# {ach.description} – {percentage:.1f}%"
+                f"{offset + i + 1}. **{ach.name}** {ach.icon} ({percentage:.1f}%)\n"
+                f"-# {ach.description}"
             )
 
         embed.description = "\n\n".join(description_lines)
