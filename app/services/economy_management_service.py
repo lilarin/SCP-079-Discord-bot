@@ -20,8 +20,6 @@ class EconomyManagementService:
 
         await db_user.update_balance(amount, balance_only)
 
-        await achievement_handler_service.handle_economy_achievements(user)
-
         asyncio.create_task(
             economy_logging_service.log_balance_change(
                 user=user,
