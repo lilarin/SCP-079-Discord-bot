@@ -57,11 +57,9 @@ class CoguardService:
         while new_number == state.current_number:
             new_number = random.randint(1, 100)
 
-        is_correct = (
-                             choice == "higher" and new_number > state.current_number
-                     ) or (
-                             choice == "lower" and new_number < state.current_number
-                     )
+        higher_correct = choice == "higher" and new_number > state.current_number
+        lower_correct = choice == "lower" and new_number < state.current_number
+        is_correct = higher_correct or lower_correct
 
         if not is_correct:
             loss_embed = await ui_utils.format_coguard_loss_embed(state.bet, state.win_streak)
