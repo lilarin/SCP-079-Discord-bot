@@ -51,7 +51,7 @@ class Config:
 
         # SCP Article Scraper configuration
         self.wiki_url: str = "http://scp-ukrainian.wikidot.com"
-        self.scp_classes: Dict[str, str] = {t(f"scp_classes.{k}"): v for k, v in t("scp_classes").items()}
+        self.scp_classes: Dict[str, str] = {v: k for k, v in t("scp_classes").items()}
         self.scp_class_config: Dict[Optional[str], Tuple[str, str]] = {
             None: ("#AAAAAA", "📁"),
             "safe": ("#6AAB64", "📗"),
@@ -86,9 +86,7 @@ class Config:
         ]
 
         # UI & Pagination configuration
-        self.leaderboard_options: Dict[str, str] = {
-            t(f"leaderboard_options.{k}"): v for k, v in t("leaderboard_options").items()
-        }
+        self.leaderboard_options: Dict[str, str] = {v: k for k, v in t("leaderboard_options").items()}
         self.leaderboard_items_per_page: int = 10
         self.shop_items_per_page: int = 3
         self.inventory_items_per_page: int = 5
