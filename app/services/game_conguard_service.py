@@ -5,8 +5,7 @@ import disnake
 
 from app.config import config
 from app.core.schemas import CoguardState
-from app.services import achievement_handler_service
-from app.services.economy_management_service import economy_management_service
+from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
 from app.utils.ui_utils import ui_utils
 

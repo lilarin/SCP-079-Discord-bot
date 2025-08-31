@@ -7,8 +7,7 @@ from tortoise.expressions import Q
 from tortoise.transactions import in_transaction
 
 from app.core.models import User as UserModel
-from app.services import achievement_handler_service
-from app.services.economy_logging_service import economy_logging_service
+from app.services import achievement_handler_service, economy_logging_service
 from app.utils.ui_utils import ui_utils
 
 

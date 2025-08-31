@@ -1,4 +1,3 @@
-import math
 from typing import List, Tuple, Optional
 
 from disnake import Embed, Component, User

@@ -4,8 +4,7 @@ from typing import Tuple
 
 from app.config import config
 from app.core.models import User
-from app.services import achievement_handler_service
-from app.services.economy_management_service import economy_management_service
+from app.services import achievement_handler_service, economy_management_service
 
 
 class WorkService:
