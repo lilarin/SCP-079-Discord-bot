@@ -83,13 +83,11 @@ class CoguardService:
         await response_utils.edit_response(interaction, embed=embed, components=components)
 
     async def cash_out(self, interaction: disnake.MessageInteraction):
-        user_id = interaction.user.id
-
         winnings_label = interaction.component.label
         winnings = int(winnings_label.split(' ')[1])
 
         await economy_management_service.update_user_balance(
-            user_id, winnings, f"Перемога у грі `когнітивна-стійкість`"
+            interaction.user, winnings, f"Перемога у грі `когнітивна-стійкість`"
         )
 
         state = self._parse_state_from_components(interaction.message.components)
