@@ -42,7 +42,8 @@ customization and competition options to create an engaging community experience
   Place high-risk bets on specific items (36x payout) or safer bets on item categories (2x or 3x payout)
 * **Coin flip:** The classic 50/50 chance to double your bet. Quick, simple, and risky
 
-### [Demonstration (Imgur screenshots collection)](https://imgur.com/a/lilarin-scp-079-discord-bot-kafjgyl)
+> [!IMPORTANT]
+> ### [Demonstration (Imgur screenshots collection)](https://imgur.com/a/lilarin-scp-079-discord-bot-kafjgyl)
 
 ---
 
