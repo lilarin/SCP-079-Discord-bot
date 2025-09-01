@@ -129,7 +129,8 @@ customization and competition options to create an engaging community experience
 6. **Run the bot:**
    ```bash
    python -m app.main
-   ```   or on Windows, run using `start_bot.bat`
+   ```   
+   or on Windows, run using `start_bot.bat`
 
 ---
 
