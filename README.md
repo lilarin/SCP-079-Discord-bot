@@ -99,12 +99,14 @@ customization and competition options to create an engaging community experience
 > ### Designs
 > The image assets included in this repository serve as **layout templates only**. They are provided to demonstrate the
 correct dimensions and positioning required for text and image overlays  
+> 
 > **The final visual designs used in my production bot are not included in this public repository!**
 >
 > ### The Specifics of The Scraper
 > The web scraper is **specifically designed to work with HTML structure of
 the [Ukrainian SCP Wiki](http://scp-ukrainian.wikidot.com/)**. It relies on specific CSS selectors and page layouts
 found on that site to correctly parse SCP object numbers, titles, and classes  
+> 
 > **This scraper will not work out-of-the-box with other SCP wikis (e.g., English, Polish, etc.)**, to adapt the bot for
 a different wiki, you will need to:
 > 1. Identify the equivalent "SCP Series" pages on your target wiki
