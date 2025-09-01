@@ -121,10 +121,10 @@ customization and competition options to create an engaging community experience
 5. **Initial data population:**
    On the first run, ensure the configuration flags in your `.env` file are set to `True` to populate the database with
    initial data:
-    * `UPDATE_SCP_OBJECTS=True`: Runs the scraper to fetch SCP articles from the wiki.
-    * `SYNC_SHOP_CARDS=True`: Populates the `items` table based on `assets/configs/shop_cards.json`.
-    * `SYNC_ACHIEVEMENTS=True`: Populates the `achievements` table based on `assets/configs/achievements.json`.
-      After the first successful launch, you can set these flags to `False` to speed up subsequent restarts.
+    * `UPDATE_SCP_OBJECTS=True`: Runs the scraper to fetch SCP articles from the wiki
+    * `SYNC_SHOP_CARDS=True`: Populates the `items` table based on `assets/configs/shop_cards.json`
+    * `SYNC_ACHIEVEMENTS=True`: Populates the `achievements` table based on `assets/configs/achievements.json`  
+    After the first successful launch, you can set these flags to `False` to speed up subsequent restarts
 
 6. **Run the bot:**
    ```bash
