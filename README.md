@@ -89,7 +89,7 @@ customization and competition options to create an engaging community experience
    ```bash
    python -m app.main
    ```
-   > [!NOTE]
+   > [!Tip]  
    > or on Windows, run using `start_bot.bat`
 
 ---
