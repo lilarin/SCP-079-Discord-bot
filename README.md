@@ -135,7 +135,7 @@ customization and competition options to create an engaging community experience
 
 ## Disclaimers
 
-> [!IMPORTANT]
+> [!WARNING]
 > ### Designs
 > The image assets included in this repository serve as **layout templates only**. They are provided to demonstrate the
 > correct dimensions and positioning required for text and image overlays
