@@ -109,6 +109,5 @@ found on that site to correctly parse SCP object numbers, titles, and classes
 > 
 > **This scraper will not work out-of-the-box with other SCP wikis (e.g., English, Polish, etc.)**, to adapt the bot for
 a different wiki, you will need to:
-> 1. Identify the equivalent "SCP Series" pages on your target wiki
-> 2. Analyze the HTML structure of those pages
-> 3. Modify the parsing logic in `_parse_scp_data` method to match the new structure
+> 1. Analyze the HTML structure of SCP Series" pages on your target wiki
+> 2. Modify the parsing logic in `_parse_scp_data` method to match the new structure
