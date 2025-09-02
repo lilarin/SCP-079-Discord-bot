@@ -184,7 +184,8 @@ class KeyCardService:
             user_name,
             user_code,
             avatar_key,
-            decoration_key
+            decoration_key,
+            template.name
         )
 
         cached_file = keycard_cache.get(cache_key)
