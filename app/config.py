@@ -156,7 +156,7 @@ class Config:
 
         queue_handler = logging.handlers.QueueHandler(log_queue)
 
-        logger = logging.getLogger("scp-profiles")
+        logger = logging.getLogger("scp-079-bot")
         logger.setLevel(logging.INFO)
         logger.propagate = False
         logger.addHandler(queue_handler)
