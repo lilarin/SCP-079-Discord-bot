@@ -33,10 +33,8 @@ Write-Host "Virtual environment activated." -ForegroundColor Green
 # Check if .env file exists, create it if not
 $envFile = ".env"
 if (-not (Test-Path $envFile)) {
-    Write-Host "Creating .env file..." -ForegroundColor Yellow
-    $discordToken = Read-Host -Prompt "Enter your Discord bot token"
-    "DISCORD_BOT_TOKEN=$discordToken" | Out-File -FilePath $envFile -Encoding utf8
-    Write-Host ".env file created." -ForegroundColor Green
+    Write-Host "Create .env." -ForegroundColor Red
+    exit 1
 } else {
     Write-Host ".env file already exists." -ForegroundColor Green
 }
@@ -52,4 +50,4 @@ Write-Host "Dependencies installed successfully." -ForegroundColor Green
 
 # Run the bot
 Write-Host "Starting Discord bot..." -ForegroundColor Green
-python -m app.bot
+python -m app.main
