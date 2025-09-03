@@ -235,7 +235,7 @@ async def top(
 @bot.slash_command(name=t("commands.balance.name"), description=t("commands.balance.description"))
 @commands.guild_only()
 @target_is_user
-async def view_balance(
+async def balance(
         interaction: disnake.ApplicationCommandInteraction,
         user: disnake.User = commands.Param(
             description=t("commands.balance.params.user.description"),
@@ -257,7 +257,7 @@ async def view_balance(
 
 @bot.slash_command(name=t("commands.transfer.name"), description=t("commands.transfer.description"))
 @commands.guild_only()
-async def transfer_balance(
+async def transfer(
         interaction: disnake.ApplicationCommandInteraction,
         recipient: disnake.User = commands.Param(
             description=t("commands.transfer.params.recipient.description"),
@@ -306,7 +306,7 @@ async def shop(interaction: disnake.ApplicationCommandInteraction):
 @bot.slash_command(name=t("commands.update_shop.name"), description=t("commands.update_shop.description"))
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
-async def update_shop_quantities(interaction: disnake.ApplicationCommandInteraction):
+async def update_shop(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
 
     try:
@@ -320,7 +320,7 @@ async def update_shop_quantities(interaction: disnake.ApplicationCommandInteract
 
 @bot.slash_command(name=t("commands.buy.name"), description=t("commands.buy.description"))
 @commands.guild_only()
-async def buy_item(
+async def buy(
         interaction: disnake.ApplicationCommandInteraction,
         item_id: str = commands.Param(
             description=t("commands.buy.params.item_id.description"),
@@ -365,7 +365,7 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
 
 @bot.slash_command(name=t("commands.equip.name"), description=t("commands.equip.description"))
 @commands.guild_only()
-async def equip_item(
+async def equip(
         interaction: disnake.ApplicationCommandInteraction,
         item_id: str = commands.Param(
             description=t("commands.equip.params.item_id.description"),
@@ -413,7 +413,7 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
 @commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=config.cooldown_type)
 @bot.slash_command(name=t("commands.risky_work.name"), description=t("commands.risky_work.description"))
 @commands.guild_only()
-async def non_legal_work(interaction: disnake.ApplicationCommandInteraction):
+async def risky_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
 
     try:
@@ -449,8 +449,7 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@bot.slash_command(name=t("commands.edit_balance.name"),
-                   description=t("commands.edit_balance.description"))
+@bot.slash_command(name=t("commands.edit_balance.name"), description=t("commands.edit_balance.description"))
 @commands.guild_only()
 @commands.has_permissions(administrator=True)
 @target_is_user
@@ -689,7 +688,7 @@ async def achievements(
             name=t("commands.achievements.params.user.name")
         ),
 ):
-    await response_utils.wait_for_response(interaction)
+    await response_utils.wait_for_ephemeral_response(interaction)
     user = user or interaction.user
 
     try:
@@ -699,11 +698,11 @@ async def achievements(
             target: disnake.User = user
 
         embed, components = await achievement_service.init_achievements_message(target)
-        await response_utils.send_response(interaction, embed=embed, components=components)
+        await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
 
     except Exception as e:
         logger.error(f"Помилка при отриманні досягнень: {e}")
-        await response_utils.send_response(interaction, t("responses.achievements.load_error"), delete_after=10)
+        await response_utils.edit_ephemeral_response(interaction, t("responses.achievements.load_error"), delete_after=10)
 
 
 @bot.slash_command(name=t("commands.achievement_stats.name"), description=t("commands.achievement_stats.description"))
