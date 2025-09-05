@@ -76,8 +76,6 @@
       }
     },
     "achievements": {
-      "load_error": "Failed to load achievements",
-      "stats_load_error": "Failed to load the list of achievements",
       "dm_notification": "## You have earned a new achievement!\n### `{name}` {icon}\n-# {description}"
     }
   },
