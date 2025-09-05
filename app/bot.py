@@ -700,9 +700,9 @@ async def achievements(
         embed, components = await achievement_service.init_achievements_message(target)
         await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
 
-    except Exception as e:
-        logger.error(f"Помилка при отриманні досягнень: {e}")
-        await response_utils.edit_ephemeral_response(interaction, t("responses.achievements.load_error"), delete_after=10)
+    except Exception as exception:
+        await response_utils.send_error_response(interaction)
+        logger.error(exception)
 
 
 @bot.slash_command(name=t("commands.achievement_stats.name"), description=t("commands.achievement_stats.description"))
@@ -713,9 +713,9 @@ async def achievement_stats(interaction: disnake.ApplicationCommandInteraction):
     try:
         embed, components = await achievement_service.init_stats_message()
         await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
-    except Exception as e:
-        logger.error(f"Помилка при отриманні статистики досягнень: {e}")
-        await response_utils.edit_ephemeral_response(interaction, t("responses.achievements.stats_load_error"))
+    except Exception as exception:
+        await response_utils.send_error_response(interaction)
+        logger.error(exception)
 
 
 @bot.event
