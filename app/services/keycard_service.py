@@ -2,6 +2,7 @@ import asyncio
 from io import BytesIO
 from typing import Tuple, Optional
 
+import unicodedata
 from PIL import Image, ImageDraw
 from cachetools import TTLCache
 from disnake import File, User, Member
@@ -67,7 +68,8 @@ class KeyCardService:
     ) -> None:
         font = config.get_font(font_path, font_size)
         fill_color = self._int_to_rgb(color)
-        self.draw.text(position, text, font=font, fill=fill_color)
+        normalized_text = unicodedata.normalize("NFKC", text)
+        self.draw.text(position, normalized_text, font=font, fill=fill_color)
 
     def _add_spaced_text(
             self,
