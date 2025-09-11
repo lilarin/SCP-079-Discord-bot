@@ -11,8 +11,8 @@ customization and competition options to create an engaging community experience
 * **Dynamic user profiles as keycards:** Every user receives a unique "Keycard" profile. This profile displays their
   rank, server role, balance, achievements, and a customizable dossier. The visual design of the keycard dynamically
   updates when the user equips different high-level access cards
-* **Narrative work system:** Earn currency through work prompts that are presented as mini-stories. Choose between "
-  Legal Work" for a safe, guaranteed income, or "Risky Work" for a chance at a much larger reward or a significant
+* **Narrative work system:** Earn currency through work prompts that are presented as mini-stories. Choose between 
+* "Legal Work" for a safe, guaranteed income, or "Risky Work" for a chance at a much larger reward or a significant
   penalty. The complexity and payout of these stories evolve as you acquire better keycards
 * **Deep progression & achievements:** Unlock unique achievements by participating in games, exploring SCP articles,
   engaging with the economy, and progressing through the ranks. Certain high-tier items in the shop can only be
@@ -34,13 +34,13 @@ customization and competition options to create an engaging community experience
   be higher or lower than the current one. Build up your win streak to increase your payout multiplier
 * **SCP-173 staring (russian roulette analog):** Join a lobby with other players and try to survive rounds of "
   blinking." In each round, players have a chance of being eliminated. Be the last one standing to win the entire pot.
-  Supports "Normal Mode" (game ends on first elimination) and "Last Man Standing Mode."
+  Supports "Normal Mode" (game ends on first elimination) and "Last Man Standing Mode"
 * **SCP-330 candy game (risk management):** Inspired by SCP-330 "Take Only Two." You start with an unknown number of
   pre-taken candies. Each candy you take increases your potential reward, but if the total number of candies taken
   exceeds the limit, you lose your entire bet
 * **The hole (roulette):** A timed-lobby roulette game where players bet on which anomalous item "The Hole" will return.
   Place high-risk bets on specific items (36x payout) or safer bets on item categories (2x or 3x payout)
-* **Coin flip:** The classic 50/50 chance to double your bet. Quick, simple, and risky
+* **Coin flip:** The classic 50/50 chance to double your bet
 
 > [!IMPORTANT]
 > ### [Demonstration (Imgur screenshots collection)](https://imgur.com/a/lilarin-scp-079-discord-bot-kafjgyl)
@@ -110,7 +110,7 @@ customization and competition options to create an engaging community experience
 
 3. **Environment variables configuration:**
 
-   Rename the `.env.example` file and fill in the required credentials.
+   Rename the `.env.example` file and fill in the required credentials
 
 4. **Database migration:**
    The project uses `aerich` for database migrations with Tortoise ORM. Run the following command to init the database:
