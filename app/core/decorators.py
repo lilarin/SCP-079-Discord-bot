@@ -1,5 +1,6 @@
 from functools import wraps
 
+from app.config import config
 from app.core.models import User
 from app.localization import t
 from app.services.economy_management_service import economy_management_service
@@ -11,7 +12,23 @@ def target_is_user(func):
     async def wrapper(interaction, *args, **kwargs):
         user = kwargs.get("user")
         if user and user.bot:
-            await response_utils.send_ephemeral_response(interaction, message=t("errors.bots_not_allowed"))
+            await response_utils.send_ephemeral_response(
+                interaction, message=t("errors.bots_not_allowed")
+            )
+            return
+
+        await func(interaction, *args, **kwargs)
+
+    return wrapper
+
+
+def is_allowed_user(func):
+    @wraps(func)
+    async def wrapper(interaction, *args, **kwargs):
+        if interaction.author.id not in config.administrator_user_ids:
+            await response_utils.send_ephemeral_response(
+                interaction, message=t("errors.missing_permissions")
+            )
             return
 
         await func(interaction, *args, **kwargs)

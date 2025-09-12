@@ -28,6 +28,7 @@ class Config:
         self.sync_achievements: bool = "True" == self._get_env_variable("SYNC_ACHIEVEMENTS")
         self.project_root: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.timezone: str = "Europe/Kiev"
+        self.administrator_user_ids = [354638720600768522]
 
         # File System Paths configuration
         self.assets_dir_path: str = os.path.join(self.project_root, "assets")
