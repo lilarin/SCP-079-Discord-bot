@@ -5,7 +5,11 @@ import disnake
 from disnake.ext import commands
 
 from app.config import config, logger
-from app.core.decorators import target_is_user, remove_bet_from_balance
+from app.core.decorators import (
+    target_is_user,
+    remove_bet_from_balance,
+    is_allowed_user
+)
 from app.core.models import User as UserModel
 from app.localization import t
 from app.modals.dossier_modal import DossierModal
@@ -67,22 +71,15 @@ async def on_slash_command(interaction):
 
 @bot.event
 async def on_slash_command_error(interaction, error):
-    if isinstance(error, commands.MissingPermissions):
-        await response_utils.send_ephemeral_response(interaction, t("errors.missing_permissions"))
-        return
-    elif isinstance(error, commands.NoPrivateMessage):
+    if isinstance(error, commands.NoPrivateMessage):
         await response_utils.send_ephemeral_response(interaction, t("errors.no_private_message"))
-        return
     elif isinstance(error, disnake.ext.commands.errors.CommandOnCooldown):
         timestamp = await time_utils.get_current()
         timestamp = round(timestamp.timestamp() + error.retry_after)
-        await response_utils.send_ephemeral_response(
-            interaction,
-            t("errors.cooldown", timestamp=timestamp)
-        )
+        await response_utils.send_ephemeral_response(interaction, t("errors.cooldown", timestamp=timestamp))
         asyncio.create_task(achievement_handler_service.handle_cooldown_achievement(interaction.user))
-
-    # logger.error(error)
+    else:
+        logger.error(error)
 
 
 @bot.event
@@ -434,7 +431,7 @@ async def risky_work(interaction: disnake.ApplicationCommandInteraction):
 
 @bot.slash_command(name=t("commands.reset_reputation.name"), description=t("commands.reset_reputation.description"))
 @commands.guild_only()
-@commands.has_permissions(administrator=True)
+@is_allowed_user
 async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
 
@@ -451,7 +448,7 @@ async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
 
 @bot.slash_command(name=t("commands.edit_balance.name"), description=t("commands.edit_balance.description"))
 @commands.guild_only()
-@commands.has_permissions(administrator=True)
+@is_allowed_user
 @target_is_user
 async def edit_player_balance(
         interaction: disnake.ApplicationCommandInteraction,
