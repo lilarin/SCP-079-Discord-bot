@@ -3,8 +3,8 @@ import random
 
 from disnake import ui, ApplicationCommandInteraction, MessageInteraction
 
-from app.config import config
 from app.core.schemas import CoguardState
+from app.core.variables import variables
 from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
@@ -32,7 +32,7 @@ class CoguardService:
 
     @staticmethod
     async def start_game(interaction: ApplicationCommandInteraction, bet: int):
-        initial_multiplier = round(random.uniform(*config.coguard_initial_multiplier_range), 2)
+        initial_multiplier = round(random.uniform(*variables.coguard_initial_multiplier_range), 2)
         initial_number = random.randint(1, 100)
 
         embed, components = await ui_utils.format_coguard_embed(
@@ -65,7 +65,7 @@ class CoguardService:
             return
 
         new_win_streak = state.win_streak + 1
-        multiplier_increment = random.uniform(*config.coguard_multiplier_increment_range)
+        multiplier_increment = random.uniform(*variables.coguard_multiplier_increment_range)
         new_multiplier = round(state.multiplier + multiplier_increment, 2)
         new_potential_win = int(state.bet * new_multiplier)
 

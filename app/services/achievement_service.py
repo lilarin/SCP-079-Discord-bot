@@ -3,15 +3,16 @@ from typing import Dict, List, Tuple, Optional
 from disnake import Embed, Component, User, Member
 from tortoise.functions import Count
 
-from app.config import config, logger
+from app.config import logger
 from app.core.models import Achievement, User as UserModel, UserAchievement
 from app.core.schemas import AchievementConfig
+from app.core.variables import variables
 from app.utils.ui_utils import ui_utils
 
 
 class AchievementService:
     def __init__(self):
-        self.achievements_config: Dict[str, AchievementConfig] = config.achievements
+        self.achievements_config: Dict[str, AchievementConfig] = variables.achievements
 
     async def sync_achievements(self) -> None:
         if not self.achievements_config:
@@ -72,7 +73,7 @@ class AchievementService:
     async def init_achievements_message(self, user: Member | User) -> Optional[Tuple[Embed, List[Component]]]:
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
         items, _, has_next = await self._get_paginated_user_achievements(
-            user_id=user.id, limit=config.achievements_per_page
+            user_id=user.id, limit=variables.achievements_per_page
         )
 
         embed = await ui_utils.format_achievements_embed(user, items)
@@ -91,7 +92,7 @@ class AchievementService:
             self, user: User, page: int, offset: int
     ) -> Optional[Tuple[Embed, List[Component]]]:
         items, has_previous, has_next = await self._get_paginated_user_achievements(
-            user_id=user.id, limit=config.achievements_per_page, offset=offset
+            user_id=user.id, limit=variables.achievements_per_page, offset=offset
         )
 
         embed = await ui_utils.format_achievements_embed(user, items, offset=offset)
@@ -139,7 +140,7 @@ class AchievementService:
 
     async def init_stats_message(self) -> Optional[Tuple[Embed, List[Component]]]:
         stats, _, has_next = await self.get_achievements_statistics(
-            limit=config.achievements_per_page
+            limit=variables.achievements_per_page
         )
         total_players = await self.get_total_players_with_achievements_count()
 
@@ -156,7 +157,7 @@ class AchievementService:
 
     async def edit_stats_message(self, page: int, offset: int) -> Optional[Tuple[Embed, List[Component]]]:
         stats, has_previous, has_next = await self.get_achievements_statistics(
-            limit=config.achievements_per_page, offset=offset
+            limit=variables.achievements_per_page, offset=offset
         )
         total_players = await self.get_total_players_with_achievements_count()
 

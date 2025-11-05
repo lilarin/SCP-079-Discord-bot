@@ -2,15 +2,15 @@ import asyncio
 import random
 from typing import Tuple
 
-from app.config import config
 from app.core.models import User
+from app.core.variables import variables
 from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 
 
 class WorkService:
     def __init__(self):
-        self.work_prompts = config.work_prompts
+        self.work_prompts = variables.work_prompts
 
     async def _get_user_work_key(self, db_user: User) -> str:
         await db_user.fetch_related("equipped_card")
@@ -24,7 +24,7 @@ class WorkService:
         work_key = await self._get_user_work_key(db_user)
         prompt = random.choice(self.work_prompts[work_key].legal)
 
-        reward = random.randint(*config.legal_work_reward_range)
+        reward = random.randint(*variables.legal_work_reward_range)
 
         await economy_management_service.update_user_balance(user, reward, t("economy.reasons.legal_work"))
 
@@ -39,11 +39,11 @@ class WorkService:
         work_key = await self._get_user_work_key(db_user)
         non_legal_prompts = self.work_prompts[work_key].non_legal
 
-        is_success = random.random() < config.non_legal_work_success_chance
+        is_success = random.random() < variables.non_legal_work_success_chance
 
         if is_success:
             prompt = random.choice(non_legal_prompts.success)
-            amount = random.randint(*config.non_legal_work_reward_range)
+            amount = random.randint(*variables.non_legal_work_reward_range)
             await economy_management_service.update_user_balance(
                 user, amount, t("economy.reasons.risky_work_success")
             )
@@ -52,7 +52,7 @@ class WorkService:
             )
         else:
             prompt = random.choice(non_legal_prompts.failure)
-            amount = random.randint(*config.non_legal_work_penalty_range)
+            amount = random.randint(*variables.non_legal_work_penalty_range)
             await economy_management_service.update_user_balance(
                 user, -amount, t("economy.reasons.risky_work_failure")
             )

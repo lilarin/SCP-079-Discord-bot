@@ -3,8 +3,8 @@ import random
 
 from disnake import ApplicationCommandInteraction, TextChannel
 
-from app.config import config
 from app.core.schemas import HoleGameState, HolePlayerBet
+from app.core.variables import variables
 from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
@@ -18,7 +18,7 @@ class HoleGameService:
     @staticmethod
     async def item_autocomplete(interaction: ApplicationCommandInteraction, user_input: str) -> list[str]:
         user_input = user_input.lower()
-        return [name for name in config.hole_items.values() if user_input in name.lower()][:25]
+        return [name for name in variables.hole_items.values() if user_input in name.lower()][:25]
 
     def is_game_active(self, channel_id: int) -> bool:
         return channel_id in self.games
@@ -66,7 +66,7 @@ class HoleGameService:
 
     async def _run_game_finalization(self, channel: TextChannel):
         channel_id = channel.id
-        await asyncio.sleep(config.hole_game_duration)
+        await asyncio.sleep(variables.hole_game_duration)
 
         if channel_id not in self.games:
             return
@@ -74,10 +74,10 @@ class HoleGameService:
         game_state_to_process = self.games.pop(channel_id)
 
         winning_number = random.randint(0, 36)
-        winning_item_name = config.hole_items[winning_number]
+        winning_item_name = variables.hole_items[winning_number]
         winners = []
         for p_bet in game_state_to_process.bets:
-            bet_option = config.hole_bet_options[p_bet.choice]
+            bet_option = variables.hole_bet_options[p_bet.choice]
             if winning_number in bet_option["numbers"]:
                 payout = p_bet.amount * bet_option["multiplier"]
                 await economy_management_service.update_user_balance(

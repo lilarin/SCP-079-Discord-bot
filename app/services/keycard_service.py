@@ -7,9 +7,9 @@ from PIL import Image, ImageDraw
 from cachetools import TTLCache
 from disnake import File, User, Member
 
-from app.config import config
 from app.core.models import User as UserModel, UserAchievement
 from app.core.schemas import CardConfig, UserProfileData
+from app.core.variables import variables
 from app.utils.keycard_utils import keycard_utils
 
 keycard_cache = TTLCache(maxsize=500, ttl=259200)
@@ -27,11 +27,11 @@ class KeyCardService:
         template = None
         if db_user.equipped_card:
             equipped_template_id = db_user.equipped_card.item_id
-            if equipped_template_id in config.cards:
-                template = config.cards[equipped_template_id]
+            if equipped_template_id in variables.cards:
+                template = variables.cards[equipped_template_id]
 
         if not template:
-            templates = list(config.cards.values())
+            templates = list(variables.cards.values())
             template = templates[-1]
 
         card_image = await self.get_or_generate_image(user, template)
@@ -66,7 +66,7 @@ class KeyCardService:
             font_size: int,
             color: int
     ) -> None:
-        font = config.get_font(font_path, font_size)
+        font = variables.get_font(font_path, font_size)
         fill_color = self._int_to_rgb(color)
         normalized_text = unicodedata.normalize("NFKC", text)
         self.draw.text(position, normalized_text, font=font, fill=fill_color)
@@ -80,7 +80,7 @@ class KeyCardService:
             color: int,
             spacing: int
     ) -> None:
-        font = config.get_font(font_path, font_size)
+        font = variables.get_font(font_path, font_size)
         fill_color = self._int_to_rgb(color)
         x, y = position
         for char in text:
@@ -144,7 +144,7 @@ class KeyCardService:
         self._add_spaced_text(
             text=user_code,
             position=(630, 240),
-            font_path=config.primary_font_path,
+            font_path=variables.primary_font_path,
             font_size=45,
             color=secondary_color,
             spacing=30
@@ -163,7 +163,7 @@ class KeyCardService:
         self._add_text(
             text=user_name,
             position=(53, 303),
-            font_path=config.secondary_font_path,
+            font_path=variables.secondary_font_path,
             font_size=130,
             color=primary_color
         )

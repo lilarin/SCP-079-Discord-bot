@@ -6,8 +6,9 @@ from disnake import Embed, Component, User
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
-from app.config import config, logger
+from app.config import logger
 from app.core.models import Item, ItemType, User as UserModel, UserItem, UserAchievement
+from app.core.variables import variables
 from app.localization import t
 from app.services import achievement_handler_service
 from app.utils.ui_utils import ui_utils
@@ -15,7 +16,7 @@ from app.utils.ui_utils import ui_utils
 
 class ShopService:
     def __init__(self):
-        self.card_configs = config.cards
+        self.card_configs = variables.cards
 
     async def sync_shop_cards(self) -> None:
         logger.info("Starting shop card metadata synchronization...")
@@ -128,7 +129,7 @@ class ShopService:
         return await Item.filter(quantity__gt=0).count()
 
     async def init_shop_message(self) -> Optional[Tuple[Embed, List[Component]]]:
-        items, _, has_next = await self.get_shop_items(limit=config.shop_items_per_page)
+        items, _, has_next = await self.get_shop_items(limit=variables.shop_items_per_page)
         embed = await ui_utils.format_shop_embed(items)
 
         components = await ui_utils.init_control_buttons(
@@ -142,7 +143,7 @@ class ShopService:
 
     async def edit_shop_message(self, page: int, offset: int) -> Optional[Tuple[Embed, List[Component]]]:
         items, has_previous, has_next = await self.get_shop_items(
-            limit=config.shop_items_per_page, offset=offset
+            limit=variables.shop_items_per_page, offset=offset
         )
         embed = await ui_utils.format_shop_embed(items, offset=offset)
 
@@ -175,7 +176,7 @@ class ShopService:
             if await UserItem.filter(user=db_user, item=item).exists():
                 return t("responses.shop.item_already_owned")
 
-            card_config = config.cards.get(item_id)
+            card_config = variables.cards.get(item_id)
             if card_config and card_config.required_achievements:
                 required_ids = set(card_config.required_achievements)
                 user_achievements = await UserAchievement.filter(user=db_user).prefetch_related("achievement")
@@ -185,9 +186,9 @@ class ShopService:
                 if missing_ids:
                     missing_ach = "\n* ".join(
                         [
-                            f"{config.achievements[ach_id].name} {config.achievements[ach_id].icon}"
+                            f"{variables.achievements[ach_id].name} {variables.achievements[ach_id].icon}"
                             for ach_id in missing_ids
-                            if ach_id in config.achievements
+                            if ach_id in variables.achievements
                         ]
                     )
                     return t("responses.shop.missing_achievements_start") + f"\n* {missing_ach}"

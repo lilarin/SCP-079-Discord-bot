@@ -7,15 +7,16 @@ import aiohttp
 from bs4 import BeautifulSoup, NavigableString
 from disnake import User
 
-from app.config import config, logger
+from app.config import logger
 from app.core.models import SCPObject, User as UserModel, ViewedScpObject
+from app.core.variables import variables
 from app.services import achievement_handler_service
 
 
 class ScpObjectsService:
     def __init__(self):
-        self.urls = config.scrape_urls
-        self.wiki_url = config.wiki_url
+        self.urls = variables.scrape_urls
+        self.wiki_url = variables.wiki_url
 
     @staticmethod
     async def _fetch_html(session: aiohttp.ClientSession, url: str) -> Optional[str]:

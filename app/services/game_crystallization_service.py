@@ -3,8 +3,8 @@ import random
 
 from disnake import ApplicationCommandInteraction, ui, MessageInteraction
 
-from app.config import config
 from app.core.schemas import CrystallizationState
+from app.core.variables import variables
 from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
@@ -29,8 +29,8 @@ class CrystallizationService:
 
     @staticmethod
     async def start_game(interaction: ApplicationCommandInteraction, bet: int):
-        initial_multiplier = round(random.uniform(*config.crystallize_initial_multiplier_range), 2)
-        initial_loss_chance = config.crystallize_initial_chance * 100
+        initial_multiplier = round(random.uniform(*variables.crystallize_initial_multiplier_range), 2)
+        initial_loss_chance = variables.crystallize_initial_chance * 100
 
         embed, components = await ui_utils.format_crystallize_embed(
             bet=bet,
@@ -55,8 +55,8 @@ class CrystallizationService:
             )
             return
 
-        chance_min, chance_max = config.crystallize_chance_increment_range
-        multiplier_min, multiplier_max = config.crystallize_multiplier_increment_range
+        chance_min, chance_max = variables.crystallize_chance_increment_range
+        multiplier_min, multiplier_max = variables.crystallize_multiplier_increment_range
 
         chance_increment = random.uniform(chance_min, chance_max)
 

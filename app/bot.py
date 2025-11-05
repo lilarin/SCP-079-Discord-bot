@@ -11,6 +11,7 @@ from app.core.decorators import (
     is_allowed_user
 )
 from app.core.models import User as UserModel
+from app.core.variables import variables
 from app.localization import t
 from app.modals.dossier_modal import DossierModal
 from app.services import (
@@ -142,19 +143,18 @@ async def view_card(
         logger.error(exception)
 
 
-@commands.cooldown(rate=1, per=config.article_cooldown_time_minutes * 60, type=config.cooldown_type)
-@bot.slash_command(name=t("commands.get_random_article.name"),
-                   description=t("commands.get_random_article.description"))
+@commands.cooldown(rate=1, per=variables.article_cooldown_time_minutes * 60, type=variables.cooldown_type)
+@bot.slash_command(name=t("commands.get_random_article.name"), description=t("commands.get_random_article.description"))
 @commands.guild_only()
 async def get_random_article(
         interaction: disnake.ApplicationCommandInteraction,
         object_class=commands.Param(
-            choices=list(config.scp_classes.keys()),
+            choices=list(variables.scp_classes.keys()),
             description=t("commands.get_random_article.params.object_class.description"),
             default=None, name=t("commands.get_random_article.params.object_class.name")
         ),
         object_range=commands.Param(
-            choices=list(config.scp_ranges.keys()),
+            choices=list(variables.scp_ranges.keys()),
             description=t("commands.get_random_article.params.object_range.description"),
             default=None, name=t("commands.get_random_article.params.object_range.name")
         ),
@@ -169,8 +169,8 @@ async def get_random_article(
     try:
         found_all, random_article = await scp_objects_service.get_random_scp_object(
             user=interaction.user,
-            object_class=config.scp_classes[object_class] if object_class else None,
-            object_range=config.scp_ranges[object_range] if object_range else None,
+            object_class=variables.scp_classes[object_class] if object_class else None,
+            object_range=variables.scp_ranges[object_range] if object_range else None,
             skip_viewed=skip_viewed,
         )
 
@@ -212,7 +212,7 @@ async def dossier(interaction: disnake.ApplicationCommandInteraction):
 async def top(
         interaction: disnake.ApplicationCommandInteraction,
         criteria=commands.Param(
-            choices=list(config.leaderboard_options.keys()),
+            choices=list(variables.leaderboard_options.keys()),
             description=t("commands.top.params.criteria.description"),
             name=t("commands.top.params.criteria.name")
         ),
@@ -220,7 +220,7 @@ async def top(
     await response_utils.wait_for_response(interaction)
 
     try:
-        chosen_criteria = config.leaderboard_options[criteria]
+        chosen_criteria = variables.leaderboard_options[criteria]
         embed, components = await leaderboard_service.init_leaderboard_message(bot, interaction.guild, chosen_criteria)
         await response_utils.send_response(interaction, embed=embed, components=components)
 
@@ -386,7 +386,7 @@ async def equip(
         logger.error(exception)
 
 
-@commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=1, per=variables.work_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.legal_work.name"), description=t("commands.legal_work.description"))
 @commands.guild_only()
 async def legal_work(interaction: disnake.ApplicationCommandInteraction):
@@ -407,7 +407,7 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
         logger.error(exception)
 
 
-@commands.cooldown(rate=1, per=config.work_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=1, per=variables.work_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.risky_work.name"), description=t("commands.risky_work.description"))
 @commands.guild_only()
 async def risky_work(interaction: disnake.ApplicationCommandInteraction):
@@ -478,7 +478,7 @@ async def edit_player_balance(
         logger.error(exception)
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_crystallize.name"), description=t("commands.game_crystallize.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -501,7 +501,7 @@ async def game_crystallize(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_coin.name"), description=t("commands.game_coin.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -524,7 +524,7 @@ async def game_coin_flip(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_candy.name"), description=t("commands.game_candy.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -547,7 +547,7 @@ async def game_candy(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_coguard.name"), description=t("commands.game_coguard.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -600,7 +600,7 @@ async def game_scp173(
         )
 
 
-@commands.cooldown(rate=config.games_cooldown_rate, per=config.games_cooldown_time_minutes * 60, type=config.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_hole.name"), description=t("commands.game_hole.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -613,7 +613,7 @@ async def game_hole(
         ),
         group_bet: str = commands.Param(
             description=t("commands.game_hole.params.group_bet.description"),
-            choices=list(config.hole_group_bet_options.keys()),
+            choices=list(variables.hole_group_bet_options.keys()),
             default=None,
             name=t("commands.game_hole.params.group_bet.name")
         ),
@@ -634,7 +634,7 @@ async def game_hole(
         )
         return
 
-    if item_bet and item_bet not in config.hole_items.values():
+    if item_bet and item_bet not in variables.hole_items.values():
         reason = t("responses.games.invalid_bet_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
             interaction.user, bet, reason

@@ -5,16 +5,16 @@ import textwrap
 from PIL import Image, ImageDraw, ImageFont
 from disnake import File
 
-from app.config import config
+from app.core.variables import variables
 from app.core.models import SCPObject
 
 
 class ArticleService:
     def __init__(self):
-        self.wiki_url = config.wiki_url
-        self.template_path = config.article_template_path
-        self.number_font_path = config.primary_font_path
-        self.title_font_path = config.secondary_font_path
+        self.wiki_url = variables.wiki_url
+        self.template_path = variables.article_template_path
+        self.number_font_path = variables.primary_font_path
+        self.title_font_path = variables.secondary_font_path
 
     @staticmethod
     def _draw_text_with_shadow(draw, pos, text, font, main_color):

@@ -1,7 +1,8 @@
 from disnake import Guild, MessageInteraction
 from disnake.ext.commands import InteractionBot
 
-from app.config import config, logger
+from app.config import logger
+from app.core.variables import variables
 from app.localization import t
 from app.services import (
     crystallization_service,
@@ -65,7 +66,7 @@ class InteractionService:
     async def _handle_shop_pagination(self, interaction: MessageInteraction):
         total_count = await shop_service.get_total_items_count()
         new_page, offset = await self._get_pagination_params(
-            interaction, config.shop_items_per_page, total_count
+            interaction, variables.shop_items_per_page, total_count
         )
 
         embed, components = await shop_service.edit_shop_message(new_page, offset)
@@ -75,7 +76,7 @@ class InteractionService:
         user = interaction.user
         total_count = await inventory_service.get_total_user_items_count(user.id)
         new_page, offset = await self._get_pagination_params(
-            interaction, config.inventory_items_per_page, total_count
+            interaction, variables.inventory_items_per_page, total_count
         )
 
         embed, components = await inventory_service.edit_inventory_message(user, new_page, offset)
@@ -84,7 +85,7 @@ class InteractionService:
     async def _handle_achievements_stats_pagination(self, interaction: MessageInteraction):
         total_count = await achievement_service.get_total_achievements_count()
         new_page, offset = await self._get_pagination_params(
-            interaction, config.achievements_per_page, total_count
+            interaction, variables.achievements_per_page, total_count
         )
 
         embed, components = await achievement_service.edit_stats_message(new_page, offset)
@@ -100,7 +101,7 @@ class InteractionService:
 
         total_count = await achievement_service.get_total_user_achievements_count(target_user.id)
         new_page, offset = await self._get_pagination_params(
-            interaction, config.achievements_per_page, total_count
+            interaction, variables.achievements_per_page, total_count
         )
 
         embed, components = await achievement_service.edit_achievements_message(target_user, new_page, offset)
@@ -111,7 +112,7 @@ class InteractionService:
     ):
         total_count = await leaderboard_service.get_total_users_count(criteria)
         new_page, offset = await self._get_pagination_params(
-            interaction, config.leaderboard_items_per_page, total_count
+            interaction, variables.leaderboard_items_per_page, total_count
         )
         embed, components = await leaderboard_service.edit_leaderboard_message(
             bot, guild, criteria, new_page, offset
@@ -146,7 +147,7 @@ class InteractionService:
             elif "user_achievements" in custom_id:
                 await self._handle_achievements_pagination(bot, interaction)
             else:
-                for criteria in config.leaderboard_options.values():
+                for criteria in variables.leaderboard_options.values():
                     if criteria in custom_id:
                         await self._handle_leaderboard_pagination(bot, interaction.guild, interaction, criteria)
                         break

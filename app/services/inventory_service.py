@@ -3,9 +3,10 @@ from typing import List, Tuple, Optional
 from disnake import Embed, Component, User, Member
 from tortoise.exceptions import DoesNotExist
 
-from app.config import config, logger
+from app.config import logger
 from app.core.enums import ItemType
 from app.core.models import Item, User as UserModel, UserItem
+from app.core.variables import variables
 from app.localization import t
 from app.utils.ui_utils import ui_utils
 
@@ -38,10 +39,10 @@ class InventoryService:
 
     @staticmethod
     async def check_for_default_card(user: UserModel) -> None:
-        if not config.cards:
+        if not variables.cards:
             return
 
-        default_card_id = list(config.cards.keys())[-1]
+        default_card_id = list(variables.cards.keys())[-1]
         has_default_card = await UserItem.filter(user=user, item__item_id=default_card_id).exists()
 
         if not has_default_card:
@@ -52,7 +53,7 @@ class InventoryService:
                 logger.error(f"Error: Default item '{default_card_id}' not found in the database.")
 
     async def init_inventory_message(self, user: User | Member) -> Optional[Tuple[Embed, List[Component]]]:
-        items, _, has_next = await self.get_user_items(user.id, limit=config.inventory_items_per_page)
+        items, _, has_next = await self.get_user_items(user.id, limit=variables.inventory_items_per_page)
 
         embed = await ui_utils.format_inventory_embed(user, items)
 
@@ -69,7 +70,7 @@ class InventoryService:
             self, user: User | Member, page: int, offset: int
     ) -> Optional[Tuple[Embed, List[Component]]]:
         items, has_previous, has_next = await self.get_user_items(
-            user.id, limit=config.inventory_items_per_page, offset=offset
+            user.id, limit=variables.inventory_items_per_page, offset=offset
         )
 
         embed = await ui_utils.format_inventory_embed(user, items, offset=offset)

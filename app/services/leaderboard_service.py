@@ -4,9 +4,9 @@ from disnake import Embed, Component, Guild
 from disnake.ext.commands import InteractionBot
 from tortoise.functions import Count
 
-from app.config import config
 from app.core.enums import Color
 from app.core.models import User
+from app.core.variables import variables
 from app.localization import t
 from app.utils.ui_utils import ui_utils
 
@@ -84,7 +84,7 @@ class LeaderboardService:
 
         has_next = len(top_users_raw) > limit
         current_page_users = top_users_raw[:limit]
-        total_achievements = len(config.achievements)
+        total_achievements = len(variables.achievements)
 
         processed_users = []
         if total_achievements > 0:
@@ -133,7 +133,7 @@ class LeaderboardService:
     ) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, _, has_next = await self.get_articles_top_users(
-                limit=config.leaderboard_items_per_page
+                limit=variables.leaderboard_items_per_page
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
@@ -146,7 +146,7 @@ class LeaderboardService:
             )
         elif chosen_criteria == "balance":
             top_users, _, has_next = await self.get_balance_top_users(
-                limit=config.leaderboard_items_per_page
+                limit=variables.leaderboard_items_per_page
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
@@ -159,7 +159,7 @@ class LeaderboardService:
             )
         elif chosen_criteria == "reputation":
             top_users, _, has_next = await self.get_reputation_top_users(
-                limit=config.leaderboard_items_per_page
+                limit=variables.leaderboard_items_per_page
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
@@ -172,7 +172,7 @@ class LeaderboardService:
             )
         else:
             top_users, _, has_next = await self.get_achievements_top_users(
-                limit=config.leaderboard_items_per_page
+                limit=variables.leaderboard_items_per_page
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
@@ -198,7 +198,7 @@ class LeaderboardService:
     ) -> Optional[Tuple[Embed, List[Component]]]:
         if chosen_criteria == "articles":
             top_users, has_previous, has_next = await self.get_articles_top_users(
-                limit=config.leaderboard_items_per_page, offset=offset
+                limit=variables.leaderboard_items_per_page, offset=offset
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
@@ -212,7 +212,7 @@ class LeaderboardService:
             )
         elif chosen_criteria == "balance":
             top_users, has_previous, has_next = await self.get_balance_top_users(
-                limit=config.leaderboard_items_per_page, offset=offset
+                limit=variables.leaderboard_items_per_page, offset=offset
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
@@ -226,7 +226,7 @@ class LeaderboardService:
             )
         elif chosen_criteria == "reputation":
             top_users, has_previous, has_next = await self.get_reputation_top_users(
-                limit=config.leaderboard_items_per_page, offset=offset
+                limit=variables.leaderboard_items_per_page, offset=offset
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,
@@ -240,7 +240,7 @@ class LeaderboardService:
             )
         else:
             top_users, has_previous, has_next = await self.get_achievements_top_users(
-                limit=config.leaderboard_items_per_page, offset=offset
+                limit=variables.leaderboard_items_per_page, offset=offset
             )
             embed = await ui_utils.format_leaderboard_embed(
                 bot,

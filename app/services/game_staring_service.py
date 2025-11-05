@@ -4,9 +4,9 @@ from typing import Dict
 
 from disnake import ApplicationCommandInteraction, MessageInteraction, TextChannel
 
-from app.config import config
 from app.core.models import User
 from app.core.schemas import SCP173GameState
+from app.core.variables import variables
 from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
@@ -32,7 +32,7 @@ class StaringGameService:
         message = await interaction.original_message()
         game_state.message_id = message.id
         self.games[message.id] = game_state
-        await asyncio.sleep(config.staring_lobby_duration)
+        await asyncio.sleep(variables.staring_lobby_duration)
         if message.id in self.games and not self.games[message.id].is_started:
             current_state = self.games[message.id]
             if len(current_state.players) < 2:
@@ -63,7 +63,7 @@ class StaringGameService:
         if user in game_state.players:
             return await response_utils.send_ephemeral_response(interaction,
                                                                 t("responses.games.staring.already_in_game"))
-        if len(game_state.players) >= config.staring_max_players:
+        if len(game_state.players) >= variables.staring_max_players:
             return await response_utils.send_ephemeral_response(interaction, t("responses.games.staring.lobby_full"))
         db_user, _ = await User.get_or_create(user_id=user.id)
         if db_user.balance < game_state.bet:
@@ -77,7 +77,7 @@ class StaringGameService:
         embed = await ui_utils.format_scp173_lobby_embed(game_state)
         components = await ui_utils.init_scp173_lobby_components(game_state)
         await response_utils.edit_response(interaction, embed=embed, components=components)
-        if len(game_state.players) == config.staring_max_players:
+        if len(game_state.players) == variables.staring_max_players:
             await self.run_game(interaction.channel, message_id)
 
     async def handle_start(self, interaction: MessageInteraction) -> None:
@@ -134,7 +134,7 @@ class StaringGameService:
             current_round_survivors = []
             a_death_occurred = False
 
-            denominator = max(config.staring_max_players - (round_number - 1), 1)
+            denominator = max(variables.staring_max_players - (round_number - 1), 1)
             death_chance = 1.0 / denominator
 
             for player in survivors:

@@ -4,7 +4,7 @@ from typing import Tuple
 
 from disnake import ui, ApplicationCommandInteraction, MessageInteraction
 
-from app.config import config
+from app.core.variables import variables
 from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
@@ -28,7 +28,7 @@ class CandyGameService:
 
     @staticmethod
     async def start_game(interaction: ApplicationCommandInteraction, bet: int):
-        pre_taken_candies = random.choices([0, 1, 2], weights=config.candy_pre_taken_weights, k=1)[0]
+        pre_taken_candies = random.choices([0, 1, 2], weights=variables.candy_pre_taken_weights, k=1)[0]
         player_taken_candies = 0
 
         potential_win = bet
@@ -60,7 +60,7 @@ class CandyGameService:
             )
             return
 
-        current_multiplier = config.candy_win_multipliers.get(player_taken, 1.0)
+        current_multiplier = variables.candy_win_multipliers.get(player_taken, 1.0)
         potential_win = int(bet * current_multiplier)
 
         embed, components = await ui_utils.format_candy_game_embed(
@@ -76,7 +76,7 @@ class CandyGameService:
     async def leave_game(self, interaction: MessageInteraction):
         bet, pre_taken, player_taken = self._parse_state_from_components(interaction.message.components)
 
-        multiplier = config.candy_win_multipliers.get(player_taken, 1.0)
+        multiplier = variables.candy_win_multipliers.get(player_taken, 1.0)
         winnings = int(bet * multiplier)
 
         await economy_management_service.update_user_balance(

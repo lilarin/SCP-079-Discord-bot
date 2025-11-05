@@ -5,10 +5,10 @@ from disnake import Embed, File, Role, ButtonStyle, User, Member, Guild
 from disnake.ext.commands import InteractionBot
 from disnake.ui import ActionRow, Button
 
-from app.config import config
 from app.core.enums import Color
 from app.core.models import SCPObject, Item, Achievement
 from app.core.schemas import SCP173GameState, HoleGameState
+from app.core.variables import variables
 from app.localization import t
 
 
@@ -139,7 +139,7 @@ class UIUtils:
         if achievements_count > 0:
             embed.add_field(
                 name=t("ui.user_card.achievements_field"),
-                value=f"{achievements_count} / {len(config.achievements)}",
+                value=f"{achievements_count} / {len(variables.achievements)}",
                 inline=False,
             )
 
@@ -150,12 +150,12 @@ class UIUtils:
 
     @staticmethod
     async def format_article_embed(article: SCPObject, image_file: File) -> Tuple[Embed, ActionRow]:
-        embed = Embed(color=int(config.scp_class_config[article.object_class][0].lstrip("#"), 16))
+        embed = Embed(color=int(variables.scp_class_config[article.object_class][0].lstrip("#"), 16))
         name_confirm = Button(
             style=ButtonStyle.link,
             url=article.link,
             label=t("ui.article.view_button"),
-            emoji=config.scp_class_config[article.object_class][1],
+            emoji=variables.scp_class_config[article.object_class][1],
         )
 
         embed.set_image(file=image_file)
@@ -199,12 +199,12 @@ class UIUtils:
                 f"-# **{item.description}**",
             ]
 
-            card_config = config.cards.get(item.item_id)
+            card_config = variables.cards.get(item.item_id)
 
             if card_config and card_config.required_achievements:
                 required_ach = []
                 for ach_id in card_config.required_achievements:
-                    ach_config = config.achievements.get(ach_id)
+                    ach_config = variables.achievements.get(ach_id)
                     if ach_config:
                         required_ach.append(f"{ach_config.name} {ach_config.icon}")
 
@@ -545,11 +545,11 @@ class UIUtils:
             value=player_list if player_list else t("ui.staring_game.no_players"),
             inline=False
         )
-        embed.set_footer(text=t("ui.staring_game.lobby_footer", duration=config.staring_lobby_duration))
+        embed.set_footer(text=t("ui.staring_game.lobby_footer", duration=variables.staring_lobby_duration))
         return embed
 
     async def init_scp173_lobby_components(self, game_state: SCP173GameState) -> List[ActionRow]:
-        is_full = len(game_state.players) >= config.staring_max_players
+        is_full = len(game_state.players) >= variables.staring_max_players
         state_row = await self.init_scp173_game_components(game_state)
 
         action_row = ActionRow(
@@ -610,7 +610,7 @@ class UIUtils:
             ),
             Button(
                 style=ButtonStyle.secondary,
-                label=f"{len(game_state.players)}/{config.staring_max_players}",
+                label=f"{len(game_state.players)}/{variables.staring_max_players}",
                 custom_id="game_scp173_count_display",
                 disabled=True
             ),
@@ -671,7 +671,7 @@ class UIUtils:
         for i, bet in enumerate(game_state.bets):
             embed.description += f"{i + 1}. {bet.player.mention} **{bet.amount}** 💠 на `{bet.choice}`\n"
 
-        embed.set_footer(text=t("ui.hole_game.lobby_footer", duration=config.hole_game_duration))
+        embed.set_footer(text=t("ui.hole_game.lobby_footer", duration=variables.hole_game_duration))
         return embed
 
     @staticmethod
