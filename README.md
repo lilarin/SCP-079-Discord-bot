@@ -112,10 +112,17 @@ customization and competition options to create an engaging community experience
 
    Rename the `.env.example` file and fill in the required credentials
 
-4. **Database migration:**
-   The project uses `aerich` for database migrations with Tortoise ORM. Run the following command to init the database:
+4. **Database configuration:**
+   The project uses `aerich` for database migrations with Tortoise ORM. Run the following commands to setup the database
+   
+   Init aerich and migrations folder:
    ```bash
    aerich init -t app.config.tortoise_orm
+   ```
+   
+   On first launch init db and aerich and apply all migrations:
+   ```bash
+   aerich init-db
    ```
 
 5. **Initial data population:**
@@ -136,7 +143,7 @@ customization and competition options to create an engaging community experience
 
 ## Disclaimers
 
-> [!WARNING]
+`> [!WARNING]`
 > ### Designs
 > The image assets included in this repository serve as **layout templates only**. They are provided to demonstrate the
 > correct dimensions and positioning required for text and image overlays
