@@ -66,7 +66,7 @@ async def format_candy_game_embed() -> Embed:
         description=t("ui.candy_game.description"),
         color=Color.ORANGE.value
     )
-    embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
+    embed.set_thumbnail(url="https://i.postimg.cc/ZRt48gsr/m-GBlb-YS.png")
     return embed
 
 
@@ -76,7 +76,7 @@ async def format_candy_win_embed(winnings: int) -> Embed:
         description=t("ui.candy_game.win_description", winnings=winnings),
         color=Color.GREEN.value
     )
-    embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
+    embed.set_thumbnail(url="https://i.postimg.cc/ZRt48gsr/m-GBlb-YS.png")
     return embed
 
 
@@ -86,7 +86,7 @@ async def format_candy_loss_embed(bet: int) -> Embed:
         description=t("ui.candy_game.loss_description", bet=bet),
         color=Color.RED.value
     )
-    embed.set_thumbnail(url="https://imgur.com/mGBlbYS.png")
+    embed.set_thumbnail(url="https://i.postimg.cc/ZRt48gsr/m-GBlb-YS.png")
     return embed
 
 
