@@ -5,10 +5,10 @@ from disnake import ApplicationCommandInteraction, TextChannel
 
 from app.core.schemas import HoleGameState, HolePlayerBet
 from app.core.variables import variables
+from app.embeds import games_embeds
 from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
-from app.utils.ui_utils import ui_utils
 
 
 class HoleGameService:
@@ -45,9 +45,7 @@ class HoleGameService:
         )
 
         game_state.bets.append(HolePlayerBet(player=player, amount=bet, choice=choice))
-
-        lobby_embed = await ui_utils.format_hole_lobby_embed(game_state)
-
+        lobby_embed = await games_embeds.format_hole_lobby_embed(game_state)
         await response_utils.edit_message(game_state.message, embed=lobby_embed)
 
     async def create_game(self, interaction: ApplicationCommandInteraction, bet: int, choice: str):
@@ -56,10 +54,9 @@ class HoleGameService:
 
         initial_bet = HolePlayerBet(player=player, amount=bet, choice=choice)
         game_state = HoleGameState(message=await interaction.original_response(), bets=[initial_bet])
-
         self.games[channel_id] = game_state
 
-        lobby_embed = await ui_utils.format_hole_lobby_embed(game_state)
+        lobby_embed = await games_embeds.format_hole_lobby_embed(game_state)
         await response_utils.send_response(interaction, embed=lobby_embed)
 
         asyncio.create_task(self._run_game_finalization(interaction.channel))
@@ -72,13 +69,12 @@ class HoleGameService:
             return
 
         game_state_to_process = self.games.pop(channel_id)
-
         winning_number = random.randint(0, 36)
         winning_item_name = variables.hole_items[winning_number]
         winners = []
         for p_bet in game_state_to_process.bets:
-            bet_option = variables.hole_bet_options[p_bet.choice]
-            if winning_number in bet_option["numbers"]:
+            bet_option = variables.hole_bet_options.get(p_bet.choice)
+            if bet_option and winning_number in bet_option["numbers"]:
                 payout = p_bet.amount * bet_option["multiplier"]
                 await economy_management_service.update_user_balance(
                     p_bet.player, payout, t("economy.reasons.game_win_hole")
@@ -92,7 +88,7 @@ class HoleGameService:
                     achievement_handler_service.handle_hole_achievements(p_bet.player, is_jackpot, is_o5_win, payout)
                 )
 
-        result_embed = await ui_utils.format_hole_results_embed(
+        result_embed = await games_embeds.format_hole_results_embed(
             winning_item=winning_item_name, winners=winners
         )
         await response_utils.send_new_message(channel=channel, embed=result_embed)

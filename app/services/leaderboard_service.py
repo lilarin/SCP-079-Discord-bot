@@ -1,14 +1,15 @@
 from typing import List, Tuple, Optional
 
-from disnake import Embed, Component, Guild
+from disnake import Embed, Guild, ui
 from disnake.ext.commands import InteractionBot
 from tortoise.functions import Count
 
 from app.core.enums import Color
 from app.core.models import User
 from app.core.variables import variables
+from app.embeds import info_embeds
 from app.localization import t
-from app.utils.ui_utils import ui_utils
+from app.views.pagination_view import PaginationView
 
 
 class LeaderboardService:
@@ -24,11 +25,9 @@ class LeaderboardService:
             .values_list("user_id", "viewed_count", flat=False)
         )
         top_users_raw = await top_users_query
-
         has_next = len(top_users_raw) > limit
         current_page_users = top_users_raw[:limit]
         has_previous = offset > 0
-
         return current_page_users, has_previous, has_next
 
     @staticmethod
@@ -42,12 +41,9 @@ class LeaderboardService:
             .values_list("user_id", "balance", flat=False)
         )
         top_users_raw = await top_users_query
-
         has_next = len(top_users_raw) > limit
         current_page_users = top_users_raw[:limit]
-
         has_previous = offset > 0
-
         return current_page_users, has_previous, has_next
 
     @staticmethod
@@ -61,12 +57,9 @@ class LeaderboardService:
             .values_list("user_id", "reputation", flat=False)
         )
         top_users_raw = await top_users_query
-
         has_next = len(top_users_raw) > limit
         current_page_users = top_users_raw[:limit]
-
         has_previous = offset > 0
-
         return current_page_users, has_previous, has_next
 
     @staticmethod
@@ -81,187 +74,85 @@ class LeaderboardService:
             .values_list("user_id", "achievements_count", flat=False)
         )
         top_users_raw = await top_users_query
-
         has_next = len(top_users_raw) > limit
         current_page_users = top_users_raw[:limit]
         total_achievements = len(variables.achievements)
-
-        processed_users = []
-        if total_achievements > 0:
-            for user_id, achievements_count in current_page_users:
-                percentage = (achievements_count / total_achievements) * 100
-                achievements_str = f"{achievements_count}/{total_achievements} ({percentage:.1f}%)"
-                processed_users.append((user_id, achievements_str))
-
+        processed_users = [
+            (user_id, f"{count}/{total_achievements} ({(count / total_achievements) * 100:.1f}%)")
+            for user_id, count in current_page_users if total_achievements > 0
+        ]
         has_previous = offset > 0
-
         return processed_users, has_previous, has_next
 
     @staticmethod
-    async def _get_total_articles_users_count() -> int:
-        return await User.all().annotate(viewed_count=Count("viewed_objects")).filter(viewed_count__gt=0).count()
-
-    @staticmethod
-    async def _get_total_balance_users_count() -> int:
-        return await User.all().filter(balance__gt=0).count()
-
-    @staticmethod
-    async def _get_total_reputation_users_count() -> int:
-        return await User.all().filter(reputation__gt=0).count()
-
-    @staticmethod
-    async def _get_total_achievements_users_count() -> int:
-        return (
-            await User.all()
-            .annotate(achievements_count=Count("achievements"))
-            .filter(achievements_count__gt=0)
-            .count()
-        )
-
-    async def get_total_users_count(self, chosen_criteria: str) -> Optional[int]:
-        if chosen_criteria == "articles":
-            return await self._get_total_articles_users_count()
-        elif chosen_criteria == "balance":
-            return await self._get_total_balance_users_count()
-        elif chosen_criteria == "reputation":
-            return await self._get_total_reputation_users_count()
-        elif chosen_criteria == "achievements":
-            return await self._get_total_achievements_users_count()
+    async def get_total_users_count(chosen_criteria: str) -> int:
+        criteria_map = {
+            "articles": User.all().annotate(c=Count("viewed_objects")).filter(c__gt=0),
+            "balance": User.filter(balance__gt=0),
+            "reputation": User.filter(reputation__gt=0),
+            "achievements": User.all().annotate(c=Count("achievements")).filter(c__gt=0),
+        }
+        return await criteria_map.get(chosen_criteria, User.all()).count()
 
     async def init_leaderboard_message(
             self, bot: InteractionBot, guild: Guild, chosen_criteria: str
-    ) -> Optional[Tuple[Embed, List[Component]]]:
-        if chosen_criteria == "articles":
-            top_users, _, has_next = await self.get_articles_top_users(
-                limit=variables.leaderboard_items_per_page
-            )
-            embed = await ui_utils.format_leaderboard_embed(
-                bot,
-                guild,
-                top_users,
-                top_criteria=t("ui.leaderboard.criteria_articles"),
-                hint=t("ui.leaderboard.hint_articles"),
-                symbol="📚",
-                color=Color.CARNATION.value,
-            )
-        elif chosen_criteria == "balance":
-            top_users, _, has_next = await self.get_balance_top_users(
-                limit=variables.leaderboard_items_per_page
-            )
-            embed = await ui_utils.format_leaderboard_embed(
-                bot,
-                guild,
-                top_users,
-                top_criteria=t("ui.leaderboard.criteria_balance"),
-                hint=t("ui.leaderboard.hint_balance"),
-                symbol="💠",
-                color=Color.BLUE.value,
-            )
-        elif chosen_criteria == "reputation":
-            top_users, _, has_next = await self.get_reputation_top_users(
-                limit=variables.leaderboard_items_per_page
-            )
-            embed = await ui_utils.format_leaderboard_embed(
-                bot,
-                guild,
-                top_users,
-                top_criteria=t("ui.leaderboard.criteria_reputation"),
-                hint=t("ui.leaderboard.hint_reputation"),
-                symbol="🔰",
-                color=Color.YELLOW.value,
-            )
-        else:
-            top_users, _, has_next = await self.get_achievements_top_users(
-                limit=variables.leaderboard_items_per_page
-            )
-            embed = await ui_utils.format_leaderboard_embed(
-                bot,
-                guild,
-                top_users,
-                top_criteria=t("ui.leaderboard.criteria_achievements"),
-                hint=t("ui.leaderboard.hint_achievements"),
-                symbol="🎖️",
-                color=Color.HELIOTROPE.value,
-            )
-
-        components = await ui_utils.init_control_buttons(
-            criteria=chosen_criteria,
-            disable_first_page_button=True,
-            disable_previous_page_button=True,
-            disable_next_page_button=not has_next,
-            disable_last_page_button=not has_next,
-        )
-        return embed, components
+    ) -> Optional[Tuple[Embed, List[ui.View]]]:
+        return await self.edit_leaderboard_message(bot, guild, chosen_criteria, 1, 0, is_init=True)
 
     async def edit_leaderboard_message(
-            self, bot: InteractionBot, guild: Guild, chosen_criteria: str, page: int, offset: int
-    ) -> Optional[Tuple[Embed, List[Component]]]:
-        if chosen_criteria == "articles":
-            top_users, has_previous, has_next = await self.get_articles_top_users(
-                limit=variables.leaderboard_items_per_page, offset=offset
-            )
-            embed = await ui_utils.format_leaderboard_embed(
-                bot,
-                guild,
-                top_users,
-                top_criteria=t("ui.leaderboard.criteria_articles"),
-                hint=t("ui.leaderboard.hint_articles"),
-                symbol="📚",
-                color=Color.CARNATION.value,
-                offset=offset,
-            )
-        elif chosen_criteria == "balance":
-            top_users, has_previous, has_next = await self.get_balance_top_users(
-                limit=variables.leaderboard_items_per_page, offset=offset
-            )
-            embed = await ui_utils.format_leaderboard_embed(
-                bot,
-                guild,
-                top_users,
-                top_criteria=t("ui.leaderboard.criteria_balance"),
-                hint=t("ui.leaderboard.hint_balance"),
-                symbol="💠",
-                color=Color.BLUE.value,
-                offset=offset,
-            )
-        elif chosen_criteria == "reputation":
-            top_users, has_previous, has_next = await self.get_reputation_top_users(
-                limit=variables.leaderboard_items_per_page, offset=offset
-            )
-            embed = await ui_utils.format_leaderboard_embed(
-                bot,
-                guild,
-                top_users,
-                top_criteria=t("ui.leaderboard.criteria_reputation"),
-                hint=t("ui.leaderboard.hint_reputation"),
-                symbol="🔰",
-                color=Color.YELLOW.value,
-                offset=offset,
-            )
-        else:
-            top_users, has_previous, has_next = await self.get_achievements_top_users(
-                limit=variables.leaderboard_items_per_page, offset=offset
-            )
-            embed = await ui_utils.format_leaderboard_embed(
-                bot,
-                guild,
-                top_users,
-                top_criteria=t("ui.leaderboard.criteria_achievements"),
-                hint=t("ui.leaderboard.hint_achievements"),
-                symbol="🎖️",
-                color=Color.HELIOTROPE.value,
-                offset=offset,
-            )
+            self, bot: InteractionBot, guild: Guild, chosen_criteria: str, page: int, offset: int, is_init: bool = False
+    ) -> Optional[Tuple[Embed, List[ui.View]]]:
+        criteria_map = {
+            "articles": (
+                self.get_articles_top_users,
+                "ui.leaderboard.criteria_articles",
+                "ui.leaderboard.hint_articles",
+                "📚",
+                Color.CARNATION.value
+            ),
+            "balance": (
+                self.get_balance_top_users,
+                "ui.leaderboard.criteria_balance",
+                "ui.leaderboard.hint_balance",
+                "💠",
+                Color.BLUE.value
+            ),
+            "reputation": (
+                self.get_reputation_top_users,
+                "ui.leaderboard.criteria_reputation",
+                "ui.leaderboard.hint_reputation",
+                "🔰",
+                Color.YELLOW.value
+            ),
+            "achievements": (
+                self.get_achievements_top_users,
+                "ui.leaderboard.criteria_achievements",
+                "ui.leaderboard.hint_achievements",
+                "🎖️",
+                Color.HELIOTROPE.value
+            ),
+        }
 
-        components = await ui_utils.init_control_buttons(
-            criteria=chosen_criteria,
-            current_page_text=str(page),
-            disable_first_page_button=not has_previous,
-            disable_previous_page_button=not has_previous,
-            disable_next_page_button=not has_next,
-            disable_last_page_button=not has_next,
+        if chosen_criteria not in criteria_map:
+            return None
+
+        fetcher, title_key, hint_key, symbol, color = criteria_map[chosen_criteria]
+        top_users, has_previous, has_next = await fetcher(limit=variables.leaderboard_items_per_page, offset=offset)
+
+        embed = await info_embeds.format_leaderboard_embed(
+            bot, guild, top_users,
+            top_criteria=t(title_key), hint=t(hint_key),
+            symbol=symbol, color=color, offset=offset
         )
-        return embed, components
+        view = PaginationView(
+            criteria=chosen_criteria,
+            current_page=page,
+            disable_first=is_init or not has_previous,
+            disable_previous=is_init or not has_previous,
+            disable_next=not has_next,
+            disable_last=not has_next
+        )
+        return embed, [view] if view.children else []
 
 
 leaderboard_service = LeaderboardService()

@@ -12,6 +12,7 @@ from app.core.decorators import (
 )
 from app.core.models import User as UserModel
 from app.core.variables import variables
+from app.embeds import profile_embeds, info_embeds
 from app.localization import t
 from app.modals.dossier_modal import DossierModal
 from app.services import (
@@ -36,7 +37,6 @@ from app.services import (
 )
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
-from app.utils.ui_utils import ui_utils
 
 bot = commands.InteractionBot(intents=disnake.Intents.all())
 
@@ -83,26 +83,26 @@ async def on_slash_command_error(interaction, error):
         logger.error(error)
 
 
-@bot.event
-async def on_member_join(member):
-    try:
-        profile_data = await keycard_service.get_user_profile_data(member)
-
-        embed = await ui_utils.format_new_user_embed(
-            member.mention,
-            profile_data.card_image,
-            profile_data.card_template.embed_color
-        )
-
-        if member.guild.system_channel:
-            await member.guild.system_channel.send(embed=embed)
-        else:
-            logger.warning(t("logs.system_channel_not_found", guild_name=member.guild.name))
-
-    except asyncpg.exceptions.InternalServerError as error:
-        logger.error(error)
-    except Exception as exception:
-        logger.error(exception)
+# @bot.event
+# async def on_member_join(member):
+#     try:
+#         profile_data = await keycard_service.get_user_profile_data(member)
+#
+#         embed = await format_new_user_embed(
+#             member.mention,
+#             profile_data.card_image,
+#             profile_data.card_template.embed_color
+#         )
+#
+#         if member.guild.system_channel:
+#             await member.guild.system_channel.send(embed=embed)
+#         else:
+#             logger.warning(t("logs.system_channel_not_found", guild_name=member.guild.name))
+#
+#     except asyncpg.exceptions.InternalServerError as error:
+#         logger.error(error)
+#     except Exception as exception:
+#         logger.error(exception)
 
 
 @bot.slash_command(name=t("commands.view_card.name"), description=t("commands.view_card.description"))
@@ -127,7 +127,7 @@ async def view_card(
 
         profile_data = await keycard_service.get_user_profile_data(target)
 
-        embed = await ui_utils.format_user_embed(
+        embed = await profile_embeds.format_user_embed(
             card=profile_data.card_image,
             color=profile_data.card_template.embed_color,
             dossier=profile_data.dossier,
@@ -169,8 +169,8 @@ async def get_random_article(
     try:
         found_all, random_article = await scp_objects_service.get_random_scp_object(
             user=interaction.user,
-            object_class=variables.scp_classes[object_class] if object_class else None,
-            object_range=variables.scp_ranges[object_range] if object_range else None,
+            object_class=variables.scp_classes.get(object_class),
+            object_range=variables.scp_ranges.get(object_range),
             skip_viewed=skip_viewed,
         )
 
@@ -179,18 +179,16 @@ async def get_random_article(
                 interaction, message=t("responses.articles.all_viewed"), delete_after=10
             )
         elif random_article:
-            image = await article_service.create_article_image(random_article)
-
-            embed, components = await ui_utils.format_article_embed(random_article, image)
-            await response_utils.send_response(interaction, embed=embed, components=components)
+            embed, view = await article_service.create_article_components(random_article)
+            await response_utils.send_response(interaction, embed=embed, view=view)
         else:
             await response_utils.send_response(
                 interaction, message=t("responses.articles.not_found"), delete_after=10
             )
 
-    except asyncpg.exceptions.InternalServerError as exception:
+    except Exception as exception:
         await response_utils.send_error_response(interaction)
-        logger.error(exception)
+        logger.error(exception, exc_info=True)
 
 
 @bot.slash_command(name=t("commands.dossier.name"), description=t("commands.dossier.description"))
@@ -198,11 +196,10 @@ async def get_random_article(
 async def dossier(interaction: disnake.ApplicationCommandInteraction):
     try:
         db_user, _ = await UserModel.get_or_create(user_id=interaction.user.id)
-
         await interaction.response.send_modal(
             modal=DossierModal(user=interaction.user, db_user=db_user)
         )
-    except asyncpg.exceptions.InternalServerError as exception:
+    except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
 
@@ -218,12 +215,10 @@ async def top(
         ),
 ):
     await response_utils.wait_for_response(interaction)
-
     try:
         chosen_criteria = variables.leaderboard_options[criteria]
-        embed, components = await leaderboard_service.init_leaderboard_message(bot, interaction.guild, chosen_criteria)
-        await response_utils.send_response(interaction, embed=embed, components=components)
-
+        embed, views = await leaderboard_service.init_leaderboard_message(bot, interaction.guild, chosen_criteria)
+        await response_utils.send_response(interaction, embed=embed, view=views[0] if views else None)
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -246,7 +241,6 @@ async def balance(
     try:
         embed = await economy_management_service.create_user_balance_message(target_user)
         await response_utils.send_response(interaction, embed=embed)
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -267,21 +261,14 @@ async def transfer(
         ),
 ):
     await response_utils.wait_for_response(interaction)
-
     try:
-        try:
-            target: disnake.Member = await interaction.guild.fetch_member(recipient.id)
-        except disnake.NotFound:
-            target: disnake.User = recipient
-
         success, message = await economy_management_service.transfer_balance(
-            interaction.user, target, amount
+            interaction.user, recipient, amount
         )
         if success:
             await response_utils.send_response(interaction, message)
         else:
             await response_utils.send_response(interaction, message, delete_after=10)
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -292,9 +279,8 @@ async def transfer(
 async def shop(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
     try:
-        embed, components = await shop_service.init_shop_message()
-        await response_utils.send_response(interaction, embed=embed, components=components)
-
+        embed, views = await shop_service.init_shop_message()
+        await response_utils.send_response(interaction, embed=embed, view=views[0] if views else None)
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -305,11 +291,9 @@ async def shop(interaction: disnake.ApplicationCommandInteraction):
 @commands.has_permissions(administrator=True)
 async def update_shop(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
-
     try:
         await shop_service.update_card_item_quantities()
         await response_utils.edit_ephemeral_response(interaction, t("responses.shop.updated"))
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -325,18 +309,14 @@ async def buy(
         ),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
-
     try:
         db_user, _ = await UserModel.get_or_create(user_id=interaction.user.id)
-
         message = await shop_service.buy_item(
             user=interaction.user,
             db_user=db_user,
             item_id=item_id
         )
-
         await response_utils.edit_ephemeral_response(interaction, message=message)
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -346,15 +326,11 @@ async def buy(
 @commands.guild_only()
 async def inventory(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
-
     try:
         db_user, _ = await UserModel.get_or_create(user_id=interaction.user.id)
-
         await inventory_service.check_for_default_card(user=db_user)
-
-        embed, components = await inventory_service.init_inventory_message(user=interaction.user)
-        await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
-
+        embed, views = await inventory_service.init_inventory_message(user=interaction.user)
+        await response_utils.edit_ephemeral_response(interaction, embed=embed, view=views[0] if views else None)
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -370,17 +346,12 @@ async def equip(
         ),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
-
     try:
-        await UserModel.get_or_create(user_id=interaction.user.id)
-
         message = await inventory_service.equip_item(
             user_id=interaction.user.id,
             item_id=item_id
         )
-
         await response_utils.edit_ephemeral_response(interaction, message=message)
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -391,17 +362,9 @@ async def equip(
 @commands.guild_only()
 async def legal_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
-
     try:
-        prompt, reward = await work_service.perform_legal_work(user=interaction.user)
-
-        embed = await ui_utils.format_legal_work_embed(
-            prompt=prompt,
-            reward=reward
-        )
-
+        embed = await work_service.perform_legal_work(user=interaction.user)
         await response_utils.send_response(interaction, embed=embed)
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -412,18 +375,9 @@ async def legal_work(interaction: disnake.ApplicationCommandInteraction):
 @commands.guild_only()
 async def risky_work(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
-
     try:
-        prompt, amount, is_success = await work_service.perform_non_legal_work(user=interaction.user)
-
-        embed = await ui_utils.format_non_legal_work_embed(
-            prompt=prompt,
-            amount=amount,
-            is_success=is_success
-        )
-
+        embed = await work_service.perform_non_legal_work(user=interaction.user)
         await response_utils.send_response(interaction, embed=embed)
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -434,13 +388,11 @@ async def risky_work(interaction: disnake.ApplicationCommandInteraction):
 @is_allowed_user
 async def reset_reputation(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
-
     try:
         await economy_management_service.reset_users_reputation()
         await response_utils.send_response(
             interaction, t("responses.reputation.reset")
         )
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -462,23 +414,21 @@ async def edit_player_balance(
         ),
 ):
     await response_utils.wait_for_response(interaction)
-
     try:
         reason = t("responses.balance.admin_change_reason", user=interaction.user.mention)
         await economy_management_service.update_user_balance(
             user, amount, reason, balance_only=True
         )
-
         await response_utils.send_response(
             interaction, t("responses.balance.changed", user=user.mention)
         )
-
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
+                   type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_crystallize.name"), description=t("commands.game_crystallize.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -501,7 +451,8 @@ async def game_crystallize(
         )
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
+                   type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_coin.name"), description=t("commands.game_coin.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -524,7 +475,8 @@ async def game_coin_flip(
         )
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
+                   type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_candy.name"), description=t("commands.game_candy.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -547,7 +499,8 @@ async def game_candy(
         )
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
+                   type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_coguard.name"), description=t("commands.game_coguard.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -600,7 +553,8 @@ async def game_scp173(
         )
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
+                   type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_hole.name"), description=t("commands.game_hole.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -666,7 +620,7 @@ async def game_hole(
 async def games_info(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_response(interaction)
     try:
-        embed = await ui_utils.format_games_info_embed()
+        embed = await info_embeds.format_games_info_embed()
         await response_utils.send_response(interaction, embed=embed)
 
     except Exception as exception:
@@ -686,16 +640,11 @@ async def achievements(
         ),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
-    user = user or interaction.user
+    target_user = user or interaction.user
 
     try:
-        try:
-            target: disnake.Member = await interaction.guild.fetch_member(user.id)
-        except disnake.NotFound:
-            target: disnake.User = user
-
-        embed, components = await achievement_service.init_achievements_message(target)
-        await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
+        embed, views = await achievement_service.init_achievements_message(target_user)
+        await response_utils.edit_ephemeral_response(interaction, embed=embed, view=views[0] if views else None)
 
     except Exception as exception:
         await response_utils.send_error_response(interaction)
@@ -708,8 +657,8 @@ async def achievement_stats(interaction: disnake.ApplicationCommandInteraction):
     await response_utils.wait_for_ephemeral_response(interaction)
 
     try:
-        embed, components = await achievement_service.init_stats_message()
-        await response_utils.edit_ephemeral_response(interaction, embed=embed, components=components)
+        embed, views = await achievement_service.init_stats_message()
+        await response_utils.edit_ephemeral_response(interaction, embed=embed, view=views[0] if views else None)
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
@@ -720,4 +669,4 @@ async def on_button_click(interaction: disnake.MessageInteraction) -> None:
     try:
         await interaction_service.handle_button_click(bot, interaction)
     except Exception as exception:
-        logger.error(exception)
+        logger.error(exception, exc_info=True)

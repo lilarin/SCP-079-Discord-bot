@@ -88,12 +88,12 @@ class ScpObjectsService:
     async def update_scp_objects(self) -> None:
         scp_data = await self._collect_scp_objects()
 
-        existing_links = await SCPObject.all().values_list("link", flat=True)
+        existing_links = {obj.link for obj in await SCPObject.all()}
 
-        new_objects_to_create = []
-        for item_data in scp_data:
-            if item_data["link"] not in existing_links:
-                new_objects_to_create.append(SCPObject(**item_data))
+        new_objects_to_create = [
+            SCPObject(**item_data) for item_data in scp_data
+            if item_data["link"] not in existing_links
+        ]
 
         if new_objects_to_create:
             await SCPObject.bulk_create(new_objects_to_create)
@@ -118,7 +118,9 @@ class ScpObjectsService:
         query = SCPObject.filter(**filters)
 
         if skip_viewed:
-            viewed_scp_ids = await db_user.viewed_objects.all().values_list("scp_object_id", flat=True)  # type: ignore
+            viewed_scp_ids = await ViewedScpObject.filter(
+                user=db_user
+            ).values_list("scp_object_id", flat=True)
             query = query.exclude(id__in=viewed_scp_ids)
 
         count = await query.count()
@@ -129,8 +131,7 @@ class ScpObjectsService:
         random_scp_object = await query.offset(random_offset).first()
 
         if random_scp_object:
-            if db_user:
-                await ViewedScpObject.get_or_create(user=db_user, scp_object=random_scp_object)
+            await ViewedScpObject.get_or_create(user=db_user, scp_object=random_scp_object)
 
             asyncio.create_task(
                 achievement_handler_service.handle_article_achievements(user, random_scp_object)

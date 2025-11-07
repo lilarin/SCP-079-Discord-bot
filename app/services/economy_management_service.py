@@ -1,14 +1,14 @@
 import asyncio
 from typing import Tuple
 
-from disnake import User, Member
+from disnake import User, Member, Embed
 from tortoise.expressions import Q
 from tortoise.transactions import in_transaction
 
 from app.core.models import User as UserModel
+from app.embeds import economy_embeds
 from app.localization import t
 from app.services import achievement_handler_service, economy_logging_service
-from app.utils.ui_utils import ui_utils
 
 
 class EconomyManagementService:
@@ -27,7 +27,7 @@ class EconomyManagementService:
         asyncio.create_task(achievement_handler_service.handle_economy_achievements(user))
 
     @staticmethod
-    async def create_user_balance_message(user: User) -> Tuple[int, int]:
+    async def create_user_balance_message(user: User) -> Embed:
         db_user, is_created = await UserModel.get_or_create(user_id=user.id)
         higher_ranking_users_count = (
             await UserModel.filter(
@@ -37,7 +37,7 @@ class EconomyManagementService:
         )
         position = higher_ranking_users_count + 1
 
-        return await ui_utils.format_balance_embed(
+        return await economy_embeds.format_balance_embed(
             user.display_avatar.url, db_user.balance, db_user.reputation, position
         )
 
@@ -49,6 +49,9 @@ class EconomyManagementService:
     async def transfer_balance(sender: User | Member, receiver: User | Member, amount: int) -> Tuple[bool, str]:
         if sender.id == receiver.id:
             return False, t("errors.transfer_to_self")
+
+        if not isinstance(receiver, (User, Member)) or receiver.bot:
+            return False, t("errors.bots_not_allowed")
 
         if amount <= 0:
             return False, t("errors.transfer_amount_must_be_positive")

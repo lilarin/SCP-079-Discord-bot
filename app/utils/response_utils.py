@@ -1,13 +1,13 @@
-from typing import Optional, List
+from typing import Optional
 
 from disnake import (
     MessageFlags,
     Embed,
-    ActionRow,
     TextChannel,
     Message,
     User,
-    Forbidden
+    Forbidden,
+    ui
 )
 
 from app.config import logger
@@ -29,28 +29,30 @@ class ResponseUtils:
             interaction,
             message: Optional[str] = None,
             embed: Optional[Embed] = None,
-            components: Optional[List[ActionRow]] = None,
+            view: Optional[ui.View] = None,
             delete_after: Optional[int] = None
     ) -> None:
-        await interaction.edit_original_response(content=message, embed=embed, components=components, delete_after=delete_after)
+        await interaction.edit_original_response(
+            content=message, embed=embed, view=view, delete_after=delete_after
+        )
 
     @staticmethod
     async def edit_response(
             interaction,
             message: Optional[str] = None,
             embed: Optional[Embed] = None,
-            components: Optional[List[ActionRow]] = None,
+            view: Optional[ui.View] = None,
     ) -> None:
-        await interaction.message.edit(content=message, embed=embed, components=components)
+        await interaction.message.edit(content=message, embed=embed, view=view)
 
     @staticmethod
     async def edit_message(
             message: Message,
             content: Optional[str] = None,
             embed: Optional[Embed] = None,
-            components: Optional[List[ActionRow]] = None,
+            view: Optional[ui.View] = None,
     ) -> None:
-        await message.edit(content=content, embed=embed, components=components)
+        await message.edit(content=content, embed=embed, view=view)
 
     @staticmethod
     async def send_ephemeral_response(interaction, message: Optional[str] = None) -> None:
@@ -61,9 +63,9 @@ class ResponseUtils:
             interaction,
             message: Optional[str] = None,
             embed: Optional[Embed] = None,
-            components: Optional[List[ActionRow]] = None,
+            view: Optional[ui.View] = None,
     ) -> None:
-        await interaction.edit_original_response(content=message, embed=embed, components=components)
+        await interaction.edit_original_response(content=message, embed=embed, view=view)
 
     @staticmethod
     async def send_new_message(

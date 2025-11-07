@@ -5,7 +5,14 @@ from tortoise.exceptions import DoesNotExist
 
 from app.config import logger
 from app.core.enums import ItemType
-from app.core.models import User as UserModel, SCPObject, Achievement, Item, UserAchievement, UserItem
+from app.core.models import (
+    User as UserModel,
+    SCPObject,
+    Achievement,
+    Item,
+    UserAchievement,
+    UserItem
+)
 from app.core.schemas import CrystallizationState, CoguardState
 from app.utils.response_utils import response_utils
 
@@ -17,21 +24,32 @@ class AchievementHandlerService:
             db_user, _ = await UserModel.get_or_create(user_id=user.id)
             achievement = await Achievement.get(achievement_id=achievement_id)
 
-            _, created = await UserAchievement.get_or_create(user=db_user, achievement=achievement)
+            _, created = await UserAchievement.get_or_create(
+                user=db_user, achievement=achievement
+            )
             if created:
-                logger.info(f"Granted achievement '{achievement.name}' to user {user.id}")
+                logger.info(
+                    f"Granted achievement '{achievement.name}' to user {user.id}"
+                )
                 await response_utils.send_dm_message(user, achievement)
 
         except DoesNotExist:
-            logger.warning(f"Attempted to grant a non-existent achievement with id: '{achievement_id}'")
+            logger.warning(
+                f"Attempted to grant a non-existent "
+                f"achievement with id: '{achievement_id}'"
+            )
         except Exception as e:
-            logger.error(f"Error granting achievement '{achievement_id}' to user {user.id}: {e}")
+            logger.error(
+                f"Error granting achievement '{achievement_id}' "
+                f"to user {user.id}: {e}"
+            )
 
     @staticmethod
     async def _get_user_achievements_ids(user_id: int) -> Set[str]:
         db_user, _ = await UserModel.get_or_create(user_id=user_id)
-        # Змінено: отримуємо досягнення через UserAchievement
-        achievements = await UserAchievement.filter(user=db_user).prefetch_related("achievement")
+        achievements = await UserAchievement.filter(
+            user=db_user
+        ).prefetch_related("achievement")
         return {ua.achievement.achievement_id for ua in achievements}
 
     async def handle_cooldown_achievement(self, user: User):
@@ -181,10 +199,14 @@ class AchievementHandlerService:
                 item_type=ItemType.CARD, price__gt=0
             ).values_list("item_id", flat=True)
         )
-        user_cards = await UserItem.filter(user=db_user, item__item_type=ItemType.CARD).prefetch_related("item")
+        user_cards = await UserItem.filter(
+            user=db_user, item__item_type=ItemType.CARD
+        ).prefetch_related("item")
         user_card_ids = {uc.item.item_id for uc in user_cards}
 
-        if purchasable_card_ids.issubset(user_card_ids) and "access_master" not in achievements:
+        if purchasable_card_ids.issubset(
+                user_card_ids
+        ) and "access_master" not in achievements:
             await self._grant_achievement(user, "access_master")
 
         achievements_map = {

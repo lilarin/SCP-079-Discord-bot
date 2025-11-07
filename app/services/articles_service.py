@@ -1,12 +1,15 @@
 import asyncio
 import io
 import textwrap
+from typing import Tuple
 
 from PIL import Image, ImageDraw, ImageFont
-from disnake import File
+from disnake import File, Embed, ui
 
-from app.core.variables import variables
 from app.core.models import SCPObject
+from app.core.variables import variables
+from app.embeds import info_embeds
+from app.views.info_views import ArticleView
 
 
 class ArticleService:
@@ -67,12 +70,18 @@ class ArticleService:
             buffer.seek(0)
             return buffer
 
-    async def create_article_image(self, article: SCPObject) -> File:
+    async def _create_article_image(self, article: SCPObject) -> File:
         image_buffer = await asyncio.to_thread(
             self._generate_image_sync, article.number, article.title
         )
 
         return File(fp=image_buffer, filename=f"{article.number.lower()}_title.png")
+
+    async def create_article_components(self, article: SCPObject) -> Tuple[Embed, ui.View]:
+        image = await self._create_article_image(article)
+        embed = await info_embeds.format_article_embed(article, image)
+        view = ArticleView(article)
+        return embed, view
 
 
 article_service = ArticleService()

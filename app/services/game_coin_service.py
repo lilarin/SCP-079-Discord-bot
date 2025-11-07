@@ -3,10 +3,10 @@ import random
 
 from disnake import ApplicationCommandInteraction
 
+from app.embeds import games_embeds
 from app.localization import t
 from app.services import achievement_handler_service, economy_management_service
 from app.utils.response_utils import response_utils
-from app.utils.ui_utils import ui_utils
 
 
 class CoinFlipService:
@@ -19,10 +19,10 @@ class CoinFlipService:
             await economy_management_service.update_user_balance(
                 interaction.user, winnings, t("economy.reasons.game_win_coin")
             )
-            embed = await ui_utils.format_coin_flip_win_embed(bet=winnings)
+            embed = await games_embeds.format_coin_flip_win_embed(bet=winnings)
             asyncio.create_task(achievement_handler_service.handle_coin_flip_achievements(interaction.user, winnings))
         else:
-            embed = await ui_utils.format_coin_flip_loss_embed(bet=bet)
+            embed = await games_embeds.format_coin_flip_loss_embed(bet=bet)
 
         await response_utils.send_response(interaction, embed=embed)
 

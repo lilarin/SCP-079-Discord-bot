@@ -6,8 +6,8 @@ from disnake import User, Member, TextChannel
 from disnake.ext.commands import InteractionBot
 
 from app.config import config, logger
+from app.embeds import economy_embeds
 from app.utils.response_utils import response_utils
-from app.utils.ui_utils import ui_utils
 
 
 class EconomyLoggingService:
@@ -72,7 +72,7 @@ class EconomyLoggingService:
         user_mention = f"<@{user.id}>"
         log_id = await self.get_next()
 
-        embed = await ui_utils.format_balance_log_embed(
+        embed = await economy_embeds.format_balance_log_embed(
             user_mention=user_mention,
             avatar_url=user.display_avatar.url,
             amount=amount,

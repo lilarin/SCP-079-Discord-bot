@@ -1,13 +1,14 @@
 from typing import Dict, List, Tuple, Optional
 
-from disnake import Embed, Component, User, Member
+from disnake import Embed, User, Member, ui
 from tortoise.functions import Count
 
 from app.config import logger
 from app.core.models import Achievement, User as UserModel, UserAchievement
 from app.core.schemas import AchievementConfig
 from app.core.variables import variables
-from app.utils.ui_utils import ui_utils
+from app.embeds import info_embeds
+from app.views.pagination_view import PaginationView
 
 
 class AchievementService:
@@ -70,43 +71,40 @@ class AchievementService:
         user, _ = await UserModel.get_or_create(user_id=user_id)
         return await UserAchievement.filter(user=user).count()
 
-    async def init_achievements_message(self, user: Member | User) -> Optional[Tuple[Embed, List[Component]]]:
-        db_user, _ = await UserModel.get_or_create(user_id=user.id)
+    async def init_achievements_message(self, user: Member | User) -> Optional[Tuple[Embed, List[ui.View]]]:
         items, _, has_next = await self._get_paginated_user_achievements(
             user_id=user.id, limit=variables.achievements_per_page
         )
 
-        embed = await ui_utils.format_achievements_embed(user, items)
-
-        components = await ui_utils.init_control_buttons(
+        embed = await info_embeds.format_achievements_embed(user, items)
+        view = PaginationView(
             criteria="user_achievements",
-            disable_first_page_button=True,
-            disable_previous_page_button=True,
-            disable_next_page_button=not has_next,
-            disable_last_page_button=not has_next,
+            disable_first=True,
+            disable_previous=True,
+            disable_next=not has_next,
+            disable_last=not has_next,
             target_user_id=user.id
         )
-        return embed, components
+        return embed, [view] if view.children else []
 
     async def edit_achievements_message(
             self, user: User, page: int, offset: int
-    ) -> Optional[Tuple[Embed, List[Component]]]:
+    ) -> Optional[Tuple[Embed, List[ui.View]]]:
         items, has_previous, has_next = await self._get_paginated_user_achievements(
             user_id=user.id, limit=variables.achievements_per_page, offset=offset
         )
 
-        embed = await ui_utils.format_achievements_embed(user, items, offset=offset)
-
-        components = await ui_utils.init_control_buttons(
+        embed = await info_embeds.format_achievements_embed(user, items, offset=offset)
+        view = PaginationView(
             criteria="user_achievements",
-            current_page_text=page,
-            disable_first_page_button=not has_previous,
-            disable_previous_page_button=not has_previous,
-            disable_next_page_button=not has_next,
-            disable_last_page_button=not has_next,
+            current_page=page,
+            disable_first=not has_previous,
+            disable_previous=not has_previous,
+            disable_next=not has_next,
+            disable_last=not has_next,
             target_user_id=user.id
         )
-        return embed, components
+        return embed, [view] if view.children else []
 
     @staticmethod
     async def get_achievements_statistics(
@@ -119,9 +117,7 @@ class AchievementService:
             .offset(offset)
             .limit(limit + 1)
         )
-
         stats_raw = await stats_query
-
         stats_list = [(ach, ach.owners_count) for ach in stats_raw]
 
         has_next = len(stats_list) > limit
@@ -138,40 +134,36 @@ class AchievementService:
     async def get_total_achievements_count() -> int:
         return await Achievement.all().count()
 
-    async def init_stats_message(self) -> Optional[Tuple[Embed, List[Component]]]:
+    async def init_stats_message(self) -> Optional[Tuple[Embed, List[ui.View]]]:
         stats, _, has_next = await self.get_achievements_statistics(
             limit=variables.achievements_per_page
         )
         total_players = await self.get_total_players_with_achievements_count()
-
-        embed = await ui_utils.format_achievement_stats_embed(stats, total_players)
-
-        components = await ui_utils.init_control_buttons(
+        embed = await info_embeds.format_achievement_stats_embed(stats, total_players)
+        view = PaginationView(
             criteria="achievements_stats",
-            disable_first_page_button=True,
-            disable_previous_page_button=True,
-            disable_next_page_button=not has_next,
-            disable_last_page_button=not has_next
+            disable_first=True,
+            disable_previous=True,
+            disable_next=not has_next,
+            disable_last=not has_next
         )
-        return embed, components
+        return embed, [view] if view.children else []
 
-    async def edit_stats_message(self, page: int, offset: int) -> Optional[Tuple[Embed, List[Component]]]:
+    async def edit_stats_message(self, page: int, offset: int) -> Optional[Tuple[Embed, List[ui.View]]]:
         stats, has_previous, has_next = await self.get_achievements_statistics(
             limit=variables.achievements_per_page, offset=offset
         )
         total_players = await self.get_total_players_with_achievements_count()
-
-        embed = await ui_utils.format_achievement_stats_embed(stats, total_players, offset)
-
-        components = await ui_utils.init_control_buttons(
+        embed = await info_embeds.format_achievement_stats_embed(stats, total_players, offset)
+        view = PaginationView(
             criteria="achievements_stats",
-            current_page_text=page,
-            disable_first_page_button=not has_previous,
-            disable_previous_page_button=not has_previous,
-            disable_next_page_button=not has_next,
-            disable_last_page_button=not has_next
+            current_page=page,
+            disable_first=not has_previous,
+            disable_previous=not has_previous,
+            disable_next=not has_next,
+            disable_last=not has_next
         )
-        return embed, components
+        return embed, [view] if view.children else []
 
 
 achievement_service = AchievementService()
