@@ -1,3 +1,4 @@
+import re
 from io import BytesIO
 from typing import Tuple, Optional
 
@@ -7,6 +8,13 @@ from disnake import User, Member
 class KeyCardUtils:
     @staticmethod
     async def process_username(user_name: str) -> str:
+        processed_name = re.sub(r'\[.*?\]|\(.*?\)|\{.*?\}', '', user_name).strip()
+        if processed_name:
+            user_name = processed_name
+
+        user_name = re.sub(r'[^a-zA-Zа-яА-Я0-9\s._\-]', '', user_name)
+        user_name = re.sub(r'\s+', ' ', user_name).strip()
+
         user_name = user_name.upper()
         if len(user_name) > 14:
             user_name = (user_name[:12].strip() + "..")
