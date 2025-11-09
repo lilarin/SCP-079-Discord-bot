@@ -471,7 +471,7 @@ async def game_coin_flip(
         logger.error(exception)
         reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, reason
+            interaction.user, bet, reason, balance_only=True
         )
 
 
@@ -495,7 +495,7 @@ async def game_candy(
         logger.error(exception)
         reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, reason
+            interaction.user, bet, reason, balance_only=True
         )
 
 
@@ -519,7 +519,7 @@ async def game_coguard(
         logger.error(exception)
         reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, reason
+            interaction.user, bet, reason, balance_only=True
         )
 
 
@@ -549,7 +549,7 @@ async def game_scp173(
         logger.error(exception)
         reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, reason
+            interaction.user, bet, reason, balance_only=True
         )
 
 
@@ -581,7 +581,7 @@ async def game_hole(
     if (group_bet and item_bet) or (not group_bet and not item_bet):
         reason = t("responses.games.invalid_bet_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, reason
+            interaction.user, bet, reason, balance_only=True
         )
         await response_utils.send_response(
             interaction, t("responses.games.hole.choose_one_bet_type"), delete_after=10
@@ -591,7 +591,7 @@ async def game_hole(
     if item_bet and item_bet not in variables.hole_items.values():
         reason = t("responses.games.invalid_bet_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, reason
+            interaction.user, bet, reason, balance_only=True
         )
         await response_utils.send_response(
             interaction, t("responses.games.hole.option_not_found", option=item_bet), delete_after=10
@@ -611,7 +611,7 @@ async def game_hole(
         logger.error(exception)
         reason = t("responses.games.error_refund", command=interaction.data.name)
         await economy_management_service.update_user_balance(
-            interaction.user, bet, reason
+            interaction.user, bet, reason, balance_only=True
         )
 
 
