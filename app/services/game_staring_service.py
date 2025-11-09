@@ -40,7 +40,8 @@ class StaringGameService:
             await economy_management_service.update_user_balance(
                 current_state.host,
                 current_state.bet,
-                t("economy.reasons.staring_game_not_enough_players_refund")
+                t("economy.reasons.staring_game_not_enough_players_refund"),
+                balance_only=True
             )
             message_to_edit = await interaction.original_message()
             await response_utils.edit_message(
@@ -77,7 +78,10 @@ class StaringGameService:
             )
 
         await economy_management_service.update_user_balance(
-            user, -game_state.bet, t("economy.reasons.staring_game_bet")
+            user,
+            -game_state.bet,
+            t("economy.reasons.staring_game_bet"),
+            balance_only=True
         )
         game_state.players.append(user)
 
@@ -207,7 +211,10 @@ class StaringGameService:
             winnings_per_player = pot // len(survivors)
             for winner in survivors:
                 await economy_management_service.update_user_balance(
-                    winner, winnings_per_player, t("economy.reasons.game_win_staring")
+                    winner,
+                    winnings_per_player,
+                    t("economy.reasons.game_win_staring"),
+                    balance_only=True
                 )
                 asyncio.create_task(
                     achievement_handler_service.handle_scp173_achievements(
@@ -230,7 +237,12 @@ class StaringGameService:
 
     @staticmethod
     async def _handle_single_winner(channel: TextChannel, winner: User, pot: int):
-        await economy_management_service.update_user_balance(winner, pot, t("economy.reasons.game_win_staring"))
+        await economy_management_service.update_user_balance(
+            winner,
+            pot,
+            t("economy.reasons.game_win_staring"),
+            balance_only=True
+        )
         asyncio.create_task(
             achievement_handler_service.handle_scp173_achievements(
                 winner,
