@@ -109,12 +109,12 @@ class AchievementHandlerService:
 
         if db_user.balance >= 1_000_000 and "balance_1m" not in achievements:
             await self._grant_achievement(user, "balance_1m")
-        if db_user.reputation >= 100_000 and "reputation_100k" not in achievements:
-            await self._grant_achievement(user, "reputation_100k")
-        if db_user.reputation >= 1_000_000 and "reputation_1m" not in achievements:
-            await self._grant_achievement(user, "reputation_1m")
+        if db_user.reputation >= 300_000 and "reputation_300k" not in achievements:
+            await self._grant_achievement(user, "reputation_300k")
+        if db_user.reputation >= 3_000_000 and "reputation_3m" not in achievements:
+            await self._grant_achievement(user, "reputation_3m")
 
-        if amount_transferred > 10_000 and "philanthropist" not in achievements:
+        if amount_transferred > 100_000 and "philanthropist" not in achievements:
             await self._grant_achievement(user, "philanthropist")
 
     async def handle_crystallization_achievements(
@@ -123,19 +123,15 @@ class AchievementHandlerService:
         achievements = await self._get_user_achievements_ids(user.id)
         if is_loss and "game_crystal_loss" not in achievements:
             await self._grant_achievement(user, "game_crystal_loss")
-        if not is_loss and state.multiplier >= 2.5 and "game_crystal_win_x2.5" not in achievements:
-            await self._grant_achievement(user, "game_crystal_win_x2.5")
-        if not is_loss and (state.bet * state.multiplier) >= 50000 and "big_winner" not in achievements:
-            await self._grant_achievement(user, "big_winner")
+        if not is_loss and state.multiplier >= 2.0 and "game_crystal_win_x2.0" not in achievements:
+            await self._grant_achievement(user, "game_crystal_win_x2.0")
 
     async def handle_coin_flip_achievements(
             self, user: User, winnings: int
     ):
         achievements = await self._get_user_achievements_ids(user.id)
-        if winnings >= 10000 and "game_coin_win_10_000" not in achievements:
+        if winnings >= 10_000 and "game_coin_win_10_000" not in achievements:
             await self._grant_achievement(user, "game_coin_win_10_000")
-        if winnings >= 50000 and "big_winner" not in achievements:
-            await self._grant_achievement(user, "big_winner")
 
     async def handle_candy_achievements(
             self, user: User, player_taken: int, is_loss: bool
@@ -154,20 +150,20 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "game_coguard_loss_first")
         if not is_loss and state.win_streak >= 10 and "game_coguard_streak_10" not in achievements:
             await self._grant_achievement(user, "game_coguard_streak_10")
-        if not is_loss and (state.bet * state.multiplier) >= 50000 and "big_winner" not in achievements:
+        if not is_loss and (state.bet * state.multiplier) >= 30000 and "big_winner" not in achievements:
             await self._grant_achievement(user, "big_winner")
 
     async def handle_hole_achievements(
             self, user: User, is_jackpot: bool, is_o5_win: bool, winnings: int
     ):
         achievements = await self._get_user_achievements_ids(user.id)
-        if winnings > 0 and "game_hole_win" not in achievements:  # Проверяем, что есть выигрыш
+        if winnings > 0 and "game_hole_win" not in achievements:
             await self._grant_achievement(user, "game_hole_win")
         if is_jackpot and "game_hole_jackpot" not in achievements:
             await self._grant_achievement(user, "game_hole_jackpot")
         if is_o5_win and "game_hole_o5_win" not in achievements:
             await self._grant_achievement(user, "game_hole_o5_win")
-        if winnings >= 50000 and "big_winner" not in achievements:
+        if winnings >= 30000 and "big_winner" not in achievements:
             await self._grant_achievement(user, "big_winner")
 
     async def handle_scp173_achievements(
@@ -180,7 +176,7 @@ class AchievementHandlerService:
             await self._grant_achievement(user, "game_scp173_survivor")
         if is_first_death and "game_scp173_first_death" not in achievements:
             await self._grant_achievement(user, "game_scp173_first_death")
-        if pot >= 50000 and "big_winner" not in achievements:
+        if pot >= 30000 and "big_winner" not in achievements:
             await self._grant_achievement(user, "big_winner")
 
     async def handle_shop_achievements(self, user: User, bought_item_id: str):
