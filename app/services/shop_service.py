@@ -75,7 +75,7 @@ class ShopService:
 
     @staticmethod
     async def get_shop_items(limit: int, offset: int = 0) -> Tuple[List[Item], bool, bool]:
-        items_query = Item.filter(quantity__gt=0).order_by("price").offset(offset).limit(limit + 1)
+        items_query = Item.filter(quantity__gt=0).order_by("price", "id").offset(offset).limit(limit + 1)
         items_raw = await items_query
         has_next = len(items_raw) > limit
         current_page_items = items_raw[:limit]
