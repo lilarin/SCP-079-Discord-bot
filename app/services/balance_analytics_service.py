@@ -1,6 +1,5 @@
 import asyncio
 import io
-import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 
@@ -185,10 +184,7 @@ class BalanceAnalyticsService:
             period: str
     ) -> io.BytesIO:
         try:
-            font_path = os.path.join(
-                variables.assets_dir_path, "fonts", "Inter_18pt-Regular.ttf"
-            )
-            main_font = FontProperties(fname=font_path)
+            main_font = FontProperties(fname=variables.secondary_font_path)
         except Exception as e:
             logger.error(f"Could not load custom font for graph: {e}")
             main_font = FontProperties()
