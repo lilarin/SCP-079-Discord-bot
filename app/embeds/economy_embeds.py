@@ -1,9 +1,10 @@
 from typing import List, Optional
 
-from disnake import Embed, User
+from disnake import Embed, User, File
 
 from app.core.enums import Color
 from app.core.models import Item
+from app.core.schemas import BalanceAnalyticsData
 from app.core.variables import variables
 from app.localization import t
 
@@ -137,4 +138,43 @@ async def format_balance_log_embed(
     embed.add_field(name=t("ui.balance_log.new_balance_field"), value=f"**{new_balance}** 💠", inline=True)
     embed.set_footer(text=f"#{log_id}")
 
+    return embed
+
+
+async def format_report_embed(
+        user: User, stats: BalanceAnalyticsData, image_file: File, period_str: str
+) -> Embed:
+    embed = Embed(
+        title=t("ui.analytics.embed_title", user_name=user.display_name),
+        description=t("ui.analytics.embed_description_period", period=period_str),
+        color=Color.GREEN.value,
+    )
+    embed.set_thumbnail(url=user.display_avatar.url)
+    embed.add_field(
+        name=f"📈 {t('ui.analytics.total_earned')}",
+        value=f"**{stats.total_earned:,}** 💠",
+        inline=True,
+    )
+    embed.add_field(
+        name=f"📉 {t('ui.analytics.total_lost')}",
+        value=f"**{stats.total_lost:,}** 💠",
+        inline=True,
+    )
+    embed.add_field(
+        name=f"🏆 {t('ui.analytics.biggest_gain')}",
+        value=(
+            f"**+{stats.biggest_gain_amount:,}** "
+            f"💠\n-# {stats.biggest_gain_reason}"
+        ),
+        inline=False,
+    )
+    embed.add_field(
+        name=f"💔 {t('ui.analytics.biggest_loss')}",
+        value=(
+            f"**-{stats.biggest_loss_amount:,}** "
+            f"💠\n-# {stats.biggest_loss_reason}"
+        ),
+        inline=False,
+    )
+    embed.set_image(url=f"attachment://{image_file.filename}")
     return embed
