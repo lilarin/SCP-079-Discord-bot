@@ -143,6 +143,11 @@ async def format_games_info_embed() -> Embed:
         inline=False
     )
     embed.add_field(
+        name=t("ui.games_info.schrodinger_name"),
+        value=t("ui.games_info.schrodinger_desc"),
+        inline=False
+    )
+    embed.add_field(
         name=t("ui.games_info.hole_name"),
         value=t("ui.games_info.hole_desc"),
         inline=False

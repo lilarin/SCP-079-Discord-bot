@@ -1,6 +1,7 @@
 from .achievement_handler_service import achievement_handler_service
 from .achievement_service import achievement_service
 from .articles_service import article_service
+from .balance_analytics_service import balance_analytics_service
 from .economy_logging_service import economy_logging_service
 from .economy_management_service import economy_management_service
 from .game_candy_service import candy_game_service
@@ -8,6 +9,7 @@ from .game_coin_service import coin_flip_service
 from .game_conguard_service import coguard_service
 from .game_crystallization_service import crystallization_service
 from .game_hole_service import hole_game_service
+from .game_schrodinger_service import schrodinger_game_service
 from .game_staring_service import staring_game_service
 from .inventory_service import inventory_service
 from .keycard_service import keycard_service

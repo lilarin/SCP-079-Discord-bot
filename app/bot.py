@@ -33,7 +33,9 @@ from app.services import (
     achievement_service,
     economy_logging_service,
     achievement_handler_service,
-    interaction_service
+    interaction_service,
+    schrodinger_game_service,
+    balance_analytics_service
 )
 from app.utils.response_utils import response_utils
 from app.utils.time_utils import time_utils
@@ -615,6 +617,30 @@ async def game_hole(
         )
 
 
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
+                   type=variables.cooldown_type)
+@bot.slash_command(name=t("commands.game_schrodinger.name"), description=t("commands.game_schrodinger.description"))
+@commands.guild_only()
+@remove_bet_from_balance
+async def game_schrodinger(
+        interaction: disnake.ApplicationCommandInteraction,
+        bet: int = commands.Param(
+            description=t("commands.game_schrodinger.params.bet.description"),
+            ge=100, le=10000,
+            name=t("commands.game_schrodinger.params.bet.name")
+        ),
+):
+    try:
+        await schrodinger_game_service.start_game(interaction, bet)
+    except Exception as exception:
+        await response_utils.send_error_response(interaction)
+        logger.error(exception)
+        reason = t("responses.games.error_refund", command=interaction.data.name)
+        await economy_management_service.update_user_balance(
+            interaction.user, bet, reason, balance_only=True
+        )
+
+
 @bot.slash_command(name=t("commands.games_info.name"), description=t("commands.games_info.description"))
 @commands.guild_only()
 async def games_info(interaction: disnake.ApplicationCommandInteraction):
@@ -662,6 +688,54 @@ async def achievement_stats(interaction: disnake.ApplicationCommandInteraction):
     except Exception as exception:
         await response_utils.send_error_response(interaction)
         logger.error(exception)
+
+
+@bot.slash_command(name=t("commands.balance_stats.name"), description=t("commands.balance_stats.description"))
+@commands.guild_only()
+@target_is_user
+async def balance_stats(
+        interaction: disnake.ApplicationCommandInteraction,
+        period: str = commands.Param(
+            name=t("commands.balance_stats.params.period.name"),
+            description=t("commands.balance_stats.params.period.description"),
+            choices={
+                t("commands.balance_stats.params.period.choices.day"): "day",
+                t("commands.balance_stats.params.period.choices.week"): "week",
+                t("commands.balance_stats.params.period.choices.month"): "month",
+            }
+        ),
+        user: disnake.User = commands.Param(
+            description=t("commands.balance_stats.params.user.description"),
+            default=None,
+            name=t("commands.balance_stats.params.user.name")
+        ),
+        is_public: bool = commands.Param(
+            name=t("commands.balance_stats.params.is_public.name"),
+            description=t("commands.balance_stats.params.is_public.description"),
+            default=False
+        ),
+):
+    if is_public:
+        await response_utils.wait_for_response(interaction)
+    else:
+        await response_utils.wait_for_ephemeral_response(interaction)
+
+    target_user = user or interaction.user
+
+    try:
+        report = await balance_analytics_service.generate_user_report(target_user, period)
+
+        if report:
+            embed, file = report
+            await response_utils.edit_ephemeral_response(interaction, embed=embed, file=file)
+        else:
+            await response_utils.edit_ephemeral_response(
+                interaction, message=t("responses.analytics.no_history_period"), delete_after=10
+            )
+
+    except Exception as exception:
+        await response_utils.send_error_response(interaction)
+        logger.error(exception, exc_info=True)
 
 
 @bot.event

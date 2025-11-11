@@ -12,7 +12,8 @@ from app.services import (
     shop_service,
     inventory_service,
     achievement_service,
-    leaderboard_service
+    leaderboard_service,
+    schrodinger_game_service
 )
 from app.utils.pagination_utils import pagination_utils
 from app.utils.response_utils import response_utils
@@ -57,10 +58,14 @@ class InteractionService:
             "game_coguard_higher": lambda inter: coguard_service.play_turn(inter, "higher"),
             "game_coguard_lower": lambda inter: coguard_service.play_turn(inter, "lower"),
             "game_coguard_cashout": coguard_service.cash_out,
+            "game_schrodinger_initial": schrodinger_game_service.handle_initial_choice,
+            "game_schrodinger_final": schrodinger_game_service.handle_final_choice,
             "game_scp173_start": staring_game_service.handle_start,
         }
-        if action := game_actions.get(custom_id):
-            await action(interaction)
+        for prefix, action in game_actions.items():
+            if custom_id.startswith(prefix):
+                await action(interaction)
+                return
 
     async def _handle_shop_pagination(self, interaction: MessageInteraction):
         total_count = await shop_service.get_total_items_count()

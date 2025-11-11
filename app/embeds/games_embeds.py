@@ -240,3 +240,47 @@ async def format_hole_results_embed(
         embed.description += t("ui.hole_game.no_winners")
 
     return embed
+
+
+async def format_schrodinger_initial_choice_embed(num_containers: int) -> Embed:
+    embed = Embed(
+        title=t("ui.schrodinger_game.title"),
+        description=t(
+            "ui.schrodinger_game.initial_description",
+             count=num_containers
+        ),
+        color=Color.BLACK.value
+    )
+    embed.set_thumbnail(url="https://i.imgur.com/rUsdAZG.png")
+    return embed
+
+
+async def format_schrodinger_win_embed(winnings: int, winning_container_index: int, player_stayed: bool) -> Embed:
+    container_name = variables.schrodinger_container_names[winning_container_index]
+
+    embed = Embed(
+        title=t("ui.schrodinger_game.win_title"),
+        description=t(
+            "ui.schrodinger_game.win_description",
+            container=container_name,
+            winnings=winnings
+        ),
+        color=Color.GREEN.value
+    )
+    embed.set_thumbnail(url="https://i.imgur.com/rUsdAZG.png")
+    return embed
+
+
+async def format_schrodinger_loss_embed(bet: int, winning_container_index: int) -> Embed:
+    container_name = variables.schrodinger_container_names[winning_container_index]
+    embed = Embed(
+        title=t("ui.schrodinger_game.loss_title"),
+        description=t(
+            "ui.schrodinger_game.loss_description",
+            container=container_name,
+            bet=bet
+        ),
+        color=Color.RED.value
+    )
+    embed.set_thumbnail(url="https://i.imgur.com/rUsdAZG.png")
+    return embed
