@@ -69,23 +69,23 @@ class EconomyManagementService:
             db_receiver.balance += amount
             await db_receiver.save(update_fields=["balance"])
 
-            asyncio.create_task(
-                economy_logging_service.log_balance_change(
-                    user=sender,
-                    amount=-amount,
-                    new_balance=db_sender.balance,
-                    reason=t("economy.reasons.transfer_sent", user_id=receiver.id),
-                )
+        asyncio.create_task(
+            economy_logging_service.log_balance_change(
+                user=sender,
+                amount=-amount,
+                new_balance=db_sender.balance,
+                reason=t("economy.reasons.transfer_sent", user_id=receiver.id),
             )
+        )
 
-            asyncio.create_task(
-                economy_logging_service.log_balance_change(
-                    user=receiver,
-                    amount=amount,
-                    new_balance=db_receiver.balance,
-                    reason=t("economy.reasons.transfer_received", user_id=sender.id),
-                )
+        asyncio.create_task(
+            economy_logging_service.log_balance_change(
+                user=receiver,
+                amount=amount,
+                new_balance=db_receiver.balance,
+                reason=t("economy.reasons.transfer_received", user_id=sender.id),
             )
+        )
 
         asyncio.create_task(achievement_handler_service.handle_economy_achievements(sender, amount_transferred=amount))
         asyncio.create_task(achievement_handler_service.handle_economy_achievements(receiver))
