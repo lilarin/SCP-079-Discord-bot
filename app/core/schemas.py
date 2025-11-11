@@ -80,6 +80,15 @@ class SCP173GameState:
 
 
 @dataclass
+class SchrodingerGameState:
+    bet: int
+    num_containers: int
+    winning_container_index: int
+    player_initial_choice_index: Optional[int] = None
+    revealed_container_indices: List[int] = field(default_factory=list)
+
+
+@dataclass
 class HolePlayerBet:
     player: User
     amount: int
@@ -90,3 +99,13 @@ class HolePlayerBet:
 class HoleGameState:
     message: Message
     bets: List[HolePlayerBet] = field(default_factory=list)
+
+
+@dataclass
+class BalanceAnalyticsData:
+    total_earned: int
+    total_lost: int
+    biggest_gain_reason: str
+    biggest_gain_amount: int
+    biggest_loss_reason: str
+    biggest_loss_amount: int
