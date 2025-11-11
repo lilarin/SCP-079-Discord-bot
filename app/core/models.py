@@ -136,3 +136,20 @@ class UserAchievement(Model):
     class Meta:
         table = "users_achievements"
         unique_together = ("user", "achievement")
+
+
+class BalanceHistory(Model):
+    id = fields.BigIntField(pk=True)
+    user = fields.ForeignKeyField("models.User", related_name="balance_history")
+    timestamp = fields.DatetimeField(auto_now_add=True, indexed=True)
+    change_amount = fields.BigIntField()
+    new_balance = fields.BigIntField()
+    reason = fields.TextField()
+
+    class Meta:
+        table = "balance_history"
+        ordering = ["-timestamp"]
+        indexes = (("user", "timestamp"),)
+
+    def __str__(self):
+        return f"User {self.user_id} balance changed by {self.change_amount} at {self.timestamp}"
