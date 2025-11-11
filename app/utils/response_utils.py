@@ -7,7 +7,8 @@ from disnake import (
     Message,
     User,
     Forbidden,
-    ui
+    ui,
+    File
 )
 
 from app.config import logger
@@ -64,8 +65,23 @@ class ResponseUtils:
             message: Optional[str] = None,
             embed: Optional[Embed] = None,
             view: Optional[ui.View] = None,
+            file: Optional[File] = None,
+            delete_after: Optional[int] = None
     ) -> None:
-        await interaction.edit_original_response(content=message, embed=embed, view=view)
+        if file:
+            await interaction.edit_original_response(
+                content=message,
+                embed=embed,
+                view=view,
+                file=file
+            )
+        else:
+            await interaction.edit_original_response(
+                content=message,
+                embed=embed,
+                view=view,
+                delete_after=delete_after
+            )
 
     @staticmethod
     async def send_new_message(
@@ -73,11 +89,17 @@ class ResponseUtils:
             message: Optional[str] = None,
             embed: Optional[Embed] = None
     ) -> None:
-        await channel.send(content=message, embed=embed, flags=MessageFlags(suppress_notifications=True))
+        await channel.send(
+            content=message,
+            embed=embed,
+            flags=MessageFlags(suppress_notifications=True)
+        )
 
     @staticmethod
     async def send_error_response(interaction) -> None:
-        await interaction.edit_original_response(content=t("errors.generic"), delete_after=10)
+        await interaction.edit_original_response(
+            content=t("errors.generic"), delete_after=10
+        )
 
     @staticmethod
     async def send_dm_message(user: User, achievement: Achievement):
