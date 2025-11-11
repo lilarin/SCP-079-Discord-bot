@@ -429,8 +429,7 @@ async def edit_player_balance(
         logger.error(exception)
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
-                   type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_crystallize.name"), description=t("commands.game_crystallize.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -453,8 +452,7 @@ async def game_crystallize(
         )
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
-                   type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_coin.name"), description=t("commands.game_coin.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -477,8 +475,7 @@ async def game_coin_flip(
         )
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
-                   type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_candy.name"), description=t("commands.game_candy.description"))
 @commands.guild_only()
 @remove_bet_from_balance
@@ -617,8 +614,7 @@ async def game_hole(
         )
 
 
-@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60,
-                   type=variables.cooldown_type)
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
 @bot.slash_command(name=t("commands.game_schrodinger.name"), description=t("commands.game_schrodinger.description"))
 @commands.guild_only()
 @remove_bet_from_balance
