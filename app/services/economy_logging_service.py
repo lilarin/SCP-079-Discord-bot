@@ -6,6 +6,7 @@ from disnake import User, Member, TextChannel
 from disnake.ext.commands import InteractionBot
 
 from app.config import config, logger
+from app.core.models import User as UserModel, BalanceHistory
 from app.embeds import economy_embeds
 from app.utils.response_utils import response_utils
 
@@ -59,11 +60,28 @@ class EconomyLoggingService:
                 logger.error(f"Channel with ID {config.economy_logging_channel_id} is not a TextChannel or not found!")
         return self._channel
 
+    @staticmethod
+    async def _save_balance_history(
+            user_id: int, amount: int, new_balance: int, reason: str
+    ) -> None:
+        try:
+            db_user = await UserModel.get(user_id=user_id)
+            await BalanceHistory.create(
+                user=db_user,
+                change_amount=amount,
+                new_balance=new_balance,
+                reason=reason,
+            )
+        except Exception as e:
+            logger.error(f"Failed to save balance history for user {user_id}: {e}")
+
     async def log_balance_change(
             self, user: User | Member, amount: int, new_balance: int, reason: str
     ) -> None:
         if not self._bot:
             return
+
+        asyncio.create_task(self._save_balance_history(user.id, amount, new_balance, reason))
 
         log_channel = await self._get_channel()
         if not log_channel:
