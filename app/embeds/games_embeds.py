@@ -90,10 +90,10 @@ async def format_candy_loss_embed(bet: int) -> Embed:
     return embed
 
 
-async def format_coguard_embed(current_number: int) -> Embed:
+async def format_coguard_embed() -> Embed:
     embed = Embed(
         title=t("ui.coguard_game.title"),
-        description=t("ui.coguard_game.description", current_number=current_number),
+        description=t("ui.coguard_game.description"),
         color=Color.BLUE.value
     )
     embed.set_thumbnail(url="https://imgur.com/pAW9s4O.png")

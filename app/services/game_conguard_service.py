@@ -31,7 +31,7 @@ class CoguardService:
         multiplier = round(random.uniform(*variables.coguard_initial_multiplier_range), 2)
         number = random.randint(1, 100)
 
-        embed = await games_embeds.format_coguard_embed(current_number=number)
+        embed = await games_embeds.format_coguard_embed()
         view = CoguardView(
             bet=bet,
             multiplier=multiplier,
@@ -63,7 +63,7 @@ class CoguardService:
         multiplier_increment = random.uniform(*variables.coguard_multiplier_increment_range)
         new_multiplier = round(state.multiplier + multiplier_increment, 2)
 
-        embed = await games_embeds.format_coguard_embed(current_number=new_number)
+        embed = await games_embeds.format_coguard_embed()
         view = CoguardView(
             bet=state.bet,
             multiplier=new_multiplier,

@@ -56,7 +56,7 @@ class Variables:
         self.candy_win_multipliers: Dict[int, float] = {1: 1.25, 2: 2.99}
 
         self.coguard_initial_multiplier_range: Tuple[float, float] = (0.9, 1.1)
-        self.coguard_multiplier_increment_range: Tuple[float, float] = (0.3, 0.65)
+        self.coguard_multiplier_increment_range: Tuple[float, float] = (0.3, 0.6)
 
         self.schrodinger_win_multipliers: Dict[int, float] = {3: 1.35, 4: 2.4, 5: 3.5}
         self.schrodinger_container_names = ["A", "B", "C", "D", "E"]
