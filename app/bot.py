@@ -705,16 +705,20 @@ async def balance_stats(
             default=None,
             name=t("commands.balance_stats.params.user.name")
         ),
-        is_public: bool = commands.Param(
-            name=t("commands.balance_stats.params.is_public.name"),
-            description=t("commands.balance_stats.params.is_public.description"),
-            default=False
+        is_ephemeral: str = commands.Param(
+            name=t("commands.balance_stats.params.is_ephemeral.name"),
+            description=t("commands.balance_stats.params.is_ephemeral.description"),
+            default="True",
+            choices={
+                t("commands.balance_stats.params.is_ephemeral.choices.yes"): "True",
+                t("commands.balance_stats.params.is_ephemeral.choices.no"): "False",
+            }
         ),
 ):
-    if is_public:
-        await response_utils.wait_for_response(interaction)
-    else:
+    if is_ephemeral == "True":
         await response_utils.wait_for_ephemeral_response(interaction)
+    else:
+        await response_utils.wait_for_response(interaction)
 
     target_user = user or interaction.user
 
