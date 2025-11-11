@@ -42,21 +42,24 @@ class Variables:
 
         # Economy
         self.legal_work_reward_range: Tuple[int, int] = (150, 350)
-        self.non_legal_work_success_chance: float = 0.5
-        self.non_legal_work_reward_range: Tuple[int, int] = (250, 800)
-        self.non_legal_work_penalty_range: Tuple[int, int] = (100, 600)
+        self.non_legal_work_success_chance: float = 0.6
+        self.non_legal_work_reward_range: Tuple[int, int] = (250, 500)
+        self.non_legal_work_penalty_range: Tuple[int, int] = (200, 400)
 
         # Mini-games
         self.crystallize_initial_chance: float = 0.05
-        self.crystallize_initial_multiplier_range: Tuple[float, float] = (0.8, 0.9)
+        self.crystallize_initial_multiplier_range: Tuple[float, float] = (0.9, 0.99)
         self.crystallize_chance_increment_range: Tuple[float, float] = (0.07, 0.16)
-        self.crystallize_multiplier_increment_range: Tuple[float, float] = (0.1, 0.25)
+        self.crystallize_multiplier_increment_range: Tuple[float, float] = (0.11, 0.19)
 
-        self.candy_pre_taken_weights: List[float] = [0.30, 0.5, 0.20]
-        self.candy_win_multipliers: Dict[int, float] = {1: 1.1, 2: 1.8}
+        self.candy_pre_taken_weights: List[float] = [0.3, 0.5, 0.2]
+        self.candy_win_multipliers: Dict[int, float] = {1: 1.25, 2: 2.99}
 
-        self.coguard_initial_multiplier_range: Tuple[float, float] = (0.7, 0.8)
-        self.coguard_multiplier_increment_range: Tuple[float, float] = (0.1, 0.2)
+        self.coguard_initial_multiplier_range: Tuple[float, float] = (0.9, 1.1)
+        self.coguard_multiplier_increment_range: Tuple[float, float] = (0.3, 0.8)
+
+        self.schrodinger_win_multipliers: Dict[int, float] = {3: 1.35, 4: 2.4, 5: 3.5}
+        self.schrodinger_container_names = ["A", "B", "C", "D", "E"]
 
         self.staring_max_players: int = 6
         self.staring_lobby_duration: int = 60
@@ -84,7 +87,7 @@ class Variables:
         self.games_cooldown_rate: float = 3
         self.games_cooldown_time_minutes: float = 120
         self.work_cooldown_time_minutes: float = 240
-        self.article_cooldown_time_minutes: float = 0.5
+        self.article_cooldown_time_minutes: float = 5
 
         # SCP Article Scraper
         self.wiki_url: str = "http://scp-ukrainian.wikidot.com"
