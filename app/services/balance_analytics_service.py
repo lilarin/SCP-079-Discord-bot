@@ -1,7 +1,7 @@
 import asyncio
 import io
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -133,7 +133,11 @@ class BalanceAnalyticsService:
             if not current_bucket:
                 continue
 
-            closest_value = min(current_bucket, key=lambda x: abs(x - target_value))
+            if target_value == 0 and any(val != 0 for val in current_bucket):
+                closest_value = current_bucket[-1]
+            else:
+                closest_value = min(current_bucket, key=lambda x: abs(x - target_value))
+
             selected_balances[i] = closest_value
             target_value = closest_value
 
@@ -156,6 +160,43 @@ class BalanceAnalyticsService:
 
         return final_dates, final_balances
 
+    @staticmethod
+    def _downsample_by_taking_last(
+            dates: List[datetime],
+            balances: List[int],
+            num_segments: int,
+            period_start: datetime,
+            period_end: datetime,
+    ) -> Tuple[List[datetime], List[int]]:
+        points = list(zip(dates, balances))
+        if len(points) <= 1:
+            return dates, balances
+
+        total_duration = period_end - period_start
+        if total_duration.total_seconds() <= 0:
+            return dates, balances
+
+        segment_duration = total_duration / num_segments
+
+        last_point_in_bucket: Dict[int, Tuple[datetime, int]] = {}
+        for time, balance in points:
+            time_offset = time - period_start
+            bucket_index = int(time_offset.total_seconds() / segment_duration.total_seconds())
+            bucket_index = min(bucket_index, num_segments - 1)
+            last_point_in_bucket[bucket_index] = (time, balance)
+
+        final_points = [points[0]]
+
+        for bucket_index in sorted(last_point_in_bucket.keys()):
+            final_points.append(last_point_in_bucket[bucket_index])
+
+        if final_points[-1] != points[-1]:
+            final_points.append(points[-1])
+
+        final_dates, final_balances = zip(*final_points)
+
+        return list(final_dates), list(final_balances)
+
     async def _prepare_data_for_graph(
             self, initial_balance: int, history: List[BalanceHistory], period: str
     ) -> Tuple[List[datetime], List[int]]:
@@ -174,6 +215,7 @@ class BalanceAnalyticsService:
             balances.append(record.new_balance)
         if not history or dates[-1] < current_time:
             dates.append(current_time)
+            balances.append(balances[-1])
         return dates, balances
 
     def _generate_graph_image_sync(
@@ -195,15 +237,34 @@ class BalanceAnalyticsService:
 
         target_tz = pytz.timezone(config.timezone)
 
-        if period == "day":
-            num_segments = 12
-        else:
-            num_segments = 14
+        green_line_segments = 12 if period == "day" else 14
+        gray_line_segments = green_line_segments * 3
+
+        raw_plot_dates, raw_plot_balances = self._downsample_by_taking_last(
+            dates, balances,
+            num_segments=gray_line_segments,
+            period_start=dates[0],
+            period_end=dates[-1]
+        )
+
+        if len(raw_plot_dates) >= 2:
+            ax.plot(
+                raw_plot_dates,
+                raw_plot_balances,
+                marker='o',
+                linestyle='--',
+                color='gray',
+                linewidth=1.5,
+                markersize=4,
+                alpha=0.7,
+                drawstyle='steps-post',
+                label=t("ui.analytics.graph_legend_actual")
+            )
 
         simplified_dates, simplified_balances = self._downsample_data(
             dates,
             balances,
-            num_segments=num_segments,
+            num_segments=green_line_segments,
             period_start=dates[0],
             period_end=dates[-1]
         )
@@ -216,15 +277,31 @@ class BalanceAnalyticsService:
         x_numeric = mdates.date2num(simplified_dates)
         y = np.array(simplified_balances)
 
-        if len(x_numeric) < 2:
-            pass
-        elif len(x_numeric) < 4:
+        if len(x_numeric) >= 4:
+            x_smooth_numeric = np.linspace(x_numeric.min(), x_numeric.max(), 300)
+            y_smooth = pchip_interpolate(x_numeric, y, x_smooth_numeric)
+            x_smooth_dates = mdates.num2date(x_smooth_numeric)
+            ax.plot(
+                x_smooth_dates,
+                y_smooth,
+                color="#4CAF50",
+                linewidth=2.5,
+                label=t("ui.analytics.graph_legend_trend")
+            )
+            ax.fill_between(
+                x_smooth_dates,
+                y_smooth,
+                color="#4CAF50",
+                alpha=0.2
+            )
+        elif len(x_numeric) >= 2:
             ax.plot(
                 simplified_dates,
                 simplified_balances,
                 color="#4CAF50",
                 linewidth=2.5,
-                drawstyle='steps-post'
+                drawstyle='steps-post',
+                label=t("ui.analytics.graph_legend_trend")
             )
             ax.fill_between(
                 simplified_dates,
@@ -233,12 +310,9 @@ class BalanceAnalyticsService:
                 alpha=0.2,
                 step='post'
             )
-        else:
-            x_smooth_numeric = np.linspace(x_numeric.min(), x_numeric.max(), 300)
-            y_smooth = pchip_interpolate(x_numeric, y, x_smooth_numeric)
-            x_smooth_dates = mdates.num2date(x_smooth_numeric)
-            ax.plot(x_smooth_dates, y_smooth, color="#4CAF50", linewidth=2.5)
-            ax.fill_between(x_smooth_dates, y_smooth, color="#4CAF50", alpha=0.2)
+
+        legend = ax.legend(prop=main_font, frameon=False)
+        plt.setp(legend.get_texts(), color='w')
 
         period_str = self.period_locales.get(period, "").lower()
         ax.set_title(
