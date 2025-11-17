@@ -148,8 +148,8 @@ class AchievementHandlerService:
         achievements = await self._get_user_achievements_ids(user.id)
         if is_loss and state.win_streak == 0 and "game_coguard_loss_first" not in achievements:
             await self._grant_achievement(user, "game_coguard_loss_first")
-        if not is_loss and state.win_streak >= 10 and "game_coguard_streak_10" not in achievements:
-            await self._grant_achievement(user, "game_coguard_streak_10")
+        if not is_loss and state.win_streak >= 7 and "game_coguard_streak_7" not in achievements:
+            await self._grant_achievement(user, "game_coguard_streak_7")
         if not is_loss and (state.bet * state.multiplier) >= 30000 and "big_winner" not in achievements:
             await self._grant_achievement(user, "big_winner")
 

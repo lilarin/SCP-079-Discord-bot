@@ -11,7 +11,7 @@ from app.core.models import Item, ItemType, User as UserModel, UserItem, UserAch
 from app.core.variables import variables
 from app.embeds import economy_embeds
 from app.localization import t
-from app.services import achievement_handler_service
+from app.services import achievement_handler_service, economy_logging_service
 from app.views.pagination_view import PaginationView
 
 
@@ -151,6 +151,13 @@ class ShopService:
             await db_user.save(using_db=conn, update_fields=["balance"])
             await item_for_update.save(using_db=conn, update_fields=["quantity"])
             await UserItem.create(user=db_user, item=item_for_update, using_db=conn)
+
+        reason = t("economy.reasons.shop_item_buy", shop_item=card_config.name)
+        asyncio.create_task(
+            economy_logging_service.log_balance_change(
+                user=user, amount=item_for_update.price, new_balance=db_user.balance, reason=reason
+            )
+        )
 
         asyncio.create_task(achievement_handler_service.handle_shop_achievements(user, item_id))
         return t("responses.shop.buy_success", item_name=item.name)
