@@ -47,8 +47,15 @@ class CrystallizationView(ui.View):
 
 
 class CandyGameView(ui.View):
-    def __init__(self, bet: int, pre_taken: int, player_taken: int, potential_win: int, multiplier: float,
-                 is_first_turn: bool):
+    def __init__(
+            self,
+            bet: int,
+            obfuscated_state: str,
+            player_taken: int,
+            potential_win: int,
+            multiplier: float,
+            is_first_turn: bool
+    ):
         super().__init__(timeout=None)
 
         swap_colors = bool(player_taken == 2)
@@ -78,7 +85,7 @@ class CandyGameView(ui.View):
             ui.Button(
                 style=ButtonStyle.secondary,
                 label=t("ui.candy_game.taken_button", count=player_taken),
-                custom_id=f"candy_state_{player_taken}_{pre_taken}",
+                custom_id=f"candy_state_{obfuscated_state}",
                 disabled=True, row=0
             )
         )
