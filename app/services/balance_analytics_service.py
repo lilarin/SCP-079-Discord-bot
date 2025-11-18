@@ -54,8 +54,17 @@ class BalanceAnalyticsService:
 
     @staticmethod
     def _calculate_stats(history: List[BalanceHistory]) -> BalanceAnalyticsData:
-        gains = [h for h in history if h.change_amount > 0]
-        losses = [h for h in history if h.change_amount < 0]
+        sent_reason_prefix = t("economy.reasons.transfer_sent").split("{")[0]
+        received_reason_prefix = t("economy.reasons.transfer_received").split("{")[0]
+
+        filtered_history = [
+            h for h in history
+            if not h.reason.startswith(sent_reason_prefix) and not h.reason.startswith(received_reason_prefix)
+        ]
+
+        gains = [h for h in filtered_history if h.change_amount > 0]
+        losses = [h for h in filtered_history if h.change_amount < 0]
+
         total_earned = sum(h.change_amount for h in gains)
         total_lost = sum(h.change_amount for h in losses)
         if gains:
