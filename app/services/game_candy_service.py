@@ -49,7 +49,9 @@ class CandyGameService:
     @staticmethod
     def _parse_state_from_components(components: list[ui.ActionRow], message_id: int) -> tuple[int, int, int]:
         state_id = components[0].children[2].custom_id
-        obfuscated_part = state_id.split("_")[2]
+
+        prefix = "candy_state_"
+        obfuscated_part = state_id[len(prefix):]
 
         player_taken, pre_taken = CandyGameService._deobfuscate_state(obfuscated_part, message_id)
 

@@ -36,29 +36,40 @@ def is_allowed_user(func):
     return wrapper
 
 
-def remove_bet_from_balance(func):
-    @wraps(func)
-    async def wrapper(interaction, *args, **kwargs):
-        bet = kwargs.get("bet")
+def _remove_bet_from_balance(wait_for_response: bool):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(interaction, *args, **kwargs):
+            bet = kwargs.get("bet")
 
-        await response_utils.wait_for_response(interaction)
-        if bet <= 0:
-            await response_utils.send_response(
-                interaction, message=t("errors.bet_must_be_positive"), delete_after=10
-            )
-            return
+            if wait_for_response:
+                await response_utils.wait_for_response(interaction)
+            else:
+                await interaction.response.defer()
 
-        db_user, _ = await User.get_or_create(user_id=interaction.user.id)
+            if bet <= 0:
+                await response_utils.send_response(
+                    interaction, message=t("errors.bet_must_be_positive"), delete_after=10
+                )
+                return
 
-        if db_user.balance < bet:
-            await response_utils.send_response(
-                interaction, t("errors.insufficient_funds_for_bet", balance=db_user.balance), delete_after=10,
-            )
-            return
+            db_user, _ = await User.get_or_create(user_id=interaction.user.id)
 
-        reason = t("economy.reasons.game_bet", game_name=interaction.application_command.name)
-        await economy_management_service.update_user_balance(interaction.user, -bet, reason=reason)
+            if db_user.balance < bet:
+                await response_utils.send_response(
+                    interaction, t("errors.insufficient_funds_for_bet", balance=db_user.balance), delete_after=10,
+                )
+                return
 
-        await func(interaction, *args, **kwargs)
+            reason = t("economy.reasons.game_bet", game_name=interaction.application_command.name)
+            await economy_management_service.update_user_balance(interaction.user, -bet, reason=reason)
 
-    return wrapper
+            await func(interaction, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+remove_bet_from_balance = _remove_bet_from_balance(wait_for_response=True)
+remove_bet_from_balance_v2 = _remove_bet_from_balance(wait_for_response=False)
