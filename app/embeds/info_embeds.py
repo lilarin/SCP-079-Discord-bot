@@ -128,6 +128,11 @@ async def format_games_info_embed() -> Embed:
         inline=False
     )
     embed.add_field(
+        name=t("ui.games_info.twenty_one_name"),
+        value=t("ui.games_info.twenty_one_desc"),
+        inline=False
+    )
+    embed.add_field(
         name=t("ui.games_info.candy_name"),
         value=t("ui.games_info.candy_desc"),
         inline=False

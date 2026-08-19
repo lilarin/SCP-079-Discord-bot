@@ -13,7 +13,8 @@ from app.services import (
     inventory_service,
     achievement_service,
     leaderboard_service,
-    schrodinger_game_service
+    schrodinger_game_service,
+    twenty_one_service
 )
 from app.utils.pagination_utils import pagination_utils
 from app.utils.response_utils import response_utils
@@ -61,6 +62,8 @@ class InteractionService:
             "game_schrodinger_initial": schrodinger_game_service.handle_initial_choice,
             "game_schrodinger_final": schrodinger_game_service.handle_final_choice,
             "game_scp173_start": staring_game_service.handle_start,
+            "game_twenty_one_hit": twenty_one_service.hit,
+            "game_twenty_one_stand": twenty_one_service.stand,
         }
         for prefix, action in game_actions.items():
             if custom_id.startswith(prefix):

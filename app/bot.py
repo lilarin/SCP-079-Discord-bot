@@ -8,6 +8,7 @@ from app.config import config, logger
 from app.core.decorators import (
     target_is_user,
     remove_bet_from_balance,
+    remove_bet_from_balance_v2,
     is_allowed_user
 )
 from app.core.models import User as UserModel
@@ -35,6 +36,7 @@ from app.services import (
     achievement_handler_service,
     interaction_service,
     schrodinger_game_service,
+    twenty_one_service,
     balance_analytics_service
 )
 from app.utils.response_utils import response_utils
@@ -305,9 +307,10 @@ async def update_shop(interaction: disnake.ApplicationCommandInteraction):
 @commands.guild_only()
 async def buy(
         interaction: disnake.ApplicationCommandInteraction,
-        item_id: str = commands.Param(
-            description=t("commands.buy.params.item_id.description"),
-            name=t("commands.buy.params.item_id.name")
+        card: str = commands.Param(
+            description=t("commands.buy.params.card.description"),
+            autocomplete=shop_service.card_autocomplete,
+            name=t("commands.buy.params.card.name")
         ),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
@@ -316,7 +319,7 @@ async def buy(
         message = await shop_service.buy_item(
             user=interaction.user,
             db_user=db_user,
-            item_id=item_id
+            item_id=card
         )
         await response_utils.edit_ephemeral_response(interaction, message=message)
     except Exception as exception:
@@ -342,16 +345,17 @@ async def inventory(interaction: disnake.ApplicationCommandInteraction):
 @commands.guild_only()
 async def equip(
         interaction: disnake.ApplicationCommandInteraction,
-        item_id: str = commands.Param(
-            description=t("commands.equip.params.item_id.description"),
-            name=t("commands.equip.params.item_id.name")
+        card: str = commands.Param(
+            description=t("commands.equip.params.card.description"),
+            autocomplete=inventory_service.card_autocomplete,
+            name=t("commands.equip.params.card.name")
         ),
 ):
     await response_utils.wait_for_ephemeral_response(interaction)
     try:
         message = await inventory_service.equip_item(
             user_id=interaction.user.id,
-            item_id=item_id
+            item_id=card
         )
         await response_utils.edit_ephemeral_response(interaction, message=message)
     except Exception as exception:
@@ -450,6 +454,27 @@ async def game_crystallize(
         await economy_management_service.update_user_balance(
             interaction.user, bet, reason
         )
+
+
+@commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)
+@bot.slash_command(name=t("commands.game_twenty_one.name"), description=t("commands.game_twenty_one.description"))
+@commands.guild_only()
+@remove_bet_from_balance_v2
+async def game_twenty_one(
+        interaction: disnake.ApplicationCommandInteraction,
+        bet: int = commands.Param(
+            description=t("commands.game_twenty_one.params.bet.description"),
+            ge=100, le=10000,
+            name=t("commands.game_twenty_one.params.bet.name")
+        ),
+):
+    try:
+        await twenty_one_service.start_game(interaction, bet)
+    except Exception as exception:
+        await response_utils.send_error_response(interaction)
+        logger.error(exception)
+        reason = t("responses.games.error_refund", command=interaction.data.name)
+        await economy_management_service.update_user_balance(interaction.user, bet, reason, balance_only=True)
 
 
 @commands.cooldown(rate=variables.games_cooldown_rate, per=variables.games_cooldown_time_minutes * 60, type=variables.cooldown_type)

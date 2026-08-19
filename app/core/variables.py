@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Dict, Tuple, Optional, List
 
@@ -17,7 +18,9 @@ class Variables:
         self.locales_path: str = os.path.join(self.assets_dir_path, "configs", "locales.json")
         t.load(self.locales_path)
 
-        self.cards_dir_path: str = os.path.join(self.assets_dir_path, "cards")
+        self.cards_dir_path: str = os.path.join(self.assets_dir_path, "keycards")
+        self.playing_cards_dir_path: str = os.path.join(self.assets_dir_path, "playingcards")
+        self.twenty_one_config_path: str = os.path.join(self.assets_dir_path, "configs", "twenty_one.json")
         self.shop_cards_path: str = os.path.join(self.assets_dir_path, "configs", "shop_cards.json")
         self.work_prompts_path: str = os.path.join(self.assets_dir_path, "configs", "work_prompts.json")
         self.achievements_config_path: str = os.path.join(self.assets_dir_path, "configs", "achievements.json")
@@ -29,6 +32,8 @@ class Variables:
         self.cards: Dict[str, CardConfig] = configs_load_utils.load_cards_from_json(self.shop_cards_path, self.cards_dir_path)
         self.work_prompts: Dict[str, WorkPrompts] = configs_load_utils.load_work_prompts_from_json(self.work_prompts_path)
         self.achievements: Dict[str, AchievementConfig] = configs_load_utils.load_achievements_from_json(self.achievements_config_path)
+        with open(self.twenty_one_config_path, "r", encoding="utf-8") as config_file:
+            self.twenty_one: Dict = json.load(config_file)
 
         # Image font cache
         self.fonts: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
@@ -84,8 +89,8 @@ class Variables:
         # Cooldowns
         self.cooldown_type: BucketType = BucketType.user
         # user for shared cooldown between guilds, guild for guild-based cooldown
-        self.games_cooldown_rate: float = 3
-        self.games_cooldown_time_minutes: float = 120
+        self.games_cooldown_rate: float = 5
+        self.games_cooldown_time_minutes: float = 180
         self.work_cooldown_time_minutes: float = 240
         self.article_cooldown_time_minutes: float = 5
 

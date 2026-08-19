@@ -16,6 +16,9 @@ class CardConfig:
     secondary_color: int
     embed_color: int
     required_achievements: Optional[List[str]]
+    work_progression_rank: int
+    work_reward_multiplier: Optional[float]
+    risky_work_penalty_multiplier: float
 
 
 @dataclass
@@ -66,6 +69,23 @@ class CoguardState:
     multiplier: float
     current_number: int
     win_streak: int
+
+
+@dataclass
+class TwentyOneCard:
+    rank: str
+    label: str
+    suit: str
+    value: int
+
+
+@dataclass
+class TwentyOneGameState:
+    bet: int
+    deck: List[TwentyOneCard]
+    player_cards: List[TwentyOneCard]
+    dealer_cards: List[TwentyOneCard]
+    dealer_turn: bool = False
 
 
 @dataclass

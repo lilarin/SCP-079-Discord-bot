@@ -6,6 +6,23 @@ from app.core.variables import variables
 from app.localization import t
 
 
+class TwentyOneView(ui.View):
+    def __init__(self, disabled: bool = False):
+        super().__init__(timeout=None)
+        self.add_item(ui.Button(
+            style=ButtonStyle.primary,
+            label=t("ui.twenty_one.hit_button"),
+            custom_id="game_twenty_one_hit",
+            disabled=disabled,
+        ))
+        self.add_item(ui.Button(
+            style=ButtonStyle.green,
+            label=t("ui.twenty_one.stand_button"),
+            custom_id="game_twenty_one_stand",
+            disabled=disabled,
+        ))
+
+
 class CrystallizationView(ui.View):
     def __init__(self, bet: int, multiplier: float, potential_win: int, loss_chance: float, is_first_turn: bool):
         super().__init__(timeout=None)

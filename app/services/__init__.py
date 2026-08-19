@@ -11,6 +11,7 @@ from .game_crystallization_service import crystallization_service
 from .game_hole_service import hole_game_service
 from .game_schrodinger_service import schrodinger_game_service
 from .game_staring_service import staring_game_service
+from .game_twenty_one_service import twenty_one_service
 from .inventory_service import inventory_service
 from .keycard_service import keycard_service
 from .leaderboard_service import leaderboard_service
