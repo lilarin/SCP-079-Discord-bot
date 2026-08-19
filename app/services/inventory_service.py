@@ -1,6 +1,6 @@
 from typing import List, Tuple, Optional
 
-from disnake import Embed, User, Member, ui
+from disnake import ApplicationCommandInteraction, Embed, OptionChoice, User, Member, ui
 from tortoise.exceptions import DoesNotExist
 
 from app.config import logger
@@ -13,6 +13,19 @@ from app.views.pagination_view import PaginationView
 
 
 class InventoryService:
+    @staticmethod
+    async def card_autocomplete(
+            interaction: ApplicationCommandInteraction, user_input: str
+    ) -> list[OptionChoice]:
+        user_items = await UserItem.filter(
+            user__user_id=interaction.user.id,
+            item__name__icontains=user_input,
+        ).select_related("item").limit(25)
+        return [
+            OptionChoice(name=item.item.name, value=item.item.item_id)
+            for item in user_items
+        ]
+
     @staticmethod
     async def get_user_items(user_id: int, limit: int, offset: int = 0) -> Tuple[List[Item], bool, bool]:
         user, _ = await UserModel.get_or_create(user_id=user_id)

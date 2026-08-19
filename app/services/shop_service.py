@@ -2,7 +2,7 @@ import asyncio
 import random
 from typing import List, Tuple, Optional
 
-from disnake import Embed, User, ui
+from disnake import ApplicationCommandInteraction, Embed, OptionChoice, User, ui
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
@@ -18,6 +18,31 @@ from app.views.pagination_view import PaginationView
 class ShopService:
     def __init__(self):
         self.card_configs = variables.cards
+
+    @staticmethod
+    async def card_autocomplete(
+            interaction: ApplicationCommandInteraction, user_input: str
+    ) -> list[OptionChoice]:
+        user = await UserModel.get_or_none(user_id=interaction.user.id)
+        if user is None:
+            return []
+
+        owned_item_ids = await UserItem.filter(
+            user__user_id=interaction.user.id,
+        ).values_list("item__item_id", flat=True)
+        items_query = Item.filter(
+            item_type=ItemType.CARD,
+            quantity__gt=0,
+            price__lte=user.balance,
+            name__icontains=user_input,
+        )
+        if owned_item_ids:
+            items_query = items_query.exclude(item_id__in=owned_item_ids)
+        items = await items_query.order_by("name").limit(25)
+        return [
+            OptionChoice(name=f"{item.name} — {item.price} 💠", value=item.item_id)
+            for item in items
+        ]
 
     async def sync_shop_cards(self) -> None:
         logger.info("Starting shop card metadata synchronization...")
@@ -155,7 +180,7 @@ class ShopService:
         reason = t("economy.reasons.shop_item_buy", shop_item=card_config.name)
         asyncio.create_task(
             economy_logging_service.log_balance_change(
-                user=user, amount=item_for_update.price, new_balance=db_user.balance, reason=reason
+                user=user, amount=-item_for_update.price, new_balance=db_user.balance, reason=reason
             )
         )
 
