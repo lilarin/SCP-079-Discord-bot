@@ -3,7 +3,7 @@ import random
 
 from disnake import User, Embed
 
-from app.core.models import User as UserModel
+from app.core.models import User as UserModel, UserItem
 from app.core.variables import variables
 from app.embeds import economy_embeds
 from app.localization import t
@@ -20,11 +20,23 @@ class WorkService:
             return db_user.equipped_card.item_id
         return list(self.work_prompts.keys())[-1]
 
+    @staticmethod
+    async def _get_work_card(db_user: UserModel):
+        user_items = await UserItem.filter(user=db_user).select_related("item")
+        card_configs = [
+            variables.cards[user_item.item.item_id]
+            for user_item in user_items
+            if user_item.item.item_id in variables.cards
+        ]
+        return max(card_configs, key=lambda card: card.work_progression_rank, default=None)
+
     async def perform_legal_work(self, user: User) -> Embed:
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
         work_key = await self._get_user_work_key(db_user)
+        work_card = await self._get_work_card(db_user)
         prompt = random.choice(self.work_prompts[work_key].legal)
-        reward = random.randint(*variables.legal_work_reward_range)
+        multiplier = work_card.work_reward_multiplier if work_card and work_card.work_reward_multiplier else 1.0
+        reward = round(random.randint(*variables.legal_work_reward_range) * multiplier)
 
         await economy_management_service.update_user_balance(user, reward, t("economy.reasons.legal_work"))
         asyncio.create_task(
@@ -35,12 +47,14 @@ class WorkService:
     async def perform_non_legal_work(self, user: User) -> Embed:
         db_user, _ = await UserModel.get_or_create(user_id=user.id)
         work_key = await self._get_user_work_key(db_user)
+        work_card = await self._get_work_card(db_user)
         non_legal_prompts = self.work_prompts[work_key].non_legal
         is_success = random.random() < variables.non_legal_work_success_chance
 
         if is_success:
             prompt = random.choice(non_legal_prompts.success)
-            amount = random.randint(*variables.non_legal_work_reward_range)
+            multiplier = work_card.work_reward_multiplier if work_card and work_card.work_reward_multiplier else 1.0
+            amount = round(random.randint(*variables.non_legal_work_reward_range) * multiplier)
             await economy_management_service.update_user_balance(
                 user, amount, t("economy.reasons.risky_work_success")
             )
@@ -49,7 +63,8 @@ class WorkService:
             )
         else:
             prompt = random.choice(non_legal_prompts.failure)
-            amount = random.randint(*variables.non_legal_work_penalty_range)
+            multiplier = work_card.risky_work_penalty_multiplier if work_card else 1.0
+            amount = round(random.randint(*variables.non_legal_work_penalty_range) * multiplier)
             await economy_management_service.update_user_balance(
                 user, -amount, t("economy.reasons.risky_work_failure")
             )

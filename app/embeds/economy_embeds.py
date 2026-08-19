@@ -9,6 +9,20 @@ from app.core.variables import variables
 from app.localization import t
 
 
+def _format_card_description(item: Item) -> str:
+    return item.description
+
+
+def _format_card_work_bonus(item: Item) -> Optional[str]:
+    card_config = variables.cards.get(item.item_id)
+    if not card_config or not card_config.work_reward_multiplier or card_config.work_reward_multiplier == 1:
+        return None
+    return t(
+        "ui.card_work_bonus.earnings",
+        percent=(card_config.work_reward_multiplier - 1) * 100,
+    )
+
+
 async def format_balance_embed(user_avatar_url: str, balance: int, reputation: int, position: int) -> Embed:
     embed = Embed(
         title=t("ui.balance.title"),
@@ -43,7 +57,7 @@ async def format_shop_embed(items: List[Item], offset: int = 0) -> Embed:
             f"{i + offset}. **{item.name}**",
             t("ui.shop.item_price", price=item.price),
             t("ui.shop.item_quantity", quantity=item.quantity),
-            f"-# **{item.description}**",
+            f"-# {_format_card_description(item)}",
         ]
 
         card_config = variables.cards.get(item.item_id)
@@ -59,7 +73,8 @@ async def format_shop_embed(items: List[Item], offset: int = 0) -> Embed:
                 requirements_str = "\n-# * ".join(required_ach)
                 item_details.append(f'{t("ui.shop.required_achievements")} \n-# * {requirements_str}')
 
-        item_details.extend([t("ui.shop.item_id", item_id=item.item_id)])
+        if bonus := _format_card_work_bonus(item):
+            item_details.append(f"-# {bonus}")
         description_lines.append("\n".join(item_details))
 
     embed.description = "\n\n".join(description_lines)
@@ -78,12 +93,15 @@ async def format_inventory_embed(user: User, items: List[Item], offset: int = 0)
         embed.description = t("ui.inventory.empty")
         return embed
 
-    description = [
-        f"{offset + i + 1}. **{item.name}**\n"
-        f"-# **{item.description}**\n"
-        f'{t("ui.inventory.item_id", item_id=item.item_id)}'
-        for i, item in enumerate(items)
-    ]
+    description = []
+    for i, item in enumerate(items):
+        item_description = (
+            f"{offset + i + 1}. **{item.name}**\n"
+            f"-# {_format_card_description(item)}"
+        )
+        if bonus := _format_card_work_bonus(item):
+            item_description += f"\n-# {bonus}"
+        description.append(item_description)
 
     embed.description = "\n\n".join(description)
     return embed

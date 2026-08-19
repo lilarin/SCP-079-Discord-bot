@@ -32,7 +32,10 @@ class ConfigsLoadUtils:
                     primary_color=int(data["colors"]["primary"].lstrip("#"), 16),
                     secondary_color=int(data["colors"]["secondary"].lstrip("#"), 16),
                     embed_color=int(data["colors"]["embed"].lstrip("#"), 16),
-                    required_achievements=data.get("required_achievements")
+                    required_achievements=data.get("required_achievements"),
+                    work_progression_rank=data["work_progression_rank"],
+                    work_reward_multiplier=data.get("work_reward_multiplier"),
+                    risky_work_penalty_multiplier=data["risky_work_penalty_multiplier"]
                 )
             return loaded_cards
 
