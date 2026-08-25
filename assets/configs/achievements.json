@@ -114,6 +114,21 @@
     "description": "Виграти в 'Монетку' 10 000 💠",
     "icon": "🍀"
   },
+  "game_twenty_one_blackjack": {
+    "name": "Натуральний blackjack",
+    "description": "Отримати blackjack з перших двох карт у грі '21'",
+    "icon": "🃏"
+  },
+  "game_twenty_one_perfect_21": {
+    "name": "Ідеальні 21",
+    "description": "Виграти в '21', набравши рівно 21 очко без blackjack",
+    "icon": "🎯"
+  },
+  "game_twenty_one_five_cards": {
+    "name": "П'ять карт",
+    "description": "Виграти в '21' з п'ятьма картами без перебору",
+    "icon": "🖐️"
+  },
   "game_candy_loss": {
     "name": "Солодка смерть",
     "description": "Програти в 'Цукерки', взявши третю цукерку",

@@ -13,7 +13,8 @@ from app.core.models import (
     UserAchievement,
     UserItem
 )
-from app.core.schemas import CrystallizationState, CoguardState
+from app.core.schemas import CrystallizationState, CoguardState, TwentyOneCard
+from app.core.variables import variables
 from app.utils.response_utils import response_utils
 
 
@@ -132,6 +133,23 @@ class AchievementHandlerService:
         achievements = await self._get_user_achievements_ids(user.id)
         if winnings >= 10_000 and "game_coin_win_10_000" not in achievements:
             await self._grant_achievement(user, "game_coin_win_10_000")
+
+    async def handle_twenty_one_achievements(
+        self, user: User, cards: list[TwentyOneCard], result: str
+    ):
+        achievements = await self._get_user_achievements_ids(user.id)
+        score = sum(card.value for card in cards)
+        aces = sum(card.rank == "A" for card in cards)
+        while score > 21 and aces:
+            score -= 10
+            aces -= 1
+
+        if result == "blackjack" and "game_twenty_one_blackjack" not in achievements:
+            await self._grant_achievement(user, "game_twenty_one_blackjack")
+        if result == "win" and score == 21 and "game_twenty_one_perfect_21" not in achievements:
+            await self._grant_achievement(user, "game_twenty_one_perfect_21")
+        if result == "win" and len(cards) == 5 and score <= 21 and "game_twenty_one_five_cards" not in achievements:
+            await self._grant_achievement(user, "game_twenty_one_five_cards")
 
     async def handle_candy_achievements(
             self, user: User, player_taken: int, is_loss: bool
