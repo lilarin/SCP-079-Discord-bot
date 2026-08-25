@@ -66,6 +66,15 @@ class Variables:
         self.schrodinger_win_multipliers: Dict[int, float] = {3: 1.35, 4: 2.4, 5: 3.5}
         self.schrodinger_container_names = ["A", "B", "C", "D", "E"]
 
+        self.twenty_one_dealer_draw_threshold: int = 17
+        self.twenty_one_dealer_upcard_index: int = 1
+        self.twenty_one_payout_multipliers: Dict[str, float] = {
+            "win": 2,
+            "blackjack": 2.5,
+            "tie": 1,
+            "loss": 0,
+        }
+
         self.staring_max_players: int = 6
         self.staring_lobby_duration: int = 60
 

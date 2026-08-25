@@ -10,7 +10,7 @@ from app.core.enums import Color
 from app.core.schemas import TwentyOneCard, TwentyOneGameState
 from app.core.variables import variables
 from app.localization import t
-from app.services import economy_management_service
+from app.services import achievement_handler_service, economy_management_service
 from app.views.games_views import TwentyOneView
 
 
@@ -19,6 +19,7 @@ class TwentyOneService:
     card_gap = 8
     result_colors = {
         "win": Color.GREEN,
+        "blackjack": Color.GREEN,
         "tie": Color.YELLOW,
         "loss": Color.RED,
     }
@@ -47,6 +48,14 @@ class TwentyOneService:
             score -= 10
             aces -= 1
         return score
+
+    @staticmethod
+    def _is_blackjack(cards: list[TwentyOneCard]) -> bool:
+        return (
+            len(cards) == 2
+            and any(card.rank == "A" for card in cards)
+            and any(card.value == 10 for card in cards)
+        )
 
     @staticmethod
     def _card_path(card: TwentyOneCard) -> Path:
@@ -97,14 +106,14 @@ class TwentyOneService:
     ) -> tuple[list[ui.Container], list[File]]:
         cards = state.player_cards.copy()
         dealer_cards = state.dealer_cards.copy()
-        dealer_upcard = dealer_cards[variables.twenty_one["dealer_upcard_index"]]
+        dealer_upcard = dealer_cards[variables.twenty_one_dealer_upcard_index]
         player_score = TwentyOneService._score(cards)
         dealer_score = TwentyOneService._score(dealer_cards) if reveal_dealer else dealer_upcard.value
         files = [
             TwentyOneService._make_cards_file(cards, "twenty_one_player.png"),
             TwentyOneService._make_images_file(
                 ([TwentyOneService._backside_path()] + [TwentyOneService._card_path(
-                    dealer_cards[variables.twenty_one["dealer_upcard_index"]]
+                    dealer_cards[variables.twenty_one_dealer_upcard_index]
                 )])
                 if not reveal_dealer else [TwentyOneService._card_path(card) for card in dealer_cards],
                 "twenty_one_dealer.png",
@@ -137,7 +146,7 @@ class TwentyOneService:
                     "ui.twenty_one.result_payout",
                     label=t(f"ui.twenty_one.result_{result}_payout_label"),
                     amount=state.bet if result == "loss" else int(
-                        state.bet * variables.twenty_one[f"{result}_payout_multiplier"]
+                        state.bet * variables.twenty_one_payout_multipliers[result]
                     ),
                 )),
             ])
@@ -166,7 +175,14 @@ class TwentyOneService:
         )
         message = await interaction.edit_original_response(components=components, files=files)
         self.games[message.id] = state
-        if self._score(state.player_cards) > 21:
+        player_blackjack = self._is_blackjack(state.player_cards)
+        dealer_blackjack = self._is_blackjack(state.dealer_cards)
+        if player_blackjack or dealer_blackjack:
+            result = "tie" if player_blackjack and dealer_blackjack else (
+                "blackjack" if player_blackjack else "loss"
+            )
+            await self._finish(interaction, message.id, result=result)
+        elif self._score(state.player_cards) > 21:
             await self._finish(interaction, message.id)
 
     async def hit(self, interaction: MessageInteraction):
@@ -194,29 +210,37 @@ class TwentyOneService:
         await self._render(interaction, state, reveal_dealer=True)
         await asyncio.sleep(1)
 
-        while self._score(state.dealer_cards) < variables.twenty_one["dealer_draw_threshold"]:
+        while self._score(state.dealer_cards) < variables.twenty_one_dealer_draw_threshold:
             state.dealer_cards.append(state.deck.pop())
             await self._render(interaction, state, reveal_dealer=True)
             await asyncio.sleep(1)
 
         await self._finish(interaction, message_id)
 
-    async def _finish(self, interaction, message_id: int):
+    async def _finish(self, interaction, message_id: int, result: str | None = None):
         state = self.games.pop(message_id)
 
         player_score = self._score(state.player_cards)
         dealer_score = self._score(state.dealer_cards)
-        result = "loss" if player_score > 21 or (dealer_score <= 21 and dealer_score > player_score) else (
-            "tie" if dealer_score == player_score else "win"
-        )
-        multiplier = variables.twenty_one[f"{result}_payout_multiplier"]
+        if result is None:
+            result = "loss" if player_score > 21 or (dealer_score <= 21 and dealer_score > player_score) else (
+                "tie" if dealer_score == player_score else "win"
+            )
+        multiplier = variables.twenty_one_payout_multipliers[result]
         payout = int(state.bet * multiplier)
         if payout:
             await economy_management_service.update_user_balance(
-                interaction.user, payout, t(f"economy.reasons.game_{result}_twenty_one")
+                interaction.user,
+                payout,
+                t("economy.reasons.game_win_twenty_one" if result == "blackjack" else f"economy.reasons.game_{result}_twenty_one"),
             )
         components, files = self._build_components(state, reveal_dealer=True, result=result)
         await interaction.edit_original_response(components=components, files=files)
+        asyncio.create_task(
+            achievement_handler_service.handle_twenty_one_achievements(
+                interaction.user, state.player_cards, result
+            )
+        )
 
 
 twenty_one_service = TwentyOneService()
